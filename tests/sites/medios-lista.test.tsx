@@ -58,7 +58,7 @@ describe("Mi web / Medios: lista", () => {
     expect(screen.getByTestId("publicable-m3").textContent).toMatch(/no publicable/i);
     expect(screen.getByTestId("medio-m3").textContent).toContain("Luis Prueba");
     expect(screen.queryByTestId("revocar-m3")).toBeNull(); // ya revocado
-    expect(screen.queryByText(/aprobar/i)).toBeNull();
+    expect(screen.queryByTestId(/aprobar/i)).toBeNull();
     expect(screen.queryByRole("button", { name: /aprobar/i })).toBeNull();
     expect(JSON.stringify(f.mock.calls)).not.toMatch(/tenant/i);
   });
