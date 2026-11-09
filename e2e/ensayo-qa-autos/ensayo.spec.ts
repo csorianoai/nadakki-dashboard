@@ -2,7 +2,12 @@
  * ENSAYO GENERAL SINTETICO en produccion (tenant «Nadakki QA Autos», portal qa-autos.nadakki.com).
  * Recorre lo que hara Carolina. Todo lo que crea lleva el prefijo QA-ENSAYO y fotos rotuladas «QA SINTETICO».
  *
- * Entorno: QA_AUTOS_USER, QA_AUTOS_PASSWORD (obligatorias). Opcionales: QA_AUTOS_BASE_URL, QA_AUTOS_TENANT_SLUG.
+ * SIN DNS NUEVO: el usuario QA entra por dashboard.nadakki.com (baseURL) y todo lo autenticado va por su BFF. La parte PUBLICA
+ * se comprueba contra la API directa (QA_AUTOS_API_URL, por defecto https://api.nadakki.com) con la cabecera
+ * X-Portal-Host: qa-autos.nadakki.com: por el BFF no sirve, porque el BFF deriva el portal del host real de la peticion.
+ *
+ * Entorno: QA_AUTOS_USER, QA_AUTOS_PASSWORD (obligatorias). Opcionales: QA_AUTOS_BASE_URL, QA_AUTOS_TENANT_SLUG,
+ * QA_AUTOS_API_URL, QA_AUTOS_PORTAL_HOST.
  * Escribe el resultado en e2e/ensayo-qa-autos/resultado.json (ids para el certificador).
  * NUNCA imprime la contrasena ni el token.
  */
@@ -13,6 +18,9 @@ import path from "node:path";
 const USER = process.env.QA_AUTOS_USER ?? "";
 const PASS = process.env.QA_AUTOS_PASSWORD ?? "";
 const SLUG = process.env.QA_AUTOS_TENANT_SLUG ?? "qa-autos";
+const API = (process.env.QA_AUTOS_API_URL ?? "https://api.nadakki.com").replace(/\/$/, "");
+const PORTAL = process.env.QA_AUTOS_PORTAL_HOST ?? "qa-autos.nadakki.com";
+const CABECERA_PORTAL = { "X-Portal-Host": PORTAL };
 const SELLO = `QA-ENSAYO-${new Date().toISOString().slice(0, 16).replace(/[-:T]/g, "")}`;
 const PRECIO = 12345678; // inconfundible: la ficha y el filtro lo tienen que mostrar tal cual
 const INVENTADOS = /Banco Piloto|Credicefi|Precio justo|15 usuarios|47 vendidos|Aliados bancarios/i;
@@ -62,6 +70,7 @@ test.describe.serial("ensayo general QA", () => {
     expect(tenantId && dealerId, `sin tenant/dealer: ${JSON.stringify(dc).slice(0, 200)}`).toBeTruthy();
     ctx = { token, tenantId, dealerId };
     estado.tenantId = tenantId;
+    estado.portal = PORTAL;
     estado.dealerId = dealerId;
   });
 
@@ -95,9 +104,9 @@ test.describe.serial("ensayo general QA", () => {
   });
 
   test("03 el BORRADOR no sale en publico", async ({ request }) => {
-    const ficha = await request.get(`/api/v1/autos/vehicles/${vehiculoId}`);
+    const ficha = await request.get(`${API}/api/v1/autos/vehicles/${vehiculoId}`);
     expect(ficha.status(), "la ficha publica de un borrador debe ser 404").toBe(404);
-    const b = await json(await request.post("/api/v1/autos/vehicles/search", { data: { page: 1, page_size: 50 } }), "busqueda");
+    const b = await json(await request.post(`${API}/api/v1/autos/vehicles/search`, { headers: CABECERA_PORTAL, data: { page: 1, page_size: 50 } }), "busqueda del portal QA");
     expect(JSON.stringify(b)).not.toContain(vehiculoId);
   });
 
@@ -109,7 +118,7 @@ test.describe.serial("ensayo general QA", () => {
   });
 
   test("05 ficha publica: sin VIN, precio real, sin inventados", async ({ request, page }) => {
-    const api = await json(await request.get(`/api/v1/autos/vehicles/${vehiculoId}`), "ficha api");
+    const api = await json(await request.get(`${API}/api/v1/autos/vehicles/${vehiculoId}`), "ficha api");
     expect(JSON.stringify(api)).not.toMatch(/"vin"\s*:\s*"[A-Z0-9]{17}"/i);
     expect(Number(api.price_amount ?? api.price)).toBe(PRECIO);
     await page.goto(`/autos/vehiculo/${vehiculoId}`);
@@ -121,11 +130,13 @@ test.describe.serial("ensayo general QA", () => {
   });
 
   test("06 buscar y filtrar por precio", async ({ request }) => {
-    const todos = await json(await request.post("/api/v1/autos/vehicles/search", { data: { page: 1, page_size: 50 } }), "busqueda");
+    const buscar = (extra: Record<string, unknown>) =>
+      request.post(`${API}/api/v1/autos/vehicles/search`, { headers: CABECERA_PORTAL, data: { page: 1, page_size: 50, ...extra } });
+    const todos = await json(await buscar({}), "busqueda");
     expect(JSON.stringify(todos)).toContain(vehiculoId);
-    const dentro = await json(await request.post("/api/v1/autos/vehicles/search", { data: { page: 1, page_size: 50, price_min: PRECIO - 1, price_max: PRECIO + 1 } }), "filtro dentro");
+    const dentro = await json(await buscar({ price_min: PRECIO - 1, price_max: PRECIO + 1 }), "filtro dentro");
     expect(JSON.stringify(dentro)).toContain(vehiculoId);
-    const fuera = await json(await request.post("/api/v1/autos/vehicles/search", { data: { page: 1, page_size: 50, price_min: PRECIO + 1000 } }), "filtro fuera");
+    const fuera = await json(await buscar({ price_min: PRECIO + 1000 }), "filtro fuera");
     expect(JSON.stringify(fuera)).not.toContain(vehiculoId);
   });
 
@@ -151,7 +162,7 @@ test.describe.serial("ensayo general QA", () => {
     const t0 = Date.now();
     let s = 200;
     while (Date.now() - t0 < (CACHE_PUBLICA_S + 15) * 1000) {
-      s = (await request.get(`/api/v1/autos/vehicles/${vehiculoId}`)).status();
+      s = (await request.get(`${API}/api/v1/autos/vehicles/${vehiculoId}`)).status();
       if (s === 404) break;
       await new Promise((r) => setTimeout(r, 3000));
     }
