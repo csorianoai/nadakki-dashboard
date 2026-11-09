@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import GoogleAdsClient from "./GoogleAdsClient";
+import ConectarGoogleAds from "@/components/google-ads/ConectarGoogleAds";
 
 function LoadingFallback() {
   return (
@@ -12,6 +13,7 @@ function LoadingFallback() {
 export default function GoogleAdsPage() {
   return (
     <Suspense fallback={<LoadingFallback />}>
+      <div className="p-6 max-w-7xl mx-auto"><ConectarGoogleAds /></div>
       <GoogleAdsClient />
     </Suspense>
   );
