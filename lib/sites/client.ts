@@ -103,6 +103,8 @@ const Z = collection<Zone, ZoneCreate, ZoneUpdate>("zones");
 export const listZones = Z.list, createZone = Z.create, updateZone = Z.update;
 const B = collection<Building, BuildingCreate, BuildingUpdate>("buildings");
 export const listBuildings = B.list, createBuilding = B.create, updateBuilding = B.update;
+const one = <T>(name: string) => (siteId: string, id: string) => get<T>(() => `${sp(siteId)}/${name}/${seg(id)}`);
+export const getDevelopment = one<Development>("developments"), getZone = one<Zone>("zones"), getBuilding = one<Building>("buildings");
 
 // Medios
 export const presignMedia = (siteId: string, b: MediaPresignRequest, o?: CallOpts) => post<MediaPresign>(() => `${sp(siteId)}/media/presign`, b, o);
