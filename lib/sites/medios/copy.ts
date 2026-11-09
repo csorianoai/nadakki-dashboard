@@ -1,0 +1,45 @@
+import type { Bi } from "../copy-util";
+
+export const MED: Record<string, Bi> = {
+  title: { es: "Medios del sitio", en: "Site media" },
+  formNew: { es: "Subir una imagen", en: "Upload an image" },
+  note24: { es: "Importante: si no se registra el permiso, la imagen se descarta a las 24 h.", en: "Important: if the permission is not recorded, the image is discarded after 24 h." },
+  fFile: { es: "Archivo de imagen (JPG, PNG, WebP o AVIF, hasta 25 MB)", en: "Image file (JPG, PNG, WebP or AVIF, up to 25 MB)" },
+  fAltEs: { es: "Texto alternativo (español, obligatorio)", en: "Alternative text (Spanish, required)" },
+  fAltEn: { es: "Texto alternativo (inglés, opcional)", en: "Alternative text (English, optional)" },
+  enWarn: { es: "Sin inglés se usará el texto en español.", en: "Without English the Spanish text will be used." },
+  fSource: { es: "Fuente de la imagen (obligatorio)", en: "Image source (required)" }, fLicense: { es: "Licencia (obligatorio)", en: "License (required)" },
+  fType: { es: "Tipo de permiso (obligatorio)", en: "Permission type (required)" }, pick: { es: "Elija una opción", en: "Choose an option" },
+  own: { es: "Imagen propia", en: "Own image" }, developer: { es: "Permiso de la promotora", en: "Developer's permission" },
+  owner: { es: "Permiso del propietario", en: "Owner's permission" }, stock: { es: "Banco de imágenes", en: "Stock library" },
+  fBy: { es: "Quién dio el permiso (obligatorio)", en: "Who gave the permission (required)" }, fScope: { es: "Alcance del permiso (obligatorio)", en: "Permission scope (required)" },
+  fPDate: { es: "Fecha del permiso (obligatorio, no futura)", en: "Permission date (required, not in the future)" },
+  fAcq: { es: "Fecha en que se obtuvo la imagen (obligatorio)", en: "Date the image was obtained (required)" },
+  fEvidence: { es: "Evidencia del permiso (obligatorio para promotora o propietario, hasta 500 caracteres)", en: "Permission evidence (required for developer or owner, up to 500 characters)" },
+  send: { es: "Enviar", en: "Submit" }, sending: { es: "Enviando…", en: "Sending…" },
+  reason: { es: "Falta completar: revise los campos marcados.", en: "Incomplete: review the marked fields." },
+  readyReason: { es: "Todo listo para enviar.", en: "Ready to submit." },
+  fixFields: { es: "No se envió: revise los campos marcados.", en: "Not submitted: review the marked fields." },
+  required: { es: "Este dato es obligatorio.", en: "This field is required." }, invalid: { es: "Escriba una fecha válida.", en: "Enter a valid date." },
+  future: { es: "La fecha del permiso no puede ser futura.", en: "The permission date cannot be in the future." },
+  long: { es: "Es demasiado largo.", en: "It is too long." }, type: { es: "Use una imagen JPG, PNG, WebP o AVIF.", en: "Use a JPG, PNG, WebP or AVIF image." },
+  size: { es: "La imagen debe pesar hasta 25 MB.", en: "The image must be up to 25 MB." },
+  errUpload: { es: "No se pudo subir la imagen, intenta de nuevo.", en: "The image could not be uploaded, please try again." },
+  sent: { es: "Imagen enviada con su registro de permiso. Queda pendiente de aprobación por Nadakki.", en: "Image submitted with its permission record. It is pending approval by Nadakki." },
+  sentDemo: { es: "Solo en el ejemplo: no se envió nada al servidor.", en: "Sample only: nothing was sent to the server." },
+};
+
+/** Errores del servidor por su codigo estable, en lenguaje llano. */
+export const ERR: Record<string, Bi> = {
+  IMAGE_PERMISSION_REQUIRED: { es: "Falta el registro de permiso de la imagen: indique fuente, licencia, quién dio el permiso y las fechas.", en: "The image's permission record is missing: give the source, license, who gave permission and the dates." },
+  VALIDATION_ERROR: { es: "El servicio no aceptó algún dato. Revise los campos.", en: "The service did not accept some data. Review the fields." },
+  TENANT_MISMATCH: { es: "Su sesión no tiene acceso a este sitio.", en: "Your session cannot access this site." },
+  TENANT_FIELD_FORBIDDEN: { es: "No se pudo enviar por un problema interno. Avise a soporte.", en: "Could not submit because of an internal problem. Contact support." },
+  FORBIDDEN: { es: "No tiene permiso para gestionar medios.", en: "You do not have permission to manage media." },
+  UNAUTHENTICATED: { es: "Su sesión venció. Vuelva a iniciar sesión.", en: "Your session expired. Please sign in again." },
+  NOT_FOUND: { es: "No encontrado: esta imagen ya no existe.", en: "Not found: this image no longer exists." },
+  CONFLICT: { es: "Esta imagen cambió de estado. Recargue la página e intente de nuevo.", en: "This image changed status. Reload the page and try again." },
+  RATE_LIMITED: { es: "Demasiados intentos. Espere un momento e intente de nuevo.", en: "Too many attempts. Wait a moment and try again." },
+  NETWORK: { es: "No hay conexión con el servicio. Lo escrito sigue aquí; intente de nuevo.", en: "No connection to the service. What you wrote is still here; try again." },
+  UNKNOWN: { es: "No se pudo completar. Lo escrito sigue aquí; intente de nuevo.", en: "Could not complete. What you wrote is still here; try again." },
+};
