@@ -15,6 +15,7 @@ import {
 import { postGoogleAdsPreflight, type GoogleAdsPreflightResult } from "@/lib/api/googleAdsPreflight";
 import PreflightResultModal from "@/components/preflight/PreflightResultModal";
 import { useTenant } from "@/contexts/TenantContext";
+import { fetchWithFallback } from "@/lib/api/client";
 
 // ── Types ────────────────────────────────────────────────
 type ModuleStatus = "completed" | "ready" | "blocked" | "in_progress" | "not_ready";
@@ -36,20 +37,16 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
     id: "m01",
     title: "Platform Fundamentals",
     description: "Entender la plataforma y metricas clave",
-    status: "completed",
+    status: "not_ready",
     dependencies: [],
-    lastRunAt: "2026-04-10T10:00:00Z",
-    score: 92,
     actionKey: "google_ads_m01_fundamentals",
   },
   {
     id: "m02",
     title: "Account Structure",
     description: "Jerarquia de cuenta y campana",
-    status: "completed",
+    status: "not_ready",
     dependencies: ["m01"],
-    lastRunAt: "2026-04-11T10:00:00Z",
-    score: 88,
     actionKey: "google_ads_m02_account_structure",
   },
   {
@@ -167,14 +164,50 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
 ];
 
-async function getModules(tenantId: string): Promise<GoogleAdsModuleStep[]> {
-  // TODO: swap for real endpoint when ready:
-  // GET /api/v1/google-ads/modules/status
-  // const res = await fetch("/api/v1/google-ads/modules/status", {
-  //   headers: { "X-Tenant-ID": tenantId }
-  // })
-  // if (res.ok) return res.json()
-  return INITIAL_MODULES;
+type ModulesStatusBody = {
+  modules?: Array<{
+    id: string;
+    title: string;
+    description: string;
+    action_key: string;
+    status: string;
+    dependencies?: string[];
+    blocked_reason?: string | null;
+    last_run_at?: string | null;
+    score?: number | null;
+  }>;
+};
+
+// Estado real desde GET /api/v1/google-ads/modules/status (Authorization de la sesion).
+// Si falla o no hay tenant: lista vacia honesta, nunca datos de muestra.
+async function getModules(tenantId: string | null): Promise<GoogleAdsModuleStep[]> {
+  if (!tenantId) return [];
+  const res = await fetchWithFallback<ModulesStatusBody | null>("/api/v1/google-ads/modules/status", {
+    tenantId,
+    fallbackData: null,
+  });
+  if (res.source !== "live" || !res.data || !Array.isArray(res.data.modules)) return [];
+  if (res.data.modules.length === 0) {
+    // Sin cuenta conectada: todo pendiente, sin fechas ni puntajes.
+    return INITIAL_MODULES.map((m) => ({
+      ...m,
+      status: "not_ready" as ModuleStatus,
+      blockedReason: undefined,
+      lastRunAt: null,
+      score: null,
+    }));
+  }
+  return res.data.modules.map((m) => ({
+    id: m.id,
+    title: m.title,
+    description: m.description,
+    actionKey: m.action_key,
+    status: m.status as ModuleStatus,
+    dependencies: m.dependencies ?? [],
+    blockedReason: m.blocked_reason ?? undefined,
+    lastRunAt: m.last_run_at ?? null,
+    score: m.score ?? null,
+  }));
 }
 
 function notReadyFallback(
@@ -201,6 +234,7 @@ function progressCount(modules: GoogleAdsModuleStep[]) {
 function readinessScore(modules: GoogleAdsModuleStep[]) {
   const completed = modules.filter((m) => m.status === "completed").length;
   const ready = modules.filter((m) => m.status === "ready").length;
+  if (modules.length === 0) return 0;
   return Math.round(((completed * 2 + ready) / (modules.length * 2)) * 100);
 }
 
@@ -358,7 +392,7 @@ export default function GoogleAdsExecutionFlow() {
 
   useEffect(() => {
     let alive = true;
-    getModules(safeTenantId).then((data) => {
+    getModules(tenantId?.trim() || null).then((data) => {
       if (!alive) return;
       setModules(data);
       setLoading(false);
@@ -366,7 +400,7 @@ export default function GoogleAdsExecutionFlow() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [tenantId]);
 
   const handleRun = useCallback(
     async (module: GoogleAdsModuleStep) => {
@@ -422,7 +456,6 @@ export default function GoogleAdsExecutionFlow() {
                 ...m,
                 status: "completed" as ModuleStatus,
                 lastRunAt: new Date().toISOString(),
-                score: Math.floor(Math.random() * 20) + 78,
               }
             : m
         )
