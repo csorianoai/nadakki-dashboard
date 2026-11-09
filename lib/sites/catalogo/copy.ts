@@ -19,6 +19,8 @@ export const CAT: Record<string, Bi> = {
   eDate: b("Escriba una fecha válida.", "Enter a valid date."), eLong: b("Es demasiado largo.", "It is too long."),
   fixFields: b("No se envió: revise los campos marcados.", "Not submitted: review the marked fields."),
   enWarn: b("Sin inglés se usará el texto en español.", "Without English the Spanish text will be used."),
+  colVerif: b("Verificación", "Verification"),
+  more: b("Cargar más", "Load more"),
   none: b("Ninguna", "None"), unavailable: b("No disponible", "Not available"),
   save: b("Guardar", "Save"), saving: b("Guardando…", "Saving…"),
   saved: b("Guardado como borrador. Para publicarlo use la sección Publicar.", "Saved as a draft. To publish it use the Publish section."),

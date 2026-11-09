@@ -1,3 +1,4 @@
+import { pick } from "../copy-util";
 /** Desarrollos, zonas y edificios: campos de DevelopmentFields/ZoneFields/BuildingFields. Nunca tenant_id ni datos legales. */
 export type Ent = "desarrollos" | "zonas" | "edificios";
 export type Rec = Record<string, unknown>;
@@ -97,3 +98,7 @@ export function aForm(e: Ent, it: Rec): F {
 export const sinIngles = (e: Ent, f: F): number => SPEC[e].filter((s) => s.id.endsWith("-es") && f[s.id].trim() && !f[s.id.replace(/-es$/, "-en")]?.trim()).length;
 /** authorized lo escribe solo staff: aqui solo se lee. */
 export const verificado = (it: Rec | null): "si" | "no" | "pendiente" => (it?.authorized === true ? "si" : it?.authorized === false ? "pendiente" : "no");
+
+/** Texto de un nombre del contrato (cadena o {es,en}). */
+export const nombreDe = (v: unknown, lang: "es" | "en"): string =>
+  typeof v === "string" ? v : v && typeof (v as { es?: unknown }).es === "string" ? pick(v as { es: string; en?: string }, lang) : "";
