@@ -1,4 +1,4 @@
-import type { MediaAsset, MediaCreate, MediaUpdate, PermissionType } from "../types";
+import type { MediaCreate, MediaUpdate, PermissionType } from "../types";
 
 export const MAX_BYTES = 26214400;
 export const MIMES = ["image/jpeg", "image/png", "image/webp", "image/avif"] as const;
@@ -13,13 +13,6 @@ export const IDS: Record<string, keyof MForm | "file"> = {
   "otorgado-por": "grantedBy", alcance: "scope", "fecha-permiso": "pdate", "fecha-adquisicion": "acquired", evidencia: "evidence",
 };
 export const vacio = (): MForm => ({ altEs: "", altEn: "", source: "", license: "", ptype: "", grantedBy: "", scope: "", pdate: "", acquired: "", evidence: "" });
-export function aForm(m: MediaAsset): MForm {
-  const s = (k: string) => (typeof m[k] === "string" ? (m[k] as string) : "");
-  return {
-    altEs: m.alt?.es ?? "", altEn: m.alt?.en ?? "", source: s("source"), license: s("license"), ptype: m.permission_type ?? "",
-    grantedBy: s("permission_granted_by"), scope: s("permission_scope"), pdate: m.permission_date ?? "", acquired: m.acquired_on ?? "", evidence: s("permission_evidence"),
-  };
-}
 /** Fecha de hoy (local) como AAAA-MM-DD. */
 export function hoy(d = new Date()): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -61,7 +54,6 @@ function campos(f: MForm): MediaUpdate {
   return b;
 }
 export const paraCrear = (f: MForm, uploadId: string): MediaCreate => ({ upload_id: uploadId, ...campos(f) }) as MediaCreate;
-export const paraEditar = (f: MForm): MediaUpdate => campos(f);
 export async function sha256Hex(file: Blob): Promise<string> {
   const buf = await (file as { arrayBuffer: () => Promise<ArrayBuffer> }).arrayBuffer();
   const h = await globalThis.crypto.subtle.digest("SHA-256", new Uint8Array(buf));

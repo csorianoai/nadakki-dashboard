@@ -186,6 +186,26 @@ describe("Mi web / Medios: alta con permiso", () => {
     expect(e.textContent).toMatch(/permiso/i);
     expect(e.textContent).not.toMatch(/IMAGE_PERMISSION_REQUIRED/);
   });
+
+  test("tenant ajeno: 403 TENANT_MISMATCH como error llano; 404 como 'no encontrado'; sin createMedia", async () => {
+    for (const [st, code, re] of [[403, "TENANT_MISMATCH", /no tiene acceso/i], [404, "NOT_FOUND", /no encontrado/i]] as const) {
+      f.mockReset(); gf.mockReset();
+      gf.mockResolvedValue(resp({}, 200));
+      route({ ...base, "POST /media/presign": () => problem(st, code), "POST /media": () => resp(asset(MID, "pending"), 201) });
+      const r = render(<App />);
+      await screen.findByTestId("form-medio");
+      llenar();
+      fireEvent.click(screen.getByTestId("enviar"));
+      const e = await screen.findByTestId("error-envio");
+      expect(e).toHaveAttribute("role", "alert");
+      expect(e.textContent).toMatch(re);
+      expect(e.textContent).not.toContain(code);
+      expect(screen.queryByTestId("medio-enviado")).toBeNull();
+      expect(calls("POST", "/media")).toHaveLength(0);
+      expect(gf).not.toHaveBeenCalled();
+      r.unmount();
+    }
+  });
 });
 
 describe("Mi web / Medios: modo demo", () => {

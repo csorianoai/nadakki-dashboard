@@ -2,9 +2,7 @@ import type { Bi } from "../copy-util";
 
 export const MED: Record<string, Bi> = {
   title: { es: "Medios del sitio", en: "Site media" },
-  colDate: { es: "Fecha del permiso", en: "Permission date" }, colActions: { es: "Acciones", en: "Actions" },
-  formNew: { es: "Subir una imagen", en: "Upload an image" }, formEdit: { es: "Editar datos de la imagen", en: "Edit image details" },
-  cancel: { es: "Cancelar", en: "Cancel" },
+  formNew: { es: "Subir una imagen", en: "Upload an image" },
   note24: { es: "Importante: si no se registra el permiso, la imagen se descarta a las 24 h.", en: "Important: if the permission is not recorded, the image is discarded after 24 h." },
   fFile: { es: "Archivo de imagen (JPG, PNG, WebP o AVIF, hasta 25 MB)", en: "Image file (JPG, PNG, WebP or AVIF, up to 25 MB)" },
   fAltEs: { es: "Texto alternativo (español, obligatorio)", en: "Alternative text (Spanish, required)" },
@@ -18,7 +16,7 @@ export const MED: Record<string, Bi> = {
   fPDate: { es: "Fecha del permiso (obligatorio, no futura)", en: "Permission date (required, not in the future)" },
   fAcq: { es: "Fecha en que se obtuvo la imagen (obligatorio)", en: "Date the image was obtained (required)" },
   fEvidence: { es: "Evidencia del permiso (obligatorio para promotora o propietario, hasta 500 caracteres)", en: "Permission evidence (required for developer or owner, up to 500 characters)" },
-  send: { es: "Enviar", en: "Submit" }, saveEdit: { es: "Guardar cambios", en: "Save changes" }, sending: { es: "Enviando…", en: "Sending…" },
+  send: { es: "Enviar", en: "Submit" }, sending: { es: "Enviando…", en: "Sending…" },
   reason: { es: "Falta completar: revise los campos marcados.", en: "Incomplete: review the marked fields." },
   readyReason: { es: "Todo listo para enviar.", en: "Ready to submit." },
   fixFields: { es: "No se envió: revise los campos marcados.", en: "Not submitted: review the marked fields." },
@@ -29,7 +27,6 @@ export const MED: Record<string, Bi> = {
   errUpload: { es: "No se pudo subir la imagen, intenta de nuevo.", en: "The image could not be uploaded, please try again." },
   sent: { es: "Imagen enviada con su registro de permiso. Queda pendiente de aprobación por Nadakki.", en: "Image submitted with its permission record. It is pending approval by Nadakki." },
   sentDemo: { es: "Solo en el ejemplo: no se envió nada al servidor.", en: "Sample only: nothing was sent to the server." },
-  saved: { es: "Datos guardados.", en: "Details saved." },
 };
 
 /** Errores del servidor por su codigo estable, en lenguaje llano. */
@@ -40,7 +37,7 @@ export const ERR: Record<string, Bi> = {
   TENANT_FIELD_FORBIDDEN: { es: "No se pudo enviar por un problema interno. Avise a soporte.", en: "Could not submit because of an internal problem. Contact support." },
   FORBIDDEN: { es: "No tiene permiso para gestionar medios.", en: "You do not have permission to manage media." },
   UNAUTHENTICATED: { es: "Su sesión venció. Vuelva a iniciar sesión.", en: "Your session expired. Please sign in again." },
-  NOT_FOUND: { es: "Esta imagen ya no existe.", en: "This image no longer exists." },
+  NOT_FOUND: { es: "No encontrado: esta imagen ya no existe.", en: "Not found: this image no longer exists." },
   CONFLICT: { es: "Esta imagen cambió de estado. Recargue la página e intente de nuevo.", en: "This image changed status. Reload the page and try again." },
   RATE_LIMITED: { es: "Demasiados intentos. Espere un momento e intente de nuevo.", en: "Too many attempts. Wait a moment and try again." },
   NETWORK: { es: "No hay conexión con el servicio. Lo escrito sigue aquí; intente de nuevo.", en: "No connection to the service. What you wrote is still here; try again." },

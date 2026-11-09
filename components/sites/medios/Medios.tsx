@@ -13,7 +13,7 @@ export function Medios() {
   return (
     <div>
       <h1 style={{ fontSize: SIZE.fontSub, margin: "0 0 12px" }}>{pick(MED.title, lang)}</h1>
-      <FormMedio siteId={selectedId ?? sites[0]?.id ?? null} demo={demo} lang={lang} asset={null} onCancel={() => undefined} onDone={() => undefined} />
+      <FormMedio siteId={selectedId ?? sites[0]?.id ?? null} demo={demo} lang={lang} onDone={() => undefined} />
     </div>
   );
 }
