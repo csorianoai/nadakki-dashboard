@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import GoogleAdsClient from "./GoogleAdsClient";
+import ConectarGoogleAds from "@/components/google-ads/ConectarGoogleAds";
 import { AgentCard } from "@/components/ui/AgentCard";
 import { useTenant } from "@/contexts/TenantContext";
 import { AdvertisingDashboardLive } from "../components/AdvertisingDashboardLive";
@@ -299,6 +300,7 @@ export default function GoogleAdsPage() {
 
   return (
     <div className="space-y-8 p-6 max-w-7xl mx-auto">
+      <ConectarGoogleAds />
       <GoogleAdsClient embed navigationBackHref="/advertising" />
       <AdvertisingDashboardLive title="Google Ads — Dashboard API" />
       <div>
