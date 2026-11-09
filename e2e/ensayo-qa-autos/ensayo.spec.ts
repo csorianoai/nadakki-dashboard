@@ -43,12 +43,12 @@ async function json(r: Awaited<ReturnType<APIRequestContext["get"]>>, etiqueta: 
   return cuerpo ? JSON.parse(cuerpo) : {};
 }
 
-async function fotoSintetica(browser: import("@playwright/test").Browser, n: number): Promise<Buffer> {
+async function fotoSintetica(browser: import("@playwright/test").Browser, n: number, rotulo = "QA SINTETICO"): Promise<Buffer> {
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
   await page.setContent(
     `<body style="margin:0;background:#${["1e3a8a", "0e7c66", "6d28d9"][n % 3]};color:#fff;font:700 96px sans-serif;
       display:flex;flex-direction:column;align-items:center;justify-content:center;height:720px">
-      <div>QA SINTETICO</div><div style="font-size:40px">${SELLO} · foto ${n + 1}</div></body>`,
+      <div>${rotulo}</div><div style="font-size:40px">${SELLO} · ${n + 1}</div></body>`,
   );
   const buf = await page.screenshot({ type: "png" });
   await page.close();
@@ -86,12 +86,33 @@ test.describe.serial("ensayo general QA", () => {
     expect(vehiculoId).toBeTruthy();
 
     const hoy = new Date().toISOString();
-    for (const [tipo, monto] of [["purchase", "9000000"], ["repair", "350000"], ["transport", "120000"]] as const) {
+    // purchase y transport van por /costs (CostIn). Ningun otro tipo del catalogo exige datos extra: solo `repair`.
+    for (const [tipo, monto] of [["purchase", "9000000"], ["transport", "120000"]] as const) {
       const c = await json(await request.post(`/api/v1/autos/vehicles/${vehiculoId}/costs`, {
         headers: auth(), data: { cost_type: tipo, amount: monto, currency: "ARS", incurred_at: hoy },
       }), `costo ${tipo}`);
       if (tipo === "transport") costoAnulableId = String(c.id ?? c.cost_id ?? "");
     }
+    // `repair` NO va por /costs: CostIn no transporta supplier_name ni invoice_number y el backend responde 422
+    // «repair exige supplier_name e invoice_number». Es una FACTURA DE TALLER: se sube el documento (doc_type repair_invoice) y se
+    // registra por /repair-invoices con proveedor, n.o de factura y document_id. Es lo mismo que hace el formulario de Carolina
+    // (app/autos/dealer/finanzas/CostosVehiculoPanel.tsx + lib/dealer-management/vehicle-costs.ts).
+    const factura = await fotoSintetica(browser, 90, "QA SINTETICO - FACTURA DE TALLER");
+    const doc = await json(await request.post(`/api/v1/autos/vehicles/${vehiculoId}/documents`, {
+      headers: auth(),
+      multipart: {
+        file: { name: "qa-sintetico-factura-taller.png", mimeType: "image/png", buffer: factura },
+        doc_type: "repair_invoice",
+      },
+    }), "subir factura de taller");
+    expect(doc.id, "la subida del documento no devolvio id").toBeTruthy();
+    await json(await request.post(`/api/v1/autos/vehicles/${vehiculoId}/repair-invoices`, {
+      headers: auth(),
+      data: {
+        amount: "350000", currency: "ARS", incurred_at: hoy,
+        supplier_name: "QA SINTETICO TALLER", invoice_number: `${SELLO}-F1`, document_id: String(doc.id),
+      },
+    }), "costo repair (factura de taller)");
     for (let i = 0; i < 3; i++) {
       const png = await fotoSintetica(browser, i);
       await json(await request.post(`/api/v1/autos/vehicles/${vehiculoId}/photos`, {
