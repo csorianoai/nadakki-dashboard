@@ -20,7 +20,6 @@ interface Agent {
   description: string;
   icon: string;
   status: "active" | "inactive" | "pending";
-  metrics?: Array<{ label: string; value: number | string }>;
 }
 
 const AGENTS: Agent[] = [
@@ -31,10 +30,6 @@ const AGENTS: Agent[] = [
     description: "Auditoría de conversiones, diagnóstico PMax y propuestas de puja",
     icon: "💰",
     status: "active",
-    metrics: [
-      { label: "Presupuesto", value: "$500" },
-      { label: "Paced", value: "45%" },
-    ],
   },
   {
     id: "strategist",
@@ -43,10 +38,6 @@ const AGENTS: Agent[] = [
     description: "Propuestas de campaña Search, PMax, Demand Gen y Shopping",
     icon: "📊",
     status: "active",
-    metrics: [
-      { label: "Analisis", value: 24 },
-      { label: "Efectividad", value: "92%" },
-    ],
   },
   {
     id: "rsa-copy-generator",
@@ -55,10 +46,6 @@ const AGENTS: Agent[] = [
     description: "Propuestas de creativos y activos",
     icon: "📝",
     status: "active",
-    metrics: [
-      { label: "Ads", value: 342 },
-      { label: "CTR", value: "5.2%" },
-    ],
   },
 ];
 
@@ -363,16 +350,7 @@ export default function GoogleAdsPage() {
             </div>
           </div>
           <div className="bg-white dark:bg-slate-900 rounded-lg border p-6">
-            {selected.metrics && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                {selected.metrics.map((m, i) => (
-                  <div key={i} className="text-center p-3 bg-gray-50 dark:bg-slate-800 rounded">
-                    <div className="font-bold text-2xl text-blue-600 dark:text-blue-400">{m.value}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{m.label}</div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">Sin datos aún</p>
             <div className="flex gap-3 flex-wrap">
               <button
                 className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded font-semibold disabled:opacity-50"
