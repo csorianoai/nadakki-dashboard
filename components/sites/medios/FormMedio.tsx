@@ -4,7 +4,7 @@ import React, { useRef, useState } from "react";
 import { createMedia, newIdempotencyKey, presignMedia, updateMedia } from "@/lib/sites/client";
 import { pick, type Lang } from "@/lib/sites/copy-util";
 import { SitesApiError } from "@/lib/sites/errors";
-import { IDS, TIPOS, aForm, paraCrear, paraEditar, sha256Hex, validar, vacio, type MForm } from "@/lib/sites/medios/form";
+import { IDS, TIPOS, aForm, paraCrear, paraEditar, hoy, sha256Hex, validar, vacio, type MForm } from "@/lib/sites/medios/form";
 import { ERR, MED } from "@/lib/sites/medios/copy";
 import { saveDemoMedia } from "@/lib/sites/medios/mock";
 import { SIZE, ST } from "@/lib/sites/tokens";
@@ -110,7 +110,7 @@ export function FormMedio({ siteId, demo, lang, asset, onDone, onCancel }: Props
       </div>
       {campo("otorgado-por", t("fBy"), "grantedBy", { req: true })}
       {campo("alcance", t("fScope"), "scope", { req: true })}
-      {campo("fecha-permiso", t("fPDate"), "pdate", { type: "date", req: true, max: new Date().toISOString().slice(0, 10) })}
+      {campo("fecha-permiso", t("fPDate"), "pdate", { type: "date", req: true, max: hoy() })}
       {campo("fecha-adquisicion", t("fAcq"), "acquired", { type: "date", req: true })}
       {requiereEvid && campo("evidencia", t("fEvidence"), "evidence", { req: true, area: true })}
       {intentado && primero && <p role="alert" data-testid="error-campos" style={{ color: ST.badText }}>⚠ {t("fixFields")}</p>}

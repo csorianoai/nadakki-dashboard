@@ -64,6 +64,6 @@ export const paraCrear = (f: MForm, uploadId: string): MediaCreate => ({ upload_
 export const paraEditar = (f: MForm): MediaUpdate => campos(f);
 export async function sha256Hex(file: Blob): Promise<string> {
   const buf = await (file as { arrayBuffer: () => Promise<ArrayBuffer> }).arrayBuffer();
-  const h = await globalThis.crypto.subtle.digest("SHA-256", buf);
+  const h = await globalThis.crypto.subtle.digest("SHA-256", new Uint8Array(buf));
   return Array.from(new Uint8Array(h), (b) => b.toString(16).padStart(2, "0")).join("");
 }
