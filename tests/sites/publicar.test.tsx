@@ -87,7 +87,7 @@ describe("Mi web / Publicar", () => {
     expect(within(filas[2]).queryByRole("button")).toBeNull();
     fireEvent.click(within(filas[1]).getByRole("button", { name: "Aceptar este aviso" }));
     fireEvent.click(screen.getByRole("button", { name: "Confirmar aceptación" }));
-    expect(await screen.findByRole("alert", { name: "" })).toBeTruthy();
+    expect(await screen.findByTestId("error-override")).toBeTruthy();
     expect(calls("POST", "/overrides")).toHaveLength(0);
     fireEvent.change(screen.getByLabelText(/Justificación/), { target: { value: "Lo revisó el equipo" } });
     fireEvent.change(screen.getByLabelText(/Vale hasta/), { target: { value: futuro() } });
