@@ -2,8 +2,7 @@
 
 import React, { useRef, useState } from "react";
 import { createMedia, newIdempotencyKey, presignMedia, updateMedia } from "@/lib/sites/client";
-import type { Lang } from "@/lib/sites/copy-util";
-import { pick } from "@/lib/sites/copy-util";
+import { pick, type Lang } from "@/lib/sites/copy-util";
 import { SitesApiError } from "@/lib/sites/errors";
 import { IDS, TIPOS, aForm, paraCrear, paraEditar, sha256Hex, validar, vacio, type MForm } from "@/lib/sites/medios/form";
 import { ERR, MED } from "@/lib/sites/medios/copy";
@@ -14,7 +13,6 @@ import type { MediaAsset } from "@/lib/sites/types";
 interface Props { siteId: string | null; demo: boolean; lang: Lang; asset: MediaAsset | null; onDone: (m: MediaAsset, edited: boolean) => void; onCancel: () => void }
 const ctl = { minHeight: SIZE.target, padding: "0 10px", border: `1px solid ${ST.control}`, borderRadius: SIZE.radius, font: "inherit", width: "100%", boxSizing: "border-box" as const };
 const btn = { minHeight: SIZE.target, padding: "0 20px", border: `1px solid ${ST.control}`, borderRadius: SIZE.radius, font: "inherit", background: ST.white, color: ST.ink };
-
 /** Alta (presign -> subida -> createMedia) o edicion de metadatos (updateMedia) con registro de permiso obligatorio. */
 export function FormMedio({ siteId, demo, lang, asset, onDone, onCancel }: Props) {
   const [form, setForm] = useState<MForm>(asset ? aForm(asset) : vacio());
@@ -27,7 +25,6 @@ export function FormMedio({ siteId, demo, lang, asset, onDone, onCancel }: Props
   const errs = validar(form, file, !asset);
   const primero = Object.keys(IDS).find((id) => errs[id]);
   const set = (k: keyof MForm, v: string) => { setForm({ ...form, [k]: v }); setEstado({ k: "libre" }); };
-
   async function enviar() {
     if (primero) {
       setIntentado(true);
@@ -69,7 +66,6 @@ export function FormMedio({ siteId, demo, lang, asset, onDone, onCancel }: Props
     setEstado({ k: "enviado", demo: d });
     onDone(m, edited);
   }
-
   const campo = (id: string, label: string, k: keyof MForm, o: { type?: string; req?: boolean; max?: string; help?: string; area?: boolean } = {}) => {
     const err = intentado ? errs[id] : undefined;
     const ids = [err ? `err-${id}` : "", o.help ? `help-${id}` : ""].filter(Boolean).join(" ") || undefined;
@@ -85,7 +81,6 @@ export function FormMedio({ siteId, demo, lang, asset, onDone, onCancel }: Props
     );
   };
   const eFile = intentado ? errs.archivo : undefined;
-  const nuevoEstado = estado.k === "enviado" ? estado : null;
   const requiereEvid = form.ptype === "developer" || form.ptype === "owner";
   const tipoErr = intentado ? errs["tipo-permiso"] : undefined;
   return (
@@ -121,7 +116,7 @@ export function FormMedio({ siteId, demo, lang, asset, onDone, onCancel }: Props
       {intentado && primero && <p role="alert" data-testid="error-campos" style={{ color: ST.badText }}>⚠ {t("fixFields")}</p>}
       {estado.k === "subida" && <p role="alert" data-testid="error-subida" style={{ color: ST.badText }}>⚠ {t("errUpload")}</p>}
       {estado.k === "error" && <p role="alert" data-testid="error-envio" style={{ color: ST.badText }}>⚠ {pick(ERR[estado.code] ?? ERR.UNKNOWN, lang)}</p>}
-      {nuevoEstado && <p role="status" data-testid="medio-enviado">{nuevoEstado.demo ? t("sentDemo") : t(asset ? "saved" : "sent")}</p>}
+      {estado.k === "enviado" && <p role="status" data-testid="medio-enviado">{estado.demo ? t("sentDemo") : t(asset ? "saved" : "sent")}</p>}
       <p id="motivo-envio" data-testid="motivo-envio" style={{ margin: "8px 0" }}>{primero ? t("reason") : t("readyReason")}</p>
       <button type="button" data-testid="enviar" className="sx-focus" aria-describedby="motivo-envio" aria-disabled={primero ? "true" : undefined}
         disabled={estado.k === "enviando"} onClick={enviar} style={{ ...btn, opacity: primero ? 0.6 : 1 }}>{t(estado.k === "enviando" ? "sending" : asset ? "saveEdit" : "send")}</button>{" "}
