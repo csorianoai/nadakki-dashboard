@@ -18,22 +18,16 @@ const resp = (status: number, body: unknown) => ({
 
 let fetchMock: jest.Mock;
 let assign: jest.Mock;
-const realLocation = window.location;
 beforeEach(() => {
   fetchMock = jest.fn();
   (global as any).fetch = fetchMock;
   assign = jest.fn();
-  delete (window as any).location;
-  (window as any).location = { ...realLocation, assign };
-});
-afterEach(() => {
-  (window as any).location = realLocation;
 });
 
 const casos: [string, any, RegExp, string | null][] = [
   ["connected", resp(200, { status: "connected" }), /Conectado/, null],
   ["expired", resp(200, { status: "expired" }), /venci/, "Reconectar"],
-  ["not_connected", resp(200, { status: "not_connected" }), /Conexión con Google Ads/, "Conectar Google Ads"],
+  ["not_connected", resp(200, { status: "not_connected" }), /^Conectar Google Ads$/, "Conectar Google Ads"],
   ["unknown", resp(200, { status: "unknown" }), /No pudimos comprobar/, null],
   ["valor raro", resp(200, { status: "activo" }), /No pudimos comprobar/, null],
   ["cuerpo raro", resp(200, "texto"), /No pudimos comprobar/, null],
@@ -44,7 +38,7 @@ const casos: [string, any, RegExp, string | null][] = [
 describe("estado de la conexion", () => {
   it.each(casos)("%s", async (_n, r, texto, boton) => {
     fetchMock.mockResolvedValue(r);
-    render(<ConectarGoogleAds />);
+    render(<ConectarGoogleAds navegar={assign} />);
     expect(await screen.findByText(texto)).toBeTruthy();
     if (boton) expect(screen.getByRole("button", { name: boton })).toBeTruthy();
     else expect(screen.queryByRole("button")).toBeNull();
@@ -55,7 +49,7 @@ describe("estado de la conexion", () => {
 
   it("fallo de red -> unknown sin Reconectar", async () => {
     fetchMock.mockRejectedValue(new Error("red"));
-    render(<ConectarGoogleAds />);
+    render(<ConectarGoogleAds navegar={assign} />);
     expect(await screen.findByText(/No pudimos comprobar/)).toBeTruthy();
     expect(screen.queryByText("Reconectar")).toBeNull();
   });
@@ -66,7 +60,7 @@ describe("clic en conectar", () => {
     fetchMock
       .mockResolvedValueOnce(resp(200, { status: "not_connected" }))
       .mockResolvedValueOnce(resp(200, { authorization_url: "https://accounts.google.com/o/oauth2/x" }));
-    render(<ConectarGoogleAds />);
+    render(<ConectarGoogleAds navegar={assign} />);
     fireEvent.click(await screen.findByRole("button", { name: "Conectar Google Ads" }));
     await waitFor(() => expect(assign).toHaveBeenCalledWith("https://accounts.google.com/o/oauth2/x"));
     const [url, init] = fetchMock.mock.calls[1];
@@ -78,7 +72,7 @@ describe("clic en conectar", () => {
     fetchMock
       .mockResolvedValueOnce(resp(200, { status: "expired" }))
       .mockResolvedValueOnce(resp(500, { detail: "boom" }));
-    render(<ConectarGoogleAds />);
+    render(<ConectarGoogleAds navegar={assign} />);
     fireEvent.click(await screen.findByRole("button", { name: "Reconectar" }));
     expect(await screen.findByRole("alert")).toBeTruthy();
     expect(assign).not.toHaveBeenCalled();
@@ -89,7 +83,7 @@ describe("clic en conectar", () => {
     fetchMock
       .mockResolvedValueOnce(resp(200, { status: "not_connected" }))
       .mockResolvedValueOnce(resp(500, {}));
-    const { container } = render(<ConectarGoogleAds />);
+    const { container } = render(<ConectarGoogleAds navegar={assign} />);
     fireEvent.click(await screen.findByRole("button", { name: "Conectar Google Ads" }));
     await screen.findByRole("alert");
     const todo = JSON.stringify(logs.map((l) => l.mock.calls)) + container.innerHTML;
