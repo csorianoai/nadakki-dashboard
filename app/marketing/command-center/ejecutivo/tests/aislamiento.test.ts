@@ -50,4 +50,21 @@ describe("aislamiento de los datos DEMO", () => {
     const usadas = Array.from(s.matchAll(/env\.([A-Z_]+)/g)).map((m) => m[1]);
     expect(Array.from(new Set(usadas)).sort()).toEqual(["NEXT_PUBLIC_ANALYTICS_DEMO", "NODE_ENV", "VERCEL_ENV"]);
   });
+
+  it("la pantalla usa SOLO tokens del kit: ni forgeGray/forgeBrand/forgeSurface/forgeSuccess/forgeWarning/forgeDanger/forgeViz ni hex ni clases de color de Tailwind", () => {
+    const prohibidos = /forge(Gray|Brand|Surface|Success|Warning|Danger|Viz|Info)-|#[0-9a-fA-F]{3,8}\b|\b(?:bg|text|border|fill|stroke|ring|divide|from|to|via)-(?:white|black|slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)(?:-\d{2,3})?\b/;
+    for (const f of fuentes) {
+      const s = readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+      const hallazgos = s.match(new RegExp(prohibidos.source, "g")) ?? [];
+      expect({ f: f.replace(RAIZ, ""), hallazgos }).toEqual({ f: f.replace(RAIZ, ""), hallazgos: [] });
+    }
+  });
+
+  it("la pantalla no fija un locale ni una moneda: nada de Intl, toLocale*, 'es-US' ni 'USD' como literal fuera del adaptador de datos", () => {
+    for (const f of fuentes) {
+      const s = readFileSync(f, "utf8").replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+      expect({ f: f.replace(RAIZ, ""), intl: /\bIntl\.|toLocale(Date|Time|String)?\(/.test(s) }).toEqual({ f: f.replace(RAIZ, ""), intl: false });
+      expect({ f: f.replace(RAIZ, ""), literal: /["'](es-US|en-US|es-AR|USD|ARS)["']/.test(s) }).toEqual({ f: f.replace(RAIZ, ""), literal: false });
+    }
+  });
 });

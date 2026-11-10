@@ -3,6 +3,11 @@
  */
 import { render, screen } from "@testing-library/react";
 
+// El formato sale de la configuracion del tenant (useTenantBranding); en estos tests no hay proveedores de la app.
+jest.mock("@/lib/hooks/useTenantBranding", () => ({
+  useTenantBranding: () => ({ data: (globalThis as { __BRANDING__?: unknown }).__BRANDING__ ?? null }),
+}));
+
 jest.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
@@ -12,6 +17,7 @@ jest.mock("next/navigation", () => ({
 const ENV0 = { ...process.env };
 afterEach(() => {
   process.env = { ...ENV0 };
+  delete (globalThis as { __BRANDING__?: unknown }).__BRANDING__;
 });
 
 function fijarEntorno(e: Record<string, string | undefined>) {
@@ -91,5 +97,29 @@ describe("ruta /marketing/command-center/ejecutivo", () => {
     const Page = await cargarPagina();
     render(await Page({ searchParams: Promise.resolve({ estado: "<script>" }) }));
     expect(screen.getByRole("group", { name: "Inversión" })).toBeInTheDocument();
+  });
+
+  it("tema: oscuro por defecto (flujo de revision); ?tema=claro lo cambia; valores raros se ignoran", async () => {
+    fijarEntorno({ VERCEL_ENV: "preview" });
+    const Page = await cargarPagina();
+    const { unmount } = render(await Page({ searchParams: Promise.resolve({}) }));
+    expect(screen.getByTestId("command-center-ejecutivo")).toHaveAttribute("data-theme", "dark");
+    unmount();
+    const { unmount: u2 } = render(await Page({ searchParams: Promise.resolve({ tema: "claro" }) }));
+    expect(screen.getByTestId("command-center-ejecutivo")).toHaveAttribute("data-theme", "light");
+    u2();
+    render(await Page({ searchParams: Promise.resolve({ tema: "<x>" }) }));
+    expect(screen.getByTestId("command-center-ejecutivo")).toHaveAttribute("data-theme", "dark");
+  });
+
+  it("formato por tenant: el branding del tenant (locale/currency) formatea la pantalla; sin branding, es-US/USD", async () => {
+    fijarEntorno({ VERCEL_ENV: "preview" });
+    const Page = await cargarPagina();
+    const { container, unmount } = render(await Page({ searchParams: Promise.resolve({}) }));
+    expect(container.textContent).toContain("4,820");
+    unmount();
+    (globalThis as { __BRANDING__?: unknown }).__BRANDING__ = { locale: "es-AR", currency: "ARS" };
+    const r = render(await Page({ searchParams: Promise.resolve({}) }));
+    expect(r.container.textContent).toContain("4.820");
   });
 });

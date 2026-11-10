@@ -12,7 +12,17 @@ Se resuelve en el servidor, en `flag.ts`, sin tocar variables de Vercel:
 | otro entorno (local/tests) | ENCENDIDO solo con `NEXT_PUBLIC_ANALYTICS_DEMO === "1"` y `NODE_ENV !== "production"` |
 | build de produccion fuera de Vercel | APAGADO |
 
-`?estado=cargando|error|vacio|desactualizado` solo se honra en demo, para revisar los estados.
+`?estado=cargando|error|vacio|desactualizado` solo se honra en demo, para revisar los estados. `?tema=claro` muestra el tema claro (control); **por defecto es OSCURO (azul noche)**, la version que se revisa para BASELINE_APPROVED. El boton «Oscuro/Claro» de la cabecera alterna el tema (no se guarda).
+
+## Tema y formato (decisiones de Cesar, 10-nov-2026)
+- **Tema oscuro esencial.** La pantalla usa SOLO los tokens semanticos del kit (`--kit-*`, `components/analytics/kit/tema.css`) en claro y en oscuro: nada de `forgeGray-*`, hex ni colores de Tailwind (lo comprueba `tests/aislamiento.test.ts`). El tema se aplica con `data-theme` en la raiz de la pantalla (el mecanismo de Forge).
+- **Formato por tenant.** Locale y moneda salen de la configuracion de cada tenant: `PantallaDemo` lee `useTenantBranding()` y monta `<FormatoProvider formato={formatoDesdeTenant(branding)}>`; sin dato, es-US / USD. La pantalla no fija ningun locale ni moneda (el test de aislamiento lo vigila). La moneda propia de una cifra manda sobre la del tenant.
+
+## Criterios visuales obligatorios (Cesar)
+1. **Jerarquia ejecutiva.** En escritorio, el primer viewport (1440x900 y 1920x1080, sin scroll) muestra los tres KPI, el estado preliminar de rendimiento (chip del CPA y semaforo) y el inicio del grafico principal. Para ello los indicadores secundarios van DESPUES del grafico (el diseno los ponia antes). Lo mide `tests/e2e/pantalla.spec.ts` («criterio 1»).
+2. **Identidad premium.** Azul noche, tarjetas elevadas de radio 18 px, numero grande en tipografia Display y espaciado del diseno V2; sin barra lateral propia (el dashboard ya tiene su menu) y con la navegacion de secciones en la cabecera.
+3. **Semaforo responsable.** «CPA por debajo del objetivo» NO es «rentabilidad confirmada». Con menos de `CONVERSIONES_MUESTRA_CONFIABLE` conversiones (15: **propuesta a confirmar por Cesar**, ver `semaforo.ts`) la lectura es «Rendimiento preliminar». La rentabilidad queda siempre «sin confirmar» (o «en revision» si hay cierres CRM): la pantalla nunca la confirma. Los supuestos financieros (objetivo, equilibrio, comision, tasa de cierre) y la ausencia de cierres CRM estan siempre visibles junto al CPA.
+4. **Movil.** Lo esencial primero: pestañas, CPA con su estado preliminar, barra del semaforo, supuestos y CRM; despues Inversion y Leads, el grafico y, plegados en `<details>` (operables con teclado), los indicadores secundarios, el detalle de supuestos y «Más opciones» (comparar, otras secciones).
 
 ## Datos
 `demo/datos-demo.ts` (DEMO/PROTOTIPO) solo se carga con `import()` dinamico desde `page.tsx` y despues del flag. Cuando existan T6a, B2-T1 y B2-T2 se sustituye por un adaptador real con el mismo tipo (`tipos.ts`); contrato esperado: `docs/marketing/analytics-contratos/M1_resumen_ejecutivo.md` (rama `claude/relaxed-mccarthy-iaw4fa-contratos-ola1-2` de nadakki-ai-suite).
@@ -26,7 +36,9 @@ Todo control inhabilitado es un boton con `aria-disabled="true"`, alcanzable por
 | Comparar: periodo anterior | **Funcional** (`aria-pressed`) | Muestra/oculta la serie del periodo anterior en el grafico |
 | Ordenar columnas de Campañas, paginacion | **Funcional** (kit) | El diseno los dejaba inhabilitados; el kit ya los trae operables |
 | Ver tabla de datos (grafico) | **Funcional** | Alternativa accesible del grafico |
-| Pestañas moviles (< 640 px) | **Funcional** | Resumen / Campañas / Calidad de los datos |
+| Pestañas moviles (< 640 px) | **Funcional** | Resumen / Campañas / Calidad |
+| Tema Oscuro / Claro | **Funcional** (`aria-pressed`) | Alterna el tema de la pantalla; no se persiste |
+| «Más opciones», «Indicadores secundarios», «Supuestos financieros y fuentes» (movil) | **Funcional** (`<details>`) | Detalles plegados por defecto |
 | Reintentar (estado de error) | **Funcional** | Recarga la pagina sin `?estado` |
 | Campaign Intelligence | Inhabilitado | Se construye tras el BASELINE_APPROVED de esta pantalla |
 | Conversiones e ingresos | Inhabilitado | Idem |

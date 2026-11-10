@@ -2,6 +2,7 @@
 
 import { useId, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
+import { NOTA } from "./estilos";
 
 export interface ControlInhabilitadoProps {
   children: ReactNode;
@@ -29,14 +30,13 @@ export function ControlInhabilitado({ children, disponibleCuando, className, vis
         data-control="inhabilitado"
         onClick={(e) => e.preventDefault()}
         className={cn(
-          "min-h-[44px] max-w-full cursor-not-allowed rounded-forge-sm border border-dashed border-forgeGray-300 bg-forgeGray-50 px-3 text-left text-forge-sm font-medium text-forgeGray-600",
-          "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-600",
+          "kit-foco kit-bg-hundida kit-bd-control kit-txt-2 min-h-[44px] max-w-full cursor-not-allowed rounded-[10px] border border-dashed px-3 text-left text-[13px] font-medium",
           className
         )}
       >
         {children}
       </button>
-      <span id={id} className={visible ? "text-forge-xs text-forgeGray-600" : "sr-only"}>
+      <span id={id} className={visible ? NOTA : "sr-only"}>
         {texto}
       </span>
     </span>

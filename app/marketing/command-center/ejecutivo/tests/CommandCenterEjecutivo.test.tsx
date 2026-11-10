@@ -39,14 +39,15 @@ describe("Executive Command Center · contenido con datos DEMO", () => {
       expect(within(g).getByText(/Fuente: DEMO/)).toBeInTheDocument();
       expect(within(g).getByText(/Dato al 9 nov 2026/)).toBeInTheDocument();
     }
-    expect(within(screen.getByRole("group", { name: "Inversión" })).getByTestId("cifra-variacion")).toHaveTextContent("+12,0 %");
+    expect(within(screen.getByRole("group", { name: "Inversión" })).getByTestId("cifra-variacion")).toHaveTextContent("+12.0%");
   });
 
-  it("CPA: un costo que baja es mejora y se lee 'Bajo objetivo'", () => {
+  it("CPA: un costo que baja es mejora; con 13 conversiones la lectura es 'Rendimiento preliminar' (no 'Bajo objetivo' a secas)", () => {
     montar();
     const cpa = screen.getByTestId("kpi-cpa");
     expect(within(cpa).getByTestId("cifra-variacion")).toHaveAttribute("data-sentido", "mejor");
-    expect(within(cpa).getByTestId("cpa-lectura")).toHaveTextContent(/Bajo objetivo/i);
+    expect(within(cpa).getByTestId("cpa-lectura")).toHaveTextContent(/Rendimiento preliminar/i);
+    expect(within(cpa).getByTestId("cpa-vs-objetivo")).toHaveTextContent(/CPA por debajo del objetivo/i);
   });
 
   it("indicadores secundarios: cinco, con fuente comun", () => {
@@ -65,10 +66,10 @@ describe("Executive Command Center · contenido con datos DEMO", () => {
     expect(screen.getByText(/Los 3 últimos días \(7 nov–9 nov\) pueden estar incompletos/)).toBeInTheDocument();
   });
 
-  it("semaforo economico: bajo objetivo, muestra pequena y rentabilidad pendiente de CRM", () => {
+  it("semaforo economico: rendimiento preliminar, muestra pequena y rentabilidad pendiente de CRM", () => {
     montar();
     const s = screen.getByTestId("semaforo");
-    expect(within(s).getByTestId("semaforo-lectura")).toHaveTextContent("Bajo el CPA objetivo");
+    expect(within(s).getByTestId("semaforo-lectura")).toHaveTextContent("Rendimiento preliminar");
     expect(within(s).getByText(/muestra pequeña/)).toBeInTheDocument();
     expect(within(s).getByText("Pendiente CRM")).toBeInTheDocument();
     expect(within(s).getByText(/no prueba rentabilidad/)).toBeInTheDocument();

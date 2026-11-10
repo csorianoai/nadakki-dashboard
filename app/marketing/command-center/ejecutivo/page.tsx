@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { analyticsDemoActivo } from "./flag";
 import { PantallaDemo } from "./PantallaDemo";
-import type { EstadoPantalla } from "./tipos";
+import type { EstadoPantalla, TemaPantalla } from "./tipos";
 
 /**
  * Executive Command Center — pantalla patron de Nadakki Analytics (Fase C). SOLO vista previa.
@@ -29,14 +29,22 @@ function leerEstado(sp: Busqueda | undefined): "ok" | EstadoPantalla | "desactua
   return e === "cargando" || e === "error" || e === "vacio" || e === "desactualizado" ? e : "ok";
 }
 
+/** `?tema=claro|oscuro`. Por defecto OSCURO (azul noche): es la version que se revisa para BASELINE_APPROVED. */
+function leerTema(sp: Busqueda | undefined): TemaPantalla {
+  const v = sp?.tema;
+  const t = Array.isArray(v) ? v[0] : v;
+  return t === "claro" || t === "light" ? "light" : "dark";
+}
+
 export default async function Page({ searchParams }: { searchParams?: Promise<Busqueda> | Busqueda }) {
   if (!analyticsDemoActivo()) notFound();
 
   const { DATOS_DEMO, AHORA_DEMO } = await import("./demo/datos-demo");
-  const pedido = leerEstado(await searchParams);
+  const busqueda = await searchParams;
+  const pedido = leerEstado(busqueda);
   const estado: EstadoPantalla = pedido === "desactualizado" ? "ok" : pedido;
   // Reloj de la demo congelado (determinista); "desactualizado" lo adelanta 4 dias para mostrar el aviso.
   const ahora = pedido === "desactualizado" ? new Date(Date.parse(AHORA_DEMO) + 4 * 86_400_000).toISOString() : AHORA_DEMO;
 
-  return <PantallaDemo datos={DATOS_DEMO} estado={estado} ahora={ahora} />;
+  return <PantallaDemo datos={DATOS_DEMO} estado={estado} ahora={ahora} tema={leerTema(busqueda)} />;
 }

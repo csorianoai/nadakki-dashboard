@@ -88,6 +88,7 @@ export const DATOS_DEMO: DatosCommandCenter = {
     rango_probable: { min: 37, max: 65 },
     fuente: "DEMO · modelo económico de ejemplo (B2-T1/B2-T2 pendientes)",
     fecha_dato: FECHA,
+    cierres_crm: null,
   },
   campanas: [
     campana("c1", "Intracoastal Yacht Club · Alquiler", 341.2, 9),

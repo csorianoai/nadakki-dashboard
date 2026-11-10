@@ -31,6 +31,8 @@ export interface SupuestosEconomicos {
   /** Fuente y fecha de los supuestos. */
   fuente: string | null;
   fecha_dato: string | null;
+  /** Cierres reales confirmados por el CRM en el periodo. null = el CRM aun no esta integrado ("pendiente"). */
+  cierres_crm: number | null;
 }
 
 export type TonoCalidad = "ok" | "aviso" | "neutro";
@@ -71,3 +73,6 @@ export interface DatosCommandCenter {
 }
 
 export type EstadoPantalla = "ok" | "cargando" | "error" | "vacio";
+
+/** Tema de la pantalla. "dark" = azul noche (diseno aprobado), el que se revisa para BASELINE_APPROVED. */
+export type TemaPantalla = "dark" | "light";

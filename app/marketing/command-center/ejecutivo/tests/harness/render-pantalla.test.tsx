@@ -9,7 +9,7 @@ import { join } from "path";
 import { fireEvent, render } from "@testing-library/react";
 import { CommandCenterEjecutivo } from "../../CommandCenterEjecutivo";
 import { AHORA_DEMO, DATOS_DEMO } from "../../demo/datos-demo";
-import type { EstadoPantalla } from "../../tipos";
+import type { EstadoPantalla, TemaPantalla } from "../../tipos";
 
 const OUT = process.env.COMMAND_CENTER_HARNESS_OUT;
 const run = OUT ? it : it.skip;
@@ -23,8 +23,9 @@ function documento(cuerpo: string, titulo: string) {
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${titulo} (DEMO)</title><link rel="stylesheet" href="kit.css"></head><body>${cuerpo}</body></html>`;
 }
 
-// Ancho real que tienen los graficos dentro del panel en cada viewport (contenedor max 1440 px, 2/3 de la rejilla en escritorio).
-const ANCHO = { "1920x1080": 880, "1440x900": 880, "390x844": 326, "320x568": 256 } as const;
+// Ancho real que tienen los graficos dentro del panel en cada viewport (contenedor max 1600 px con 32 px de margen lateral,
+// 2/3 de la rejilla de tres columnas con 16 px de hueco, menos el relleno del panel).
+const ANCHO = { "1920x1080": 986, "1440x900": 880, "390x844": 326, "320x568": 256 } as const;
 type VP = keyof typeof ANCHO;
 const MOVIL = (vp: VP) => vp === "390x844" || vp === "320x568";
 
@@ -34,11 +35,19 @@ interface Caso {
   inicial?: string;
   estado?: EstadoPantalla;
   ahora?: string;
+  /** Por defecto "dark" (azul noche, la version a revisar). "light" = control. */
+  tema?: TemaPantalla;
+  /** Abre los <details> (movil) para comprobar que lo expandido tampoco desborda. */
+  expandido?: boolean;
 }
 
 const CASOS: Caso[] = [
   { archivo: "ok-escritorio-1920x1080.html", vp: "1920x1080" },
   { archivo: "ok-escritorio-1440x900.html", vp: "1440x900" },
+  // Control en tema claro (la version que se revisa es la oscura).
+  { archivo: "claro-escritorio-1440x900.html", vp: "1440x900", tema: "light" },
+  { archivo: "claro-movil-resumen-390x844.html", vp: "390x844", tema: "light" },
+  ...(["390x844", "320x568"] as VP[]).map((vp) => ({ archivo: `ok-movil-expandido-${vp}.html`, vp, expandido: true })),
   ...(["390x844", "320x568"] as VP[]).flatMap((vp) => [
     { archivo: `ok-movil-resumen-${vp}.html`, vp, inicial: "resumen" },
     { archivo: `ok-movil-campanas-${vp}.html`, vp, inicial: "campanas" },
@@ -61,7 +70,7 @@ describe("harness de la pantalla patron (Executive Command Center)", () => {
     for (const c of CASOS) {
       conMatchMedia(MOVIL(c.vp));
       const { container, unmount } = render(
-        <CommandCenterEjecutivo datos={DATOS_DEMO} estado={c.estado} ahora={c.ahora ?? AHORA_DEMO} demo anchoGrafico={ANCHO[c.vp]} />
+        <CommandCenterEjecutivo datos={DATOS_DEMO} estado={c.estado} ahora={c.ahora ?? AHORA_DEMO} demo anchoGrafico={ANCHO[c.vp]} tema={c.tema} />
       );
       // La seleccion de pestana inicial no es una prop de la pantalla: en movil se activa la pestana pedida simulando el clic.
       if (c.inicial && c.inicial !== "resumen") {
@@ -70,6 +79,7 @@ describe("harness de la pantalla patron (Executive Command Center)", () => {
         expect(pestana).toBeTruthy();
         fireEvent.click(pestana as HTMLElement);
       }
+      if (c.expandido) container.querySelectorAll("details").forEach((d) => (d.open = true));
       const html = documento(container.innerHTML, c.archivo);
       writeFileSync(join(OUT as string, c.archivo), html);
       expect(html).toContain("DEMO");
