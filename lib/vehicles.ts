@@ -29,6 +29,10 @@ export interface Vehicle {
   refId?: string;
   /** Numero REAL de fotos de la unidad (solo si el backend lo trae). */
   photoCount?: number;
+  /** URLs REALES de las fotos de la unidad (solo si el backend las trae). */
+  photos?: string[];
+  /** Foto principal real (primary_photo_url del buscador). */
+  primaryPhotoUrl?: string;
 }
 
 const DEALERS = ["AutoMundo RD", "Motores del Este", "Autos del Cibao", "Caribe Motors"] as const;
@@ -247,7 +251,8 @@ export function getVehicleById(id: number | string): Vehicle | undefined {
 }
 
 /** Fotos reales de la unidad; undefined si no se conoce (nunca se inventa). */
-export function photoCount(vehicle: Pick<Vehicle, "photoCount">): number | undefined {
+export function photoCount(vehicle: Pick<Vehicle, "photoCount" | "photos">): number | undefined {
+  if (vehicle.photos && vehicle.photos.length > 0) return vehicle.photos.length;
   const n = vehicle.photoCount;
   return typeof n === "number" && Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined;
 }

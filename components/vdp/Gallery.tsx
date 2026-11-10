@@ -17,7 +17,9 @@ export function Gallery({ vehicle }: { vehicle: Vehicle }) {
   const [idx, setIdx] = useState(0);
   const total = photoCount(vehicle);
   const status = priceStatus(vehicle.badge, vehicle.match);
-  const thumbCount = Math.min(5, total ?? 0);
+  const photos = vehicle.photos ?? [];
+  const thumbCount = photos.length > 0 ? photos.length : Math.min(5, total ?? 0);
+  const mainUrl = photos[idx] ?? (idx === 0 ? vehicle.primaryPhotoUrl : undefined);
 
   return (
     <div className="space-y-3">
@@ -26,11 +28,20 @@ export function Gallery({ vehicle }: { vehicle: Vehicle }) {
         style={{
           background: getVehicleGradient(vehicle),
           aspectRatio: "16/10",
-          filter: THUMBNAIL_FILTERS[idx] ?? "hue-rotate(0deg)",
+          filter: mainUrl ? undefined : THUMBNAIL_FILTERS[idx] ?? "hue-rotate(0deg)",
         }}
         role="img"
         aria-label={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
       >
+        {mainUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={mainUrl} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        ) : null}
+        {!total && !mainUrl ? (
+          <p className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-white/90">
+            Sin fotos todavía
+          </p>
+        ) : null}
         <QualityBadge status={status} className="absolute left-3 top-3" />
         <div className="absolute right-3 top-3 flex gap-2">
           <button
@@ -69,13 +80,18 @@ export function Gallery({ vehicle }: { vehicle: Vehicle }) {
             aria-label={`Foto ${i + 1}`}
             aria-current={idx === i}
           >
-            <div
-              className="absolute inset-0"
-              style={{
-                background: getVehicleGradient(vehicle),
-                filter: THUMBNAIL_FILTERS[i] ?? undefined,
-              }}
-            />
+            {photos[i] ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photos[i]} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            ) : (
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: getVehicleGradient(vehicle),
+                  filter: THUMBNAIL_FILTERS[i] ?? undefined,
+                }}
+              />
+            )}
           </button>
         ))}
       </div>
