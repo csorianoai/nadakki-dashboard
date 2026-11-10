@@ -1,8 +1,10 @@
 "use client";
 
+import "./tema.css";
 import { useState } from "react";
 import { PanelGrafico } from "./PanelGrafico";
 import { formatearPorcentaje, formatearValor, type EstadoCifra, type UnidadCifra } from "@/lib/analytics/cifra";
+import { useFormato } from "./FormatoProvider";
 import { agruparTopN, estadoGrafico, redondear, type DatoCategoria, type MetaGrafico } from "@/lib/analytics/graficos";
 import { cn } from "@/lib/utils";
 
@@ -18,8 +20,8 @@ export interface DonutProps {
 }
 
 /* Clases literales para que Tailwind las genere; "Otros" va siempre en gris. */
-const TRAZOS = ["stroke-forgeViz-1", "stroke-forgeViz-2", "stroke-forgeViz-3", "stroke-forgeViz-4", "stroke-forgeViz-5", "stroke-forgeViz-6"];
-const RELLENOS = ["bg-forgeViz-1", "bg-forgeViz-2", "bg-forgeViz-3", "bg-forgeViz-4", "bg-forgeViz-5", "bg-forgeViz-6"];
+const TRAZOS = ["kit-stroke-viz-1", "kit-stroke-viz-2", "kit-stroke-viz-3", "kit-stroke-viz-4", "kit-stroke-viz-5", "kit-stroke-viz-6"];
+const RELLENOS = ["kit-bg-viz-1", "kit-bg-viz-2", "kit-bg-viz-3", "kit-bg-viz-4", "kit-bg-viz-5", "kit-bg-viz-6"];
 
 const R = 70;
 const C = 2 * Math.PI * R;
@@ -31,7 +33,8 @@ export function Donut({ meta, datos, unidad, moneda, maxCategorias = 5, onReinte
   const total = items.reduce((s, d) => s + d.valor, 0);
   let estado: EstadoCifra = estadoGrafico(meta, datos.length);
   if (estado === "ok" && (items.length === 0 || !(total > 0))) estado = "datos_insuficientes";
-  const fmt = (v: number) => formatearValor({ valor: v, unidad, moneda });
+  const formato = useFormato();
+  const fmt = (v: number) => formatearValor({ valor: v, unidad, moneda }, formato);
   const pct = (v: number) => (total > 0 ? Math.round((v / total) * 1000) / 10 : 0);
   const esOtros = (i: number) => i === items.length - 1 && items[i].etiqueta === "Otros";
 
@@ -43,7 +46,7 @@ export function Donut({ meta, datos, unidad, moneda, maxCategorias = 5, onReinte
     return seg;
   });
 
-  const tabla = { columnas: ["Categoría", "Valor", "Porcentaje"], filas: items.map((d) => [d.etiqueta, fmt(d.valor), formatearPorcentaje(pct(d.valor), 1)]) };
+  const tabla = { columnas: ["Categoría", "Valor", "Porcentaje"], filas: items.map((d) => [d.etiqueta, fmt(d.valor), formatearPorcentaje(pct(d.valor), 1, formato)]) };
   const nota = descartados > 0 ? `${descartados} ${descartados === 1 ? "categoría descartada" : "categorías descartadas"} (valor cero, negativo o sin dato).` : undefined;
 
   return (
@@ -63,16 +66,16 @@ export function Donut({ meta, datos, unidad, moneda, maxCategorias = 5, onReinte
                 strokeWidth={activo === i ? 34 : 28}
                 strokeDasharray={`${largo} ${redondear(C - largo, 3)}`}
                 strokeDashoffset={desplazamiento}
-                className={esOtros(i) ? "stroke-forgeGray-400" : TRAZOS[i % TRAZOS.length]}
+                className={esOtros(i) ? "kit-stroke-otros" : TRAZOS[i % TRAZOS.length]}
               >
-                <title>{`${d.etiqueta}: ${fmt(d.valor)} (${formatearPorcentaje(pct(d.valor), 1)})`}</title>
+                <title>{`${d.etiqueta}: ${fmt(d.valor)} (${formatearPorcentaje(pct(d.valor), 1, formato)})`}</title>
               </circle>
             ))}
           </g>
-          <text x="100" y="96" textAnchor="middle" className="fill-forgeGray-600 text-[11px]">
+          <text x="100" y="96" textAnchor="middle" className="kit-fill-txt-2 text-[11px]">
             Total
           </text>
-          <text x="100" y="116" textAnchor="middle" className="fill-forgeGray-800 text-[16px] font-semibold">
+          <text x="100" y="116" textAnchor="middle" className="kit-fill-txt text-[16px] font-semibold">
             {fmt(total)}
           </text>
         </svg>
@@ -86,18 +89,18 @@ export function Donut({ meta, datos, unidad, moneda, maxCategorias = 5, onReinte
               onMouseEnter={() => setActivo(i)}
               onMouseLeave={() => setActivo(null)}
               className={cn(
-                "flex min-h-[44px] items-center gap-2 rounded-forge-sm px-2 text-forge-xs text-forgeGray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-600",
-                activo === i && "bg-forgeGray-50"
+                "flex min-h-[44px] items-center gap-2 rounded-forge-sm px-2 text-forge-xs kit-txt kit-foco",
+                activo === i && "kit-bg-hundida"
               )}
             >
-              <span className={cn("inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold text-white", esOtros(i) ? "bg-forgeGray-500" : RELLENOS[i % RELLENOS.length])}>
+              <span className={cn("inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold kit-sobre-serie", esOtros(i) ? "kit-bg-otros" : RELLENOS[i % RELLENOS.length])}>
                 {i + 1}
               </span>
               <span className="min-w-0 flex-1 truncate" title={d.etiqueta}>
                 {d.etiqueta}
               </span>
               <span className="tabular-nums">{fmt(d.valor)}</span>
-              <span className="w-14 text-right font-medium tabular-nums">{formatearPorcentaje(pct(d.valor), 1)}</span>
+              <span className="w-14 text-right font-medium tabular-nums">{formatearPorcentaje(pct(d.valor), 1, formato)}</span>
             </li>
           ))}
         </ul>

@@ -4,6 +4,16 @@
  * Regla dura: nunca Infinity/NaN; una division por cero o un periodo anterior nulo es "datos insuficientes".
  */
 
+import {
+  FORMATO_POR_DEFECTO,
+  formatearDias,
+  formatearFecha as fechaDe,
+  formatearMoneda,
+  formatearNumero,
+  formatearPorcentaje as porcentajeDe,
+  type FormatoTenant,
+} from "./formato";
+
 export type EstadoCifra = "ok" | "cargando" | "error" | "vacio" | "datos_insuficientes" | "pendiente_integracion";
 
 export type UnidadCifra = "numero" | "moneda" | "porcentaje" | "duracion_dias";
@@ -55,35 +65,27 @@ export function estadoEfectivo(c: Cifra): EstadoCifra {
   return "ok";
 }
 
-const MESES = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
-
-/** "2026-11-10" -> "10 nov 2026". Determinista (UTC), sin depender de la zona horaria ni del ICU. */
-export function formatearFecha(iso: string | null | undefined): string | null {
-  if (!iso) return null;
-  const d = new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T00:00:00Z` : iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return `${d.getUTCDate()} ${MESES[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+/** "2026-11-10" -> fecha corta en el locale del tenant (por defecto es-US). null si no es fecha. */
+export function formatearFecha(iso: string | null | undefined, f: FormatoTenant = FORMATO_POR_DEFECTO): string | null {
+  return fechaDe(iso, f);
 }
 
-export function formatearPorcentaje(n: number, decimales = 1): string {
-  return `${n.toLocaleString("es", { minimumFractionDigits: decimales, maximumFractionDigits: decimales })} %`;
+/** `n` en puntos porcentuales (1,5 = 1,5 %), con la forma del locale del tenant. */
+export function formatearPorcentaje(n: number, decimales = 1, f: FormatoTenant = FORMATO_POR_DEFECTO): string {
+  return porcentajeDe(n, f, decimales);
 }
 
-export function formatearValor(c: Pick<Cifra, "valor" | "unidad" | "moneda">): string {
+/** Valor de la cifra con el formato del tenant. La moneda propia de la cifra, si la trae, manda sobre la del tenant. */
+export function formatearValor(c: Pick<Cifra, "valor" | "unidad" | "moneda">, f: FormatoTenant = FORMATO_POR_DEFECTO): string {
   if (!finito(c.valor)) return "—";
   switch (c.unidad) {
     case "porcentaje":
-      return formatearPorcentaje(c.valor, 1);
-    case "moneda": {
-      try {
-        return c.valor.toLocaleString("es", { style: "currency", currency: c.moneda ?? "USD", maximumFractionDigits: 2 });
-      } catch {
-        return c.valor.toLocaleString("es", { maximumFractionDigits: 2 });
-      }
-    }
+      return formatearPorcentaje(c.valor, 1, f);
+    case "moneda":
+      return formatearMoneda(c.valor, f, c.moneda);
     case "duracion_dias":
-      return `${c.valor.toLocaleString("es", { maximumFractionDigits: 1 })} d`;
+      return formatearDias(c.valor, f);
     default:
-      return c.valor.toLocaleString("es", { maximumFractionDigits: 2 });
+      return formatearNumero(c.valor, f, 2);
   }
 }

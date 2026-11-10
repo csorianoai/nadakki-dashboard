@@ -1,9 +1,11 @@
 "use client";
 
+import "./tema.css";
 import { useRef } from "react";
 import { PanelGrafico } from "./PanelGrafico";
 import { useAncho } from "./useAncho";
 import { formatearValor, type EstadoCifra, type UnidadCifra } from "@/lib/analytics/cifra";
+import { useFormato } from "./FormatoProvider";
 import { escalar, esFinito, estadoGrafico, margenIzquierdo, ordenarCategorias, redondear, ticksLineales, type DatoCategoria, type MetaGrafico } from "@/lib/analytics/graficos";
 
 export interface BarrasProps {
@@ -29,7 +31,8 @@ export function Barras({ meta, datos, unidad, moneda, orientacion = "horizontal"
   const validos = datos.filter((d) => esFinito(d.valor)).length;
   let estado: EstadoCifra = estadoGrafico(meta, datos.length);
   if (estado === "ok" && validos === 0) estado = "datos_insuficientes";
-  const fmt = (v: number | null) => formatearValor({ valor: v, unidad, moneda });
+  const formato = useFormato();
+  const fmt = (v: number | null) => formatearValor({ valor: v, unidad, moneda }, formato);
 
   const lista = (ordenar ? ordenarCategorias(datos) : [...datos]).filter((d) => esFinito(d.valor));
   const visibles = lista.slice(0, Math.max(1, maximo));
@@ -53,13 +56,13 @@ export function Barras({ meta, datos, unidad, moneda, orientacion = "horizontal"
               const w = span === 0 ? 0 : (Math.abs(v) / span) * 100;
               const izq = v < 0 ? cero - w : cero;
               return (
-                <li key={d.etiqueta} className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)_auto] items-center gap-2 text-forge-xs text-forgeGray-800 sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)_auto]">
+                <li key={d.etiqueta} className="grid grid-cols-[minmax(0,7rem)_minmax(0,1fr)_auto] items-center gap-2 text-forge-xs kit-txt sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)_auto]">
                   <span className="truncate" title={d.etiqueta}>
                     {d.etiqueta}
                   </span>
-                  <span className="relative block h-3 rounded-full bg-forgeGray-100" aria-hidden>
-                    <span data-barra="" data-signo={v < 0 ? "negativo" : "positivo"} className={`absolute top-0 h-3 rounded-full ${v < 0 ? "bg-forgeDanger-500" : "bg-forgeViz-1"}`} style={{ left: pc(izq), width: pc(w) }} />
-                    {maxNeg > 0 ? <span className="absolute top-[-2px] h-4 w-px bg-forgeGray-500" style={{ left: pc(cero) }} /> : null}
+                  <span className="relative block h-3 rounded-full kit-bg-hundida-2" aria-hidden>
+                    <span data-barra="" data-signo={v < 0 ? "negativo" : "positivo"} className={`absolute top-0 h-3 rounded-full ${v < 0 ? "kit-bg-error" : "kit-bg-viz-1"}`} style={{ left: pc(izq), width: pc(w) }} />
+                    {maxNeg > 0 ? <span className="absolute top-[-2px] h-4 w-px kit-bg-cero" style={{ left: pc(cero) }} /> : null}
                   </span>
                   <span className="text-right font-medium tabular-nums">{fmt(v)}</span>
                 </li>
@@ -90,8 +93,8 @@ function BarrasVerticales({ ancho, visibles, fmt, resumen }: { ancho: number; vi
     <svg role="img" aria-label={resumen} viewBox={`0 0 ${ancho} ${alto}`} className="block h-auto w-full" preserveAspectRatio="xMidYMid meet">
       {ticks.map((t) => (
         <g key={t}>
-          <line x1={M.izq} x2={ancho - M.der} y1={py(t)} y2={py(t)} className={t === 0 ? "stroke-forgeGray-400" : "stroke-forgeGray-200"} strokeWidth="1" />
-          <text x={M.izq - 6} y={py(t)} textAnchor="end" dominantBaseline="middle" className="fill-forgeGray-600 text-[11px]">
+          <line x1={M.izq} x2={ancho - M.der} y1={py(t)} y2={py(t)} className={t === 0 ? "kit-stroke-cero" : "kit-stroke-grid"} strokeWidth="1" />
+          <text x={M.izq - 6} y={py(t)} textAnchor="end" dominantBaseline="middle" className="kit-fill-txt-2 text-[11px]">
             {fmt(t)}
           </text>
         </g>
@@ -102,10 +105,10 @@ function BarrasVerticales({ ancho, visibles, fmt, resumen }: { ancho: number; vi
         const y = py(v);
         return (
           <g key={d.etiqueta}>
-            <rect data-barra="" data-signo={v < 0 ? "negativo" : "positivo"} x={redondear(cx - bw / 2)} y={Math.min(y, y0)} width={redondear(bw)} height={redondear(Math.max(1, Math.abs(y0 - y)))} rx="2" className={v < 0 ? "fill-forgeDanger-500" : "fill-forgeViz-1"}>
+            <rect data-barra="" data-signo={v < 0 ? "negativo" : "positivo"} x={redondear(cx - bw / 2)} y={Math.min(y, y0)} width={redondear(bw)} height={redondear(Math.max(1, Math.abs(y0 - y)))} rx="2" className={v < 0 ? "kit-fill-error" : "kit-fill-viz-1"}>
               <title>{`${d.etiqueta}: ${fmt(v)}`}</title>
             </rect>
-            <text x={cx} y={alto - 14} textAnchor="middle" className="fill-forgeGray-600 text-[11px]">
+            <text x={cx} y={alto - 14} textAnchor="middle" className="kit-fill-txt-2 text-[11px]">
               {corto(d.etiqueta)}
             </text>
           </g>

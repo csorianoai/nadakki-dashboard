@@ -1,5 +1,6 @@
 "use client";
 
+import "./tema.css";
 import { useId, useRef, useState, type KeyboardEvent } from "react";
 import { OPCIONES_PERIODO, periodoDeTipo, rangoValido, type TipoPeriodo } from "@/lib/analytics/periodo";
 import type { PeriodoAnalitica } from "@/lib/analytics/cifra";
@@ -12,7 +13,7 @@ export interface SelectorPeriodoProps {
 }
 
 const FOCO =
-  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-600";
+  "kit-foco";
 
 /** Selector de periodo accesible: radiogroup con roving tabindex y flechas; el rango personalizado se valida antes de emitir. */
 export function SelectorPeriodo({ valor, onChange, className }: SelectorPeriodoProps) {
@@ -59,7 +60,7 @@ export function SelectorPeriodo({ valor, onChange, className }: SelectorPeriodoP
   }
 
   const campo =
-    "min-h-[44px] w-full min-w-0 rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-card px-3 text-forge-sm text-forgeGray-800 " + FOCO;
+    "min-h-[44px] w-full min-w-0 rounded-forge-sm border kit-ctl px-3 text-forge-sm " + FOCO;
 
   return (
     <div className={cn("min-w-0", className)}>
@@ -80,9 +81,7 @@ export function SelectorPeriodo({ valor, onChange, className }: SelectorPeriodoP
               onKeyDown={(e) => alTeclear(e, i)}
               className={cn(
                 "min-h-[44px] min-w-0 rounded-forge-sm border px-3 text-forge-sm font-medium",
-                activo
-                  ? "border-forgeBrand-600 bg-forgeBrand-600 text-white"
-                  : "border-forgeGray-200 bg-forgeSurface-card text-forgeGray-800 hover:bg-forgeGray-50",
+                activo ? "kit-ctl-activo" : "kit-ctl",
                 FOCO
               )}
             >
@@ -94,19 +93,19 @@ export function SelectorPeriodo({ valor, onChange, className }: SelectorPeriodoP
       {valor.tipo === "personalizado" ? (
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="min-w-0">
-            <label htmlFor={`${id}-desde`} className="mb-1 block text-forge-xs font-medium text-forgeGray-600">
+            <label htmlFor={`${id}-desde`} className="mb-1 block text-forge-xs font-medium kit-txt-2">
               Desde
             </label>
             <input id={`${id}-desde`} type="date" value={borrador.desde} onChange={(e) => alCambiarFecha("desde", e.target.value)} className={campo} />
           </div>
           <div className="min-w-0">
-            <label htmlFor={`${id}-hasta`} className="mb-1 block text-forge-xs font-medium text-forgeGray-600">
+            <label htmlFor={`${id}-hasta`} className="mb-1 block text-forge-xs font-medium kit-txt-2">
               Hasta
             </label>
             <input id={`${id}-hasta`} type="date" value={borrador.hasta} onChange={(e) => alCambiarFecha("hasta", e.target.value)} className={campo} />
           </div>
           {errorRango ? (
-            <p role="alert" className="text-forge-xs text-forgeDanger-700 sm:col-span-2">
+            <p role="alert" className="text-forge-xs kit-txt-error sm:col-span-2">
               {errorRango}
             </p>
           ) : null}

@@ -5,9 +5,17 @@ import { motion } from "@/lib/motion-stub";
 import { Shield, Check, X, RefreshCw, Loader2, AlertCircle } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
+import { apiFetch } from "@/lib/api/fetch-client";
 
-/** Same-origin; proxied via next.config rewrites */
-const API_URL = "";
+/**
+ * Las compuertas son solo para superadministradores de plataforma: el backend responde 401 sin token y 403 con otro rol.
+ * apiFetch manda el Bearer y renueva el token; aqui solo se traducen esos dos estados a un mensaje claro.
+ */
+function mensajeAcceso(status: number): string | null {
+  if (status === 401) return "Tu sesión ha caducado: vuelve a iniciar sesión.";
+  if (status === 403) return "Acceso denegado: esta pantalla es solo para superadministradores de plataforma.";
+  return null;
+}
 
 type GateStatus = "PENDING" | "APPROVED" | "REJECTED";
 
@@ -48,11 +56,11 @@ export default function AdminGatesPage() {
     setError(null);
     setActionError(null);
 
-    fetch(`${API_URL}/api/v1/gates`)
+    apiFetch("/api/v1/gates")
       .then(async (r) => {
         if (!r.ok) {
           setGates([]);
-          setError(`No se pudieron cargar los gates (HTTP ${r.status}).`);
+          setError(mensajeAcceso(r.status) ?? `No se pudieron cargar los gates (HTTP ${r.status}).`);
           return;
         }
         const data = await r.json().catch(() => null);
@@ -96,13 +104,13 @@ export default function AdminGatesPage() {
     setActionError(null);
     setActioning(gateId);
     const path = action === "approve" ? "approve" : "reject";
-    fetch(`${API_URL}/api/v1/gates/${gateId}/${path}`, { method: "POST" })
+    apiFetch(`/api/v1/gates/${gateId}/${path}`, { method: "POST" })
       .then((r) => {
         if (r.ok) {
           fetchGates(true);
           return;
         }
-        setActionError(`No se pudo aplicar la acción al gate ${gateId} (HTTP ${r.status}).`);
+        setActionError(mensajeAcceso(r.status) ?? `No se pudo aplicar la acción al gate ${gateId} (HTTP ${r.status}).`);
       })
       .catch(() => setActionError(`No se pudo aplicar la acción al gate ${gateId} (error de red).`))
       .finally(() => setActioning(null));

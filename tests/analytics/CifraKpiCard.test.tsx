@@ -9,18 +9,18 @@ describe("CifraKpiCard", () => {
     render(<CifraKpiCard cifra={F.CIFRA_SUBE} />);
     expect(screen.getByText("Leads nuevos")).toBeInTheDocument();
     expect(screen.getByText("120")).toBeInTheDocument();
-    expect(norm(screen.getByTestId("cifra-variacion").textContent)).toContain("+20,0 %");
+    expect(norm(screen.getByTestId("cifra-variacion").textContent)).toContain("+20.0%");
     expect(screen.getByTestId("cifra-variacion").textContent).toContain("vs periodo anterior");
     expect(screen.getByText(/Fuente: PROTOTIPO · fixture de pruebas/)).toBeInTheDocument();
     expect(screen.getByText(/Dato al 10 nov 2026/)).toBeInTheDocument();
   });
   it("variacion negativa con signo menos tipografico", () => {
     render(<CifraKpiCard cifra={F.CIFRA_BAJA} />);
-    expect(norm(screen.getByTestId("cifra-variacion").textContent)).toContain("−25,0 %");
+    expect(norm(screen.getByTestId("cifra-variacion").textContent)).toContain("−25.0%");
   });
   it("variacion cero", () => {
     render(<CifraKpiCard cifra={F.CIFRA_IGUAL} />);
-    expect(norm(screen.getByTestId("cifra-variacion").textContent)).toContain("0,0 %");
+    expect(norm(screen.getByTestId("cifra-variacion").textContent)).toContain("0.0%");
   });
   it("periodo anterior 0 => 'Datos insuficientes' en la variacion, sin Infinity ni NaN", () => {
     const { container } = render(<CifraKpiCard cifra={F.CIFRA_ANTERIOR_CERO} />);

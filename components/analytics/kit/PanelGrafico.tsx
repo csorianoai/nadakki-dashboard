@@ -1,8 +1,10 @@
 "use client";
 
+import "./tema.css";
 import { useId, type ReactNode } from "react";
 import { EstadoAnalitica, type EstadoNoOk } from "./EstadoAnalitica";
 import { formatearFecha, type EstadoCifra } from "@/lib/analytics/cifra";
+import { useFormato } from "./FormatoProvider";
 import type { MetaGrafico } from "@/lib/analytics/graficos";
 import { cn } from "@/lib/utils";
 
@@ -30,13 +32,14 @@ export interface PanelGraficoProps {
  */
 export function PanelGrafico({ meta, estado, tabla, onReintentar, nota, children, className }: PanelGraficoProps) {
   const id = useId();
-  const fecha = formatearFecha(meta.fecha_dato);
+  const formato = useFormato();
+  const fecha = formatearFecha(meta.fecha_dato, formato);
   return (
-    <figure aria-labelledby={`${id}-t`} className={cn("m-0 min-w-0 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card p-4", className)}>
-      <figcaption id={`${id}-t`} className="text-forge-sm font-semibold text-forgeGray-800">
+    <figure aria-labelledby={`${id}-t`} className={cn("kit-tema m-0 min-w-0 rounded-forge-md border kit-bd kit-bg-sup p-4", className)}>
+      <figcaption id={`${id}-t`} className="text-forge-sm font-semibold kit-txt">
         {meta.titulo}
       </figcaption>
-      {meta.descripcion ? <p className="mt-1 text-forge-xs text-forgeGray-600">{meta.descripcion}</p> : null}
+      {meta.descripcion ? <p className="mt-1 text-forge-xs kit-txt-2">{meta.descripcion}</p> : null}
       {estado !== "ok" ? (
         <div className="mt-3">
           <EstadoAnalitica estado={estado as EstadoNoOk} descripcion={meta.mensaje} onReintentar={onReintentar} />
@@ -44,24 +47,24 @@ export function PanelGrafico({ meta, estado, tabla, onReintentar, nota, children
       ) : (
         <>
           <div className="mt-3 min-w-0">{children}</div>
-          {nota ? <p className="mt-2 text-forge-xs text-forgeGray-600">{nota}</p> : null}
-          <p className="mt-3 text-forge-xs text-forgeGray-500">
+          {nota ? <p className="mt-2 text-forge-xs kit-txt-2">{nota}</p> : null}
+          <p className="mt-3 text-forge-xs kit-txt-3">
             <span>Fuente: {meta.fuente}</span>
             <span aria-hidden> · </span>
             <span>Dato al {fecha}</span>
           </p>
           {tabla ? (
             <details className="mt-3">
-              <summary className="min-h-[44px] cursor-pointer py-3 text-forge-xs font-medium text-forgeBrand-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-600">
+              <summary className="min-h-[44px] cursor-pointer py-3 text-forge-xs font-medium kit-txt-acento kit-foco">
                 Ver tabla de datos
               </summary>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-forge-xs text-forgeGray-700">
+                <table className="w-full text-left text-forge-xs kit-txt-2">
                   <caption className="sr-only">{`${meta.titulo} (tabla de datos)`}</caption>
                   <thead>
                     <tr>
                       {tabla.columnas.map((c) => (
-                        <th key={c} scope="col" className="border-b border-forgeGray-200 px-2 py-1 font-medium text-forgeGray-800">
+                        <th key={c} scope="col" className="border-b kit-bd px-2 py-1 font-medium kit-txt">
                           {c}
                         </th>
                       ))}
@@ -72,11 +75,11 @@ export function PanelGrafico({ meta, estado, tabla, onReintentar, nota, children
                       <tr key={i}>
                         {f.map((celda, j) =>
                           j === 0 ? (
-                            <th key={j} scope="row" className="border-b border-forgeGray-100 px-2 py-1 font-normal">
+                            <th key={j} scope="row" className="border-b kit-bd-suave px-2 py-1 font-normal">
                               {celda}
                             </th>
                           ) : (
-                            <td key={j} className="border-b border-forgeGray-100 px-2 py-1 tabular-nums">
+                            <td key={j} className="border-b kit-bd-suave px-2 py-1 tabular-nums">
                               {celda}
                             </td>
                           )

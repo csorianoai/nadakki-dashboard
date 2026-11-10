@@ -1,5 +1,6 @@
 "use client";
 
+import "./tema.css";
 import type { ReactNode } from "react";
 import { EmptyState } from "@/components/forge/ui/EmptyState";
 import { Skeleton } from "@/components/forge/ui/Skeleton";
@@ -40,7 +41,7 @@ export function EstadoAnalitica({ estado, titulo, descripcion, onReintentar, com
         aria-busy="true"
         aria-label={t}
         data-estado="cargando"
-        className={cn("rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card p-5", className)}
+        className={cn("kit-tema rounded-forge-md border kit-bd kit-bg-sup p-5", className)}
       >
         <Skeleton className="h-3 w-24" />
         <Skeleton className={cn("mt-3 w-32", compacto ? "h-8" : "h-10")} />
@@ -54,7 +55,7 @@ export function EstadoAnalitica({ estado, titulo, descripcion, onReintentar, com
       <button
         type="button"
         onClick={onReintentar}
-        className="min-h-[44px] rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-card px-4 text-forge-sm font-medium text-forgeGray-800 hover:bg-forgeGray-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-600"
+        className="min-h-[44px] rounded-forge-sm border kit-ctl px-4 text-forge-sm font-medium kit-foco"
       >
         Reintentar
       </button>
@@ -64,10 +65,10 @@ export function EstadoAnalitica({ estado, titulo, descripcion, onReintentar, com
     <div
       role={estado === "error" ? "alert" : "status"}
       data-estado={estado}
-      className={cn("min-w-0", className)}
+      className={cn("kit-tema min-w-0", className)}
     >
       {estado === "pendiente_integracion" ? (
-        <span className="mb-2 inline-block rounded-full border border-forgeGray-200 bg-forgeGray-50 px-2 py-0.5 text-forge-xs font-medium text-forgeGray-700">
+        <span className="mb-2 inline-block rounded-full border px-2 py-0.5 text-forge-xs font-medium kit-chip-pendiente">
           Pendiente de integración
         </span>
       ) : null}

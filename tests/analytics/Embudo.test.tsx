@@ -9,8 +9,8 @@ describe("Embudo", () => {
     const items = within(lista).getAllByRole("listitem");
     expect(items).toHaveLength(5);
     expect(items[0].textContent).toMatch(/Contacto/);
-    expect(items[1].textContent).toMatch(/40,0 %/);
-    expect(screen.getByText(/conversión total/i).parentElement?.textContent).toMatch(/2,0 %/);
+    expect(items[1].textContent).toMatch(/40\.0\s?%/);
+    expect(screen.getByText(/conversión total/i).parentElement?.textContent).toMatch(/2\.0\s?%/);
   });
   it("las barras se escalan contra la primera etapa y quedan entre 0 y 100 %", () => {
     const { container } = render(<Embudo meta={META_OK} etapas={ETAPAS} />);

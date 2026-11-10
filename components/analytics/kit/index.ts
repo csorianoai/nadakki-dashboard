@@ -1,3 +1,5 @@
+export { FormatoProvider, useFormato } from "./FormatoProvider";
+export type { FormatoProviderProps } from "./FormatoProvider";
 export { CifraKpiCard, GrillaKpi } from "./CifraKpiCard";
 export type { CifraKpiCardProps } from "./CifraKpiCard";
 export { EstadoAnalitica } from "./EstadoAnalitica";

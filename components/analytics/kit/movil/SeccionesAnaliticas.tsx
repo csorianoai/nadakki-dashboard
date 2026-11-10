@@ -1,5 +1,6 @@
 "use client";
 
+import "../tema.css";
 import { useState, type ReactNode } from "react";
 import { Tabs } from "@/components/forge/ui/Tabs";
 import { cn } from "@/lib/utils";
@@ -29,10 +30,10 @@ export function SeccionesAnaliticas({ secciones, inicial, className }: Secciones
 
   if (!movil) {
     return (
-      <div className={cn("space-y-6", className)}>
+      <div className={cn("kit-tema space-y-6", className)}>
         {secciones.map((s) => (
           <section key={s.id} aria-labelledby={`seccion-${s.id}`} className="min-w-0">
-            <h2 id={`seccion-${s.id}`} className="mb-3 font-display text-forge-lg font-semibold text-forgeGray-800">
+            <h2 id={`seccion-${s.id}`} className="mb-3 font-display text-[length:var(--forge-text-lg,18px)] font-semibold kit-txt">
               {s.titulo}
             </h2>
             {s.contenido}
@@ -45,7 +46,7 @@ export function SeccionesAnaliticas({ secciones, inicial, className }: Secciones
   const valor = secciones.some((s) => s.id === activa) ? (activa as string) : secciones[0].id;
   return (
     <Tabs
-      className={cn("min-w-0", className)}
+      className={cn("kit-tema min-w-0", className)}
       variant="pills"
       value={valor}
       onValueChange={setActiva}
