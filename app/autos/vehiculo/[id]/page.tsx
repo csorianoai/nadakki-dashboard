@@ -7,16 +7,13 @@ import { VdpBreadcrumb } from "@/components/vdp/Breadcrumb";
 import { Gallery } from "@/components/vdp/Gallery";
 import { VehicleHeader } from "@/components/vdp/VehicleHeader";
 import { AddToCartButton } from "@/components/autos/AddToCartButton";
-import { MatchScore } from "@/components/vdp/MatchScore";
 import { SpecTabs } from "@/components/vdp/SpecTabs";
 import { PriceEvaluation } from "@/components/vdp/PriceEvaluation";
-import { PaymentCalculator } from "@/components/vdp/PaymentCalculator";
 import { ContactSeller } from "@/components/vdp/ContactSeller";
 import { TradeIn } from "@/components/vdp/TradeIn";
 import { StickyHeader, useVdpNavigation } from "@/components/vdp/StickyHeader";
 import { SimilarVehicles } from "@/components/vdp/SimilarVehicles";
 import { FinancingBridgeStatus } from "@/components/vdp/FinancingBridgeStatus";
-import { VehicleChatWidget } from "@/components/vdp/VehicleChatWidget";
 import { DemoModeBadge } from "@/components/search/DemoModeBadge";
 import { AutosErrorBoundary } from "@/components/system/AutosErrorBoundary";
 import { VehicleCardSkeleton } from "@/components/vehicle/VehicleCardSkeleton";
@@ -125,27 +122,17 @@ export default function AutosVehiculoDetailPage() {
             <Gallery vehicle={vehicle} />
             <VehicleHeader vehicle={vehicle} />
             <AddToCartButton vehicle={vehicle} vehicleRefId={id} className="mt-2" />
-            <div className="flex flex-wrap items-center gap-4">
-              <MatchScore match={vehicle.match} />
-            </div>
             <PriceEvaluation vehicle={vehicle} />
             <SpecTabs vehicle={vehicle} />
             <SimilarVehicles vehicle={vehicle} />
           </div>
 
           <div className="w-full min-w-[280px] flex-[1_1_320px] max-w-[370px] space-y-4">
-            <PaymentCalculator
-              vehicle={vehicle}
-              vehicleRefId={id}
-              saved={saved}
-              onSaveToggle={() => setSaved((s) => !s)}
-            />
             <ContactSeller vehicle={vehicle} />
             <TradeIn />
           </div>
         </div>
       </div>
-      <VehicleChatWidget vehicle={vehicle} />
     </AutosErrorBoundary>
   );
 }

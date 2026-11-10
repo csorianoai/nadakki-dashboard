@@ -1,10 +1,9 @@
-import { Check, Shield, Star } from "lucide-react";
+import { Check, Shield } from "lucide-react";
 
 export function TrustChips() {
   const chips = [
     { icon: Check, label: "Dealer Verificado", className: "text-nk-success" },
     { icon: Shield, label: "VIN validado", className: "text-brand" },
-    { icon: Star, label: "15 usuarios: precio justo", className: "text-nk-warning" },
   ] as const;
 
   return (
