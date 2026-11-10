@@ -3,6 +3,8 @@
  * Sin dependencias de React. Regla dura: nunca NaN/Infinity ni division por cero.
  */
 
+import { comparadorTexto, FORMATO_POR_DEFECTO, type FormatoTenant } from "./formato";
+
 export type Direccion = "asc" | "desc";
 
 export const NIVELES_CALOR = 5;
@@ -18,7 +20,6 @@ export function normalizarTexto(s: string): string {
     .toLowerCase();
 }
 
-const colador = new Intl.Collator("es", { sensitivity: "base", numeric: true });
 
 type Clave = string | number | null | undefined;
 
@@ -28,7 +29,8 @@ const esNulo = (k: Clave): k is null | undefined => k === null || k === undefine
  * Orden estable. Las claves nulas (o NaN/Infinity) van SIEMPRE al final, ascendente o descendente.
  * No muta la entrada.
  */
-export function ordenarPor<R>(filas: readonly R[], clave: (fila: R) => Clave, direccion: Direccion): R[] {
+export function ordenarPor<R>(filas: readonly R[], clave: (fila: R) => Clave, direccion: Direccion, formato: FormatoTenant = FORMATO_POR_DEFECTO): R[] {
+  const colador = comparadorTexto(formato);
   const signo = direccion === "asc" ? 1 : -1;
   return filas
     .map((fila, indice) => ({ fila, indice, k: clave(fila) }))

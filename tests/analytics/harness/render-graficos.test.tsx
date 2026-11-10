@@ -13,6 +13,8 @@ import { CATEGORIAS, ETAPAS, META_OK, PUNTOS, SERIE_ACTUAL, SERIE_ANTERIOR } fro
 
 const OUT = process.env.ANALYTICS_HARNESS_OUT;
 const run = OUT ? it : it.skip;
+/** Tema de la captura: ANALYTICS_HARNESS_TEMA=dark (azul noche) o light (por defecto). */
+const TEMA = process.env.ANALYTICS_HARNESS_TEMA === "dark" ? "dark" : "light";
 
 const VIEWPORTS = [
   { nombre: "1440x900", ancho: 660 },
@@ -34,11 +36,11 @@ function Seccion({ id, children }: { id: string; children: ReactNode }) {
 function Pagina({ ancho }: { ancho: number }) {
   const m = (titulo: string) => ({ ...META_OK, titulo });
   return (
-    <div className="forge-app min-h-screen bg-forgeSurface-sunken p-4 sm:p-6" data-theme="light">
-      <div data-testid="banner-prototipo" role="note" className="mb-4 rounded-forge-sm border border-forgeGray-200 bg-forgeGray-50 px-3 py-2 text-forge-xs font-medium text-forgeGray-700">
+    <div className="forge-app kit-fondo min-h-screen p-4 sm:p-6" data-theme={TEMA}>
+      <div data-testid="banner-prototipo" role="note" className="mb-4 rounded-forge-sm border kit-bd kit-bg-hundida px-3 py-2 text-forge-xs font-medium kit-txt-2">
         PROTOTIPO — datos de ejemplo deterministas, no son cifras reales de ningún tenant.
       </div>
-      <h1 className="mb-4 font-display text-forge-lg font-semibold text-forgeGray-800">Kit de analítica · Ola 0 · PR 2 · gráficos</h1>
+      <h1 className="mb-4 font-display text-[length:var(--forge-text-lg,18px)] font-semibold kit-txt">Kit de analítica · Ola 0 · PR 2 · gráficos</h1>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Seccion id="c-serie">
           <SerieTemporal meta={m("Leads por día (30 días)")} datos={{ actual: SERIE_LARGA, anterior: SERIE_LARGA_ANT }} unidad="numero" ancho={ancho} />

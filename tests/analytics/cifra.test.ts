@@ -43,7 +43,7 @@ describe("formato", () => {
   it("fecha ISO determinista en UTC", () => expect(formatearFecha("2026-11-10")).toBe("10 nov 2026"));
   it("fecha invalida => null", () => expect(formatearFecha("no-es-fecha")).toBeNull());
   it("numero", () => expect(formatearValor(F.CIFRA_SUBE)).toMatch(/^120$/));
-  it("porcentaje", () => expect(formatearValor(F.CIFRA_BAJA).replace(/\s/g, " ")).toBe("1,5 %"));
+  it("porcentaje", () => expect(formatearValor(F.CIFRA_BAJA).replace(/\s/g, " ")).toBe("1.5%"));
   it("moneda", () => expect(formatearValor(F.CIFRA_COSTO_SUBE)).toMatch(/12/));
   it("nunca devuelve NaN ni Infinity", () => {
     expect(formatearValor(F.CIFRA_NO_FINITA)).toBe("—");

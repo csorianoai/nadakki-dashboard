@@ -1,9 +1,11 @@
 "use client";
 
+import "../tema.css";
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { DataTable, type DataTableColumn } from "@/components/forge/ui/DataTable";
 import { EstadoAnalitica, type EstadoNoOk } from "../EstadoAnalitica";
 import { useEsMovil } from "../movil/useEsMovil";
+import { useFormato } from "../FormatoProvider";
 import { CeldaCifra } from "./CeldaCifra";
 import { estadoEfectivo, formatearFecha, type Cifra } from "@/lib/analytics/cifra";
 import { nivelCalor, normalizarTexto, ordenarPor, paginar, rangoCalor, type Direccion } from "@/lib/analytics/tabla";
@@ -42,9 +44,9 @@ export interface TablaAnaliticaProps<R> {
 }
 
 const BOTON =
-  "min-h-[44px] rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-card px-4 text-forge-sm font-medium text-forgeGray-800 hover:bg-forgeGray-50 disabled:cursor-not-allowed disabled:text-forgeGray-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-600";
+  "min-h-[44px] rounded-forge-sm border kit-ctl px-4 text-forge-sm font-medium kit-foco";
 const CAMPO =
-  "min-h-[44px] w-full min-w-0 rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-card px-3 text-forge-sm text-forgeGray-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-600";
+  "min-h-[44px] w-full min-w-0 rounded-forge-sm border kit-ctl px-3 text-forge-sm kit-foco";
 
 /** "1.250,5" no se interpreta: solo se acepta un numero simple con punto o coma decimal. */
 function aNumero(s: string): number | null {
@@ -67,6 +69,7 @@ export function TablaAnalitica<R>({
 }: TablaAnaliticaProps<R>) {
   const uid = useId();
   const movil = useEsMovil();
+  const formato = useFormato();
   const [orden, setOrden] = useState<{ columna: string; direccion: Direccion } | null>(ordenInicial ?? null);
   const [filtros, setFiltros] = useState<Record<string, string>>({});
   const [pagina, setPagina] = useState(1);
@@ -114,9 +117,10 @@ export function TablaAnalitica<R>({
         const cifra = col.cifra(f);
         return estadoEfectivo(cifra) === "ok" ? cifra.valor : null;
       },
-      orden.direccion
+      orden.direccion,
+      formato
     );
-  }, [filtradas, columnas, orden]);
+  }, [filtradas, columnas, orden, formato]);
 
   const pag = paginar(ordenadas, pagina, tamano);
 
@@ -126,11 +130,11 @@ export function TablaAnalitica<R>({
       if (c.tipo !== "cifra") continue;
       for (const f of filas) {
         const cifra = c.cifra(f);
-        if (estadoEfectivo(cifra) === "ok") set.add(`${cifra.fuente} · dato al ${formatearFecha(cifra.fecha_dato)}`);
+        if (estadoEfectivo(cifra) === "ok") set.add(`${cifra.fuente} · dato al ${formatearFecha(cifra.fecha_dato, formato)}`);
       }
     }
     return Array.from(set);
-  }, [columnas, filas]);
+  }, [columnas, filas, formato]);
 
   if (estado || filas.length === 0) {
     return <EstadoAnalitica estado={estado ?? "vacio"} onReintentar={onReintentar} />;
@@ -169,7 +173,7 @@ export function TablaAnalitica<R>({
           const campo = `${uid}-f-${c.id}`;
           return (
             <div key={c.id} className="min-w-0">
-              <label htmlFor={campo} className="mb-1 block text-forge-xs font-medium text-forgeGray-700">
+              <label htmlFor={campo} className="mb-1 block text-forge-xs font-medium kit-txt-2">
                 {c.tipo === "texto" ? `Filtrar ${c.encabezado}` : `${c.encabezado} — mínimo`}
               </label>
               <input
@@ -196,7 +200,7 @@ export function TablaAnalitica<R>({
   const controlesOrdenMovil = movil ? (
     <div className="mb-3 flex items-end gap-2">
       <div className="min-w-0 flex-1">
-        <label htmlFor={`${uid}-orden`} className="mb-1 block text-forge-xs font-medium text-forgeGray-700">
+        <label htmlFor={`${uid}-orden`} className="mb-1 block text-forge-xs font-medium kit-txt-2">
           Ordenar por
         </label>
         <select
@@ -245,13 +249,13 @@ export function TablaAnalitica<R>({
     cuerpo = (
       <ul role="list" aria-label={titulo} className="m-0 list-none space-y-3 p-0">
         {pag.items.map((fila) => (
-          <li key={obtenerId(fila)} className="min-w-0 rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card p-4">
-            <p className="mb-2 break-words font-semibold text-forgeGray-900">{celda(titular, fila)}</p>
+          <li key={obtenerId(fila)} className="min-w-0 rounded-forge-md border kit-bd kit-bg-sup p-4">
+            <p className="mb-2 break-words font-semibold kit-txt">{celda(titular, fila)}</p>
             <dl className="grid grid-cols-1 gap-2">
               {resto.map((c) => (
                 <div key={c.id} className="flex min-w-0 items-baseline justify-between gap-3">
-                  <dt className="shrink-0 text-forge-xs text-forgeGray-600">{c.encabezado}</dt>
-                  <dd className="m-0 min-w-0 text-right text-forge-sm text-forgeGray-800">{celda(c, fila)}</dd>
+                  <dt className="shrink-0 text-forge-xs kit-txt-2">{c.encabezado}</dt>
+                  <dd className="m-0 min-w-0 text-right text-forge-sm kit-txt">{celda(c, fila)}</dd>
                 </div>
               ))}
             </dl>
@@ -278,24 +282,24 @@ export function TablaAnalitica<R>({
   }
 
   return (
-    <div className="min-w-0">
+    <div className="kit-tema min-w-0">
       {barraFiltros}
       {controlesOrdenMovil}
       {cuerpo}
       {fuentes.length > 0 ? (
-        <p data-testid="tabla-fuentes" className="mt-3 text-forge-xs text-forgeGray-500">
+        <p data-testid="tabla-fuentes" className="mt-3 text-forge-xs kit-txt-3">
           {fuentes.map((f) => `Fuente: ${f}`).join(" | ")}
         </p>
       ) : null}
       {sinResultados ? null : (
         <nav aria-label={`Paginación de ${titulo}`} className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <p aria-live="polite" className="text-forge-sm text-forgeGray-700">
+          <p aria-live="polite" className="text-forge-sm kit-txt-2">
             {`Mostrando ${pag.desde}–${pag.hasta} de ${pag.total}`}
           </p>
           <div className="flex flex-wrap items-center gap-2">
             {opcionesTamano && opcionesTamano.length > 1 ? (
               <div className="flex items-center gap-2">
-                <label htmlFor={`${uid}-tam`} className="text-forge-xs text-forgeGray-700">
+                <label htmlFor={`${uid}-tam`} className="text-forge-xs kit-txt-2">
                   Filas por página
                 </label>
                 <select
@@ -318,7 +322,7 @@ export function TablaAnalitica<R>({
             <button type="button" className={BOTON} disabled={pag.pagina <= 1} onClick={() => setPagina(pag.pagina - 1)}>
               Anterior
             </button>
-            <span className="text-forge-xs text-forgeGray-600" aria-hidden>{`${pag.pagina} / ${pag.paginas}`}</span>
+            <span className="text-forge-xs kit-txt-2" aria-hidden>{`${pag.pagina} / ${pag.paginas}`}</span>
             <button type="button" className={BOTON} disabled={pag.pagina >= pag.paginas} onClick={() => setPagina(pag.pagina + 1)}>
               Siguiente
             </button>

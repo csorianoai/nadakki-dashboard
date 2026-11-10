@@ -1,9 +1,11 @@
 "use client";
 
+import "./tema.css";
 import { useRef, useState } from "react";
 import { PanelGrafico } from "./PanelGrafico";
 import { useAncho } from "./useAncho";
 import { formatearValor, type EstadoCifra, type UnidadCifra } from "@/lib/analytics/cifra";
+import { useFormato } from "./FormatoProvider";
 import { escalar, esFinito, estadoGrafico, etiquetaUnidad, margenIzquierdo, redondear, ticksLineales, type MetaGrafico, type PuntoDispersion } from "@/lib/analytics/graficos";
 
 export interface EjeDispersion {
@@ -39,8 +41,9 @@ export function Dispersion({ meta, puntos, ejeX, ejeY, ancho: anchoInicial = 520
   let estado: EstadoCifra = estadoGrafico(meta, puntos.length);
   if (estado === "ok" && validos.length === 0) estado = "datos_insuficientes";
 
-  const fx = (v: number) => formatearValor({ valor: v, unidad: ejeX.unidad, moneda: ejeX.moneda });
-  const fy = (v: number) => formatearValor({ valor: v, unidad: ejeY.unidad, moneda: ejeY.moneda });
+  const formato = useFormato();
+  const fx = (v: number) => formatearValor({ valor: v, unidad: ejeX.unidad, moneda: ejeX.moneda }, formato);
+  const fy = (v: number) => formatearValor({ valor: v, unidad: ejeY.unidad, moneda: ejeY.moneda }, formato);
   const xs = validos.map((p) => p.x);
   const ys = validos.map((p) => p.y);
   const tx = xs.length ? ticksLineales(Math.min(...xs), Math.max(...xs), 4) : [0, 1];
@@ -68,21 +71,21 @@ export function Dispersion({ meta, puntos, ejeX, ejeY, ancho: anchoInicial = 520
         <svg role="group" aria-label={`Dispersión: ${meta.titulo}. ${validos.length} ${validos.length === 1 ? "punto" : "puntos"}; eje horizontal ${rotulo(ejeX)}, eje vertical ${rotulo(ejeY)}.`} viewBox={`0 0 ${ancho} ${alto}`} className="block h-auto w-full" preserveAspectRatio="xMidYMid meet">
           {ty.map((t) => (
             <g key={`y${t}`}>
-              <line x1={M.izq} x2={ancho - M.der} y1={py(t)} y2={py(t)} className="stroke-forgeGray-200" strokeWidth="1" />
-              <text x={M.izq - 6} y={py(t)} textAnchor="end" dominantBaseline="middle" className="fill-forgeGray-600 text-[11px]">
+              <line x1={M.izq} x2={ancho - M.der} y1={py(t)} y2={py(t)} className="kit-stroke-grid" strokeWidth="1" />
+              <text x={M.izq - 6} y={py(t)} textAnchor="end" dominantBaseline="middle" className="kit-fill-txt-2 text-[11px]">
                 {fy(t)}
               </text>
             </g>
           ))}
           {tx.map((t, k) => (
-            <text key={`x${t}`} x={px(t)} y={alto - M.aba + 16} textAnchor={k === 0 ? "start" : k === tx.length - 1 ? "end" : "middle"} className="fill-forgeGray-600 text-[11px]">
+            <text key={`x${t}`} x={px(t)} y={alto - M.aba + 16} textAnchor={k === 0 ? "start" : k === tx.length - 1 ? "end" : "middle"} className="kit-fill-txt-2 text-[11px]">
               {fx(t)}
             </text>
           ))}
-          <text x={(M.izq + ancho - M.der) / 2} y={alto - 6} textAnchor="middle" className="fill-forgeGray-700 text-[11px] font-medium">
+          <text x={(M.izq + ancho - M.der) / 2} y={alto - 6} textAnchor="middle" className="kit-fill-txt-2 text-[11px] font-medium">
             {rotulo(ejeX)}
           </text>
-          <text transform={`translate(14 ${(M.arr + alto - M.aba) / 2}) rotate(-90)`} textAnchor="middle" className="fill-forgeGray-700 text-[11px] font-medium">
+          <text transform={`translate(14 ${(M.arr + alto - M.aba) / 2}) rotate(-90)`} textAnchor="middle" className="kit-fill-txt-2 text-[11px] font-medium">
             {rotulo(ejeY)}
           </text>
           {validos.map((p) => (
@@ -97,7 +100,7 @@ export function Dispersion({ meta, puntos, ejeX, ejeY, ancho: anchoInicial = 520
               r={activo === p.id ? 8 : 6}
               fillOpacity="0.65"
               strokeWidth="2"
-              className="fill-forgeViz-1 stroke-forgeViz-1 outline-none focus-visible:stroke-forgeBrand-950"
+              className="kit-fill-viz-1 kit-stroke-viz-1 outline-none kit-stroke-foco"
               onFocus={() => setActivo(p.id)}
               onBlur={() => setActivo(null)}
               onMouseEnter={() => setActivo(p.id)}
@@ -107,7 +110,7 @@ export function Dispersion({ meta, puntos, ejeX, ejeY, ancho: anchoInicial = 520
             </circle>
           ))}
         </svg>
-        <p role="status" aria-live="polite" aria-label="Detalle del punto seleccionado" className="mt-2 min-h-[1.5rem] text-forge-xs text-forgeGray-700">
+        <p role="status" aria-live="polite" aria-label="Detalle del punto seleccionado" className="mt-2 min-h-[1.5rem] text-forge-xs kit-txt-2">
           {sel ? detalle(sel) : "Enfoca o pasa el cursor sobre un punto para ver su detalle."}
         </p>
       </div>
