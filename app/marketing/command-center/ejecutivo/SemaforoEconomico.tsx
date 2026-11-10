@@ -5,7 +5,7 @@ import { EstadoAnalitica, useFormato } from "@/components/analytics/kit";
 import { estadoEfectivo, formatearFecha, formatearPorcentaje, formatearValor, type Cifra } from "@/lib/analytics/cifra";
 import type { SupuestosEconomicos } from "./tipos";
 import { ControlInhabilitado } from "./ControlInhabilitado";
-import { CONVERSIONES_MUESTRA_CONFIABLE, FRASE_CPA, evaluarRendimiento, geometriaBarra, type Rendimiento } from "./semaforo";
+import { ETIQUETA_MUESTRA, evaluarRendimiento, fraseCpa, geometriaBarra, textoMuestra, type Rendimiento } from "./semaforo";
 import { HUNDIDO, NOTA, PANEL, TITULO_PANEL } from "./estilos";
 import { cn } from "@/lib/utils";
 
@@ -29,31 +29,93 @@ export function rendimientoDe(cpa: Cifra, conversiones: number | null, supuestos
 }
 
 const TEXTO = {
-  bajo_objetivo: { titulo: "Bajo el CPA objetivo", tono: "kit-txt-ok", Icono: Check, borde: "border-[color:var(--kit-ok)]" },
-  entre_objetivo_equilibrio: { titulo: "Entre el objetivo y el equilibrio", tono: "kit-txt-atencion", Icono: AlertTriangle, borde: "border-[color:var(--kit-atencion)]" },
-  sobre_equilibrio: { titulo: "Sobre el equilibrio", tono: "kit-txt-error", Icono: XCircle, borde: "border-[color:var(--kit-error)]" },
+  bajo_objetivo: { tono: "kit-txt-ok", Icono: Check, borde: "border-[color:var(--kit-ok)]" },
+  entre_objetivo_equilibrio: { tono: "kit-txt-atencion", Icono: AlertTriangle, borde: "border-[color:var(--kit-atencion)]" },
+  sobre_equilibrio: { tono: "kit-txt-error", Icono: XCircle, borde: "border-[color:var(--kit-error)]" },
 } as const;
 
-/** Linea de la rentabilidad: SIEMPRE «sin confirmar» (o «en revision» si ya hay cierres CRM); nunca «confirmada» ni «rentable». */
-export function AvisoRentabilidad({ cierres, rentabilidad, className }: { cierres: number | null; rentabilidad: Rendimiento["rentabilidad"]; className?: string }) {
+/** Texto de la rentabilidad: SIEMPRE «sin confirmar» (o «en revision» si ya hay cierres CRM); nunca «confirmada» ni «rentable». */
+export function textoRentabilidad(cierres: number | null, rentabilidad: Rendimiento["rentabilidad"]): string {
   const estado = rentabilidad === "en_revision" ? "en revisión" : "sin confirmar";
   const crm = cierres === null ? "cierres CRM pendientes" : `${cierres} ${cierres === 1 ? "cierre" : "cierres"} CRM`;
+  return `Rentabilidad: ${estado} · ${crm}`;
+}
+
+/** Linea de la rentabilidad junto al CPA (escritorio y tarjeta completa). */
+export function AvisoRentabilidad({ cierres, rentabilidad, className }: { cierres: number | null; rentabilidad: Rendimiento["rentabilidad"]; className?: string }) {
   return (
     <p data-testid="cpa-rentabilidad" className={cn("m-0 text-[12px] font-medium kit-txt-2", className)}>
-      {`Rentabilidad: ${estado} · ${crm}`}
+      {textoRentabilidad(cierres, rentabilidad)}
     </p>
   );
+}
+
+/** Texto de los supuestos financieros. `breve`: solo objetivo y equilibrio (el detalle completo vive en el panel de supuestos). */
+export function textoSupuestos(supuestos: SupuestosEconomicos, formato: Parameters<typeof formatearValor>[1], breve = false): string {
+  const usd = (n: number | null) => formatearValor({ valor: n, unidad: "moneda", moneda: supuestos.moneda }, formato);
+  const base = `Objetivo ${usd(supuestos.objetivo)} · equilibrio ${usd(supuestos.equilibrio)}`;
+  if (breve) return base;
+  const cierre = supuestos.tasa_cierre === null ? "—" : formatearPorcentaje(supuestos.tasa_cierre * 100, 0, formato);
+  return `${base} · comisión ${usd(supuestos.comision)} · cierre ${cierre}`;
 }
 
 /** Resumen de una linea de los supuestos financieros: siempre visible junto al semaforo. */
 export function ResumenSupuestos({ supuestos, className }: { supuestos: SupuestosEconomicos; className?: string }) {
   const formato = useFormato();
-  const usd = (n: number | null) => formatearValor({ valor: n, unidad: "moneda", moneda: supuestos.moneda }, formato);
-  const cierre = supuestos.tasa_cierre === null ? "—" : formatearPorcentaje(supuestos.tasa_cierre * 100, 0, formato);
   return (
     <p data-testid="resumen-supuestos" className={cn("m-0 text-[12px] kit-txt-2", className)}>
-      {`Objetivo ${usd(supuestos.objetivo)} · equilibrio ${usd(supuestos.equilibrio)} · comisión ${usd(supuestos.comision)} · cierre ${cierre}`}
+      {textoSupuestos(supuestos, formato)}
     </p>
+  );
+}
+
+/**
+ * Aviso minimo de movil: la ausencia de cierres CRM y los supuestos (objetivo y equilibrio) en UN bloque compacto,
+ * siempre visible bajo los tres indicadores. El detalle (comision, tasa de cierre, fuente) esta en «Supuestos financieros y fuentes».
+ */
+export function AvisoMinimo({ supuestos, cierres, rentabilidad, className }: { supuestos: SupuestosEconomicos; cierres: number | null; rentabilidad: Rendimiento["rentabilidad"]; className?: string }) {
+  const formato = useFormato();
+  return (
+    <p data-testid="aviso-minimo" className={cn("m-0 border-t kit-bd-suave pt-1.5 text-[11px] font-medium leading-snug kit-txt-2", className)}>
+      <span data-testid="cpa-rentabilidad">{textoRentabilidad(cierres, rentabilidad)}</span>
+      <span aria-hidden> · </span>
+      <span data-testid="resumen-supuestos">{textoSupuestos(supuestos, formato, true)}</span>
+    </p>
+  );
+}
+
+export interface FuenteCifra {
+  etiqueta: string;
+  fuente: string | null;
+  fecha_dato: string | null;
+}
+
+/**
+ * Fuente y fecha agrupadas (movil): las tarjetas compactas no repiten su fuente; esta linea cubre cada cifra por su nombre.
+ * Cifras con la misma fuente y fecha comparten linea; si difieren, cada fuente consta aparte.
+ */
+export function FuentesResumen({ cifras, className }: { cifras: FuenteCifra[]; className?: string }) {
+  const formato = useFormato();
+  const grupos = new Map<string, { fuente: string; fecha: string; etiquetas: string[] }>();
+  for (const c of cifras) {
+    const fuente = c.fuente ?? "sin fuente";
+    const fecha = formatearFecha(c.fecha_dato, formato) ?? "sin fecha";
+    const clave = `${fuente}|${fecha}`;
+    const g = grupos.get(clave) ?? { fuente, fecha, etiquetas: [] };
+    g.etiquetas.push(c.etiqueta);
+    grupos.set(clave, g);
+  }
+  return (
+    <div data-testid="fuentes-resumen" className={cn("flex flex-col gap-0.5", NOTA, className)}>
+      {Array.from(grupos.values()).map((g) => (
+        <p key={`${g.fuente}|${g.fecha}`} className="m-0">
+          <span>Fuente: {g.fuente}</span>
+          <span aria-hidden> · </span>
+          <span>Dato al {g.fecha}</span>
+          <span>{` (${g.etiquetas.join(", ")})`}</span>
+        </p>
+      ))}
+    </div>
   );
 }
 
@@ -68,7 +130,8 @@ export function SemaforoEconomico({ cpa, conversiones, supuestos, variante = "pa
   const cfg = r && lectura !== "datos_insuficientes" ? TEXTO[lectura] : null;
   const rango = supuestos.rango_probable;
 
-  const barra = geo ? (
+  // «Datos muy limitados» (menos de 5 conversiones): sin juicio frente al objetivo, por tanto sin marcador sobre la barra.
+  const barra = geo && r?.muestra !== "muy_limitada" ? (
     <div>
       <div
         role="img"
@@ -101,7 +164,7 @@ export function SemaforoEconomico({ cpa, conversiones, supuestos, variante = "pa
         Semáforo económico
       </h3>
 
-      {!cfg || !geo || !r ? (
+      {!cfg || !r ? (
         <EstadoAnalitica
           estado={estadoSup === "pendiente_integracion" || estadoCpa === "pendiente_integracion" ? "pendiente_integracion" : "datos_insuficientes"}
           compacto
@@ -115,12 +178,10 @@ export function SemaforoEconomico({ cpa, conversiones, supuestos, variante = "pa
             </span>
             <div className="min-w-0">
               <p className="m-0 text-[16px] font-semibold kit-txt" data-testid="semaforo-lectura">
-                {r.preliminar ? "Rendimiento preliminar" : cfg.titulo}
+                {ETIQUETA_MUESTRA[r.muestra]}
               </p>
               <p className="m-0 text-[12px] kit-txt-2">
-                {r.preliminar ? `${FRASE_CPA[lectura]} · ` : ""}
-                {`${conversiones ?? "—"} conversiones`}
-                {r.preliminar ? ` · muestra pequeña (se confirma con ${CONVERSIONES_MUESTRA_CONFIABLE} o más)` : ""}
+                {`${fraseCpa(lectura, r.muestra)} · ${textoMuestra(conversiones)}`}
                 {rango ? ` · rango probable ${usd(rango.min)}–${usd(rango.max)}` : ""}
               </p>
             </div>

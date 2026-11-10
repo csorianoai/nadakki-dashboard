@@ -18,7 +18,7 @@ export const TITULO_PANEL = "m-0 font-display text-[18px] font-semibold leading-
 export const CIFRA_GRANDE = "font-display font-bold tabular-nums tracking-[-0.02em] kit-txt break-words";
 
 /** Chips de estado (texto, fondo y borde de estado). */
-export const CHIP = "inline-flex items-center gap-1 rounded-full border px-2.5 py-[3px] text-[11px] font-bold uppercase tracking-[0.06em] whitespace-nowrap";
+export const CHIP = "inline-flex items-center gap-1 rounded-full border px-2.5 py-[3px] text-[12px] font-bold uppercase tracking-[0.04em] whitespace-nowrap";
 export const CHIP_OK = `${CHIP} border-[color:var(--kit-ok-borde)] bg-[color:var(--kit-ok-fondo)] text-[color:var(--kit-ok)]`;
 export const CHIP_ATENCION = `${CHIP} border-[color:var(--kit-atencion-borde)] bg-[color:var(--kit-atencion-fondo)] text-[color:var(--kit-atencion)]`;
 export const CHIP_ERROR = `${CHIP} border-[color:var(--kit-error-borde)] bg-[color:var(--kit-error-fondo)] text-[color:var(--kit-error)]`;

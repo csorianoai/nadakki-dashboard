@@ -5,21 +5,25 @@
 import { render, screen, within } from "@testing-library/react";
 import { CommandCenterEjecutivo } from "../CommandCenterEjecutivo";
 import { AHORA_DEMO, DATOS_DEMO } from "../demo/datos-demo";
-import { CONVERSIONES_MUESTRA_CONFIABLE, MIN_CONVERSIONES, evaluarRendimiento, muestraPequena } from "../semaforo";
+import { MIN_CONVERSIONES, MUESTRA_SEGUIMIENTO_MIN, evaluarRendimiento, muestraPequena } from "../semaforo";
 import type { DatosCommandCenter } from "../tipos";
 
 const clon = (cambio: (d: DatosCommandCenter) => DatosCommandCenter) => cambio(JSON.parse(JSON.stringify(DATOS_DEMO)) as DatosCommandCenter);
 const montar = (datos: DatosCommandCenter = DATOS_DEMO) => render(<CommandCenterEjecutivo datos={datos} ahora={AHORA_DEMO} demo />);
 
-/** Palabras que afirman rentabilidad. «Rentabilidad: sin confirmar» NO afirma nada y esta permitido. */
-const AFIRMA_RENTABILIDAD = /\brentables?\b|rentabilidad (confirmada|probada|positiva|demostrada|real confirmada)|(es|resulta|queda|esta|está) rentable|campaña rentable|ganancia confirmada/i;
+/**
+ * Palabras que afirman rentabilidad. «Rentabilidad: sin confirmar» y «no es rentabilidad confirmada» NO afirman nada y estan permitidos
+ * (la muestra de seguimiento dice explicitamente que NO es rentabilidad confirmada).
+ */
+const AFIRMA_RENTABILIDAD = /\brentables?\b|(?<!no es )rentabilidad (confirmada|probada|positiva|demostrada|real confirmada)|(es|resulta|queda|esta|está) rentable|campaña rentable|ganancia confirmada/i;
 
 describe("umbral de muestra pequeña (constante nombrada y documentada)", () => {
-  it("el umbral es una constante exportada, mayor que el minimo de datos insuficientes", () => {
+  it("el umbral de seguimiento es una constante exportada, mayor que el minimo de datos insuficientes", () => {
     expect(MIN_CONVERSIONES).toBe(5);
-    expect(CONVERSIONES_MUESTRA_CONFIABLE).toBeGreaterThan(MIN_CONVERSIONES);
-    expect(muestraPequena(CONVERSIONES_MUESTRA_CONFIABLE - 1)).toBe(true);
-    expect(muestraPequena(CONVERSIONES_MUESTRA_CONFIABLE)).toBe(false);
+    expect(MUESTRA_SEGUIMIENTO_MIN).toBe(15);
+    expect(MUESTRA_SEGUIMIENTO_MIN).toBeGreaterThan(MIN_CONVERSIONES);
+    expect(muestraPequena(MUESTRA_SEGUIMIENTO_MIN - 1)).toBe(true);
+    expect(muestraPequena(MUESTRA_SEGUIMIENTO_MIN)).toBe(false);
     expect(muestraPequena(null)).toBe(true);
   });
 });
@@ -79,22 +83,23 @@ describe("pantalla: semaforo responsable con los datos DEMO (13 conversiones, ba
     expect(s.textContent).toMatch(/5%|5 %/);
   });
 
-  it("el semaforo titula la lectura como preliminar y explica por que (13 de 15 conversiones)", () => {
+  it("el semaforo titula la lectura como preliminar y explica por que (13 conversiones: muestra pequeña de 5 a 14)", () => {
     montar();
     const s = screen.getByTestId("semaforo");
     expect(within(s).getByTestId("semaforo-lectura")).toHaveTextContent(/Rendimiento preliminar/i);
-    expect(s.textContent).toMatch(new RegExp(`13 conversiones.*${CONVERSIONES_MUESTRA_CONFIABLE}`));
+    expect(s.textContent).toMatch(/13 conversiones · muestra pequeña \(de 5 a 14\)/);
     expect(s.textContent).toMatch(/Rentabilidad real[\s\S]*Pendiente CRM/);
   });
 });
 
 describe("pantalla: otras lecturas del semaforo", () => {
-  it("muestra suficiente y bajo objetivo: ya no es 'preliminar', pero tampoco dice 'rentable' y mantiene el aviso de CRM", () => {
+  it("muestra de seguimiento y bajo objetivo: ya no es 'preliminar', pero tampoco dice 'rentable' y mantiene el aviso de CRM", () => {
     const d = clon((x) => ({ ...x, conversiones_total: 40 }));
     const { container } = montar(d);
     const cpa = screen.getByTestId("kpi-cpa");
-    expect(within(cpa).getByTestId("cpa-lectura")).toHaveTextContent(/Bajo objetivo/i);
+    expect(within(cpa).getByTestId("cpa-lectura")).toHaveTextContent(/Muestra de seguimiento/i);
     expect(within(cpa).getByTestId("cpa-lectura")).not.toHaveTextContent(/preliminar/i);
+    expect(within(cpa).getByTestId("cpa-muestra")).toHaveTextContent(/con incertidumbre: no es rentabilidad confirmada/);
     expect(within(cpa).getByTestId("cpa-rentabilidad")).toHaveTextContent(/Rentabilidad: sin confirmar/);
     expect(container.textContent).not.toMatch(AFIRMA_RENTABILIDAD);
   });

@@ -1,23 +1,33 @@
 /**
  * Logica pura del semaforo economico de la pantalla. Reglas duras: nunca NaN/Infinity;
- * sin CPA, sin objetivo o sin equilibrio validos => "datos_insuficientes"; menos de MIN_CONVERSIONES => sin CPA ni juicio.
+ * sin CPA, sin objetivo o sin equilibrio validos => "datos_insuficientes".
  *
  * SEMAFORO RESPONSABLE (criterio 3 de Cesar): «CPA por debajo del objetivo» NO es «rentabilidad confirmada».
  *   - Esta pantalla NUNCA confirma rentabilidad: solo ubica un CPA ya calculado frente a objetivo y equilibrio.
- *   - Con muestra pequena (< CONVERSIONES_MUESTRA_CONFIABLE) la lectura es «rendimiento preliminar».
+ *   - Tres estados de muestra (decision de Cesar, 10-nov-2026), segun las conversiones del periodo:
+ *       0-4   => «Datos muy limitados» (sin juicio frente al objetivo)
+ *       5-14  => «Rendimiento preliminar»
+ *       15+   => «Muestra de seguimiento» CON INCERTIDUMBRE (no es rentabilidad confirmada)
  *   - Mientras no haya cierres reales del CRM, la rentabilidad queda «sin confirmar» (y con cierres, «en revision»).
  */
 import type { LecturaCampana } from "./tipos";
 
-/** Menos de este numero de conversiones: sin CPA ni juicio de rentabilidad (texto del diseno aprobado). */
-export const MIN_CONVERSIONES = 5;
-
 /**
- * Conversiones minimas para dejar de llamar «preliminar» al rendimiento.
- * PROPUESTA A CONFIRMAR POR CESAR: el diseno V2 solo fija el minimo de 5 (datos insuficientes) y habla de «muestra pequeña»
- * sin cifra; se usa 15 (3 x el minimo) como valor inicial. Es una constante unica: cambiarla aqui cambia semaforo, KPI y textos.
+ * UMBRALES PROVISIONALES de muestra, aprobados por Cesar el 10-nov-2026.
+ * NO son una prueba de significacion estadistica ni una confirmacion de rentabilidad: solo delimitan cuanto se puede decir
+ * del CPA con las conversiones disponibles. Son constantes unicas: cambiarlas aqui cambia semaforo, KPI y textos.
  */
-export const CONVERSIONES_MUESTRA_CONFIABLE = MIN_CONVERSIONES * 3;
+/** Hasta este numero de conversiones (inclusive): «datos muy limitados». */
+export const MUESTRA_MUY_LIMITADA_MAX = 4;
+/** Hasta este numero de conversiones (inclusive): «rendimiento preliminar». */
+export const MUESTRA_PRELIMINAR_MAX = 14;
+/** Desde este numero de conversiones: «muestra de seguimiento» (con incertidumbre). */
+export const MUESTRA_SEGUIMIENTO_MIN = MUESTRA_PRELIMINAR_MAX + 1;
+
+/** Menos de este numero de conversiones: sin CPA ni juicio de rentabilidad (texto del diseno aprobado). */
+export const MIN_CONVERSIONES = MUESTRA_MUY_LIMITADA_MAX + 1;
+
+export type EstadoMuestra = "muy_limitada" | "preliminar" | "seguimiento";
 
 const fin = (n: number | null | undefined): n is number => typeof n === "number" && Number.isFinite(n);
 
@@ -28,8 +38,41 @@ export function clasificarCpa(cpa: number | null, objetivo: number | null, equil
   return "sobre_equilibrio";
 }
 
+/**
+ * Estado de la muestra segun las conversiones del periodo. Entrada invalida (null, undefined, NaN, negativa, infinita)
+ * cae a «muy_limitada»: nunca lanza y nunca sube de estado por un dato que no se puede leer.
+ */
+export function estadoMuestra(conversiones: number | null | undefined): EstadoMuestra {
+  if (!fin(conversiones) || conversiones < 0) return "muy_limitada";
+  if (conversiones <= MUESTRA_MUY_LIMITADA_MAX) return "muy_limitada";
+  if (conversiones <= MUESTRA_PRELIMINAR_MAX) return "preliminar";
+  return "seguimiento";
+}
+
+/** true salvo en la muestra de seguimiento (compatibilidad: «muestra pequeña» = todo lo que aun no llega a 15). */
 export function muestraPequena(conversiones: number | null): boolean {
-  return !fin(conversiones) || conversiones < CONVERSIONES_MUESTRA_CONFIABLE;
+  return estadoMuestra(conversiones) !== "seguimiento";
+}
+
+/** Etiqueta corta del estado de muestra (chip del CPA y titulo del semaforo). */
+export const ETIQUETA_MUESTRA: Record<EstadoMuestra, string> = {
+  muy_limitada: "Datos muy limitados",
+  preliminar: "Rendimiento preliminar",
+  seguimiento: "Muestra de seguimiento",
+};
+
+/**
+ * Texto exacto que acompana al estado de muestra. En la muestra de seguimiento dice explicitamente que hay incertidumbre y que
+ * NO es rentabilidad confirmada; en los otros dos nunca habla de confirmar nada.
+ */
+export function textoMuestra(conversiones: number | null | undefined, breve = false): string {
+  const estado = estadoMuestra(conversiones);
+  const n = fin(conversiones) && conversiones >= 0 ? conversiones : null;
+  const cuenta = n === null ? "Conversiones no disponibles" : `${n} ${n === 1 ? "conversión" : "conversiones"}`;
+  if (estado === "muy_limitada") return `${cuenta} · hacen falta al menos ${MIN_CONVERSIONES}`;
+  // `breve` (movil): sin el rango entre parentesis, que consta completo en «Supuestos financieros y fuentes».
+  if (estado === "preliminar") return breve ? `${cuenta} · muestra pequeña` : `${cuenta} · muestra pequeña (de ${MIN_CONVERSIONES} a ${MUESTRA_PRELIMINAR_MAX})`;
+  return `${cuenta} · con incertidumbre: no es rentabilidad confirmada`;
 }
 
 /** Estado de la rentabilidad. Nunca «confirmada»: esta pantalla no tiene con que confirmarla. */
@@ -47,7 +90,9 @@ export interface EntradaRendimiento {
 export interface Rendimiento {
   /** CPA frente a objetivo y equilibrio. */
   lectura: LecturaCampana;
-  /** true => se muestra «rendimiento preliminar» (muestra pequena). Nunca true si no hay lectura valida. */
+  /** Estado de la muestra (0-4 muy limitada, 5-14 preliminar, 15+ seguimiento con incertidumbre). */
+  muestra: EstadoMuestra;
+  /** true => la muestra aun no es de seguimiento (muy limitada o preliminar). Nunca true si no hay lectura valida. */
   preliminar: boolean;
   rentabilidad: EstadoRentabilidad;
   /** Cierres CRM informados (>= 0) o null si pendiente. */
@@ -59,6 +104,7 @@ export function evaluarRendimiento(e: EntradaRendimiento): Rendimiento {
   const cierres = fin(e.cierresCrm) && e.cierresCrm >= 0 ? e.cierresCrm : null;
   return {
     lectura,
+    muestra: estadoMuestra(e.conversiones),
     preliminar: lectura !== "datos_insuficientes" && muestraPequena(e.conversiones),
     // Con cierres CRM la rentabilidad pasa a revision humana; sin ellos, queda sin confirmar. Jamas «confirmada» aqui.
     rentabilidad: cierres !== null && cierres > 0 ? "en_revision" : "sin_confirmar",
@@ -88,6 +134,25 @@ export const ETIQUETA_LECTURA: Record<LecturaCampana, string> = {
   sobre_equilibrio: "Sobre el equilibrio",
   datos_insuficientes: "Datos insuficientes",
 };
+
+/**
+ * Lectura de una campana para la tabla: el CPA frente al objetivo NUNCA va sola; lleva el estado de su muestra
+ * («Preliminar: bajo objetivo», «Seguimiento: bajo objetivo»). Con menos de 5 conversiones: «Datos insuficientes», sin juicio.
+ */
+export function lecturaCampana(lectura: LecturaCampana, conversiones: number | null | undefined): string {
+  const muestra = estadoMuestra(conversiones);
+  if (lectura === "datos_insuficientes" || muestra === "muy_limitada") return ETIQUETA_LECTURA.datos_insuficientes;
+  const frase = ETIQUETA_LECTURA[lectura].toLowerCase();
+  return muestra === "preliminar" ? `Preliminar: ${frase}` : `Seguimiento: ${frase}`;
+}
+
+/** Con «datos muy limitados» (menos de 5 conversiones) no se emite juicio frente al objetivo. */
+export const FRASE_SIN_JUICIO = "Sin juicio frente al objetivo";
+
+/** Frase del CPA frente al objetivo segun el estado de la muestra (nunca habla de rentabilidad). */
+export function fraseCpa(lectura: LecturaCampana, muestra: EstadoMuestra): string {
+  return muestra === "muy_limitada" ? FRASE_SIN_JUICIO : FRASE_CPA[lectura];
+}
 
 /** Frase de la lectura del CPA frente al objetivo (sin hablar de rentabilidad). */
 export const FRASE_CPA: Record<LecturaCampana, string> = {

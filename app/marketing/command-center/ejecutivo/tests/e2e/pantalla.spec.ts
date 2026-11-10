@@ -179,29 +179,29 @@ for (const vp of VPS.filter((v) => v.movil)) {
   test(`criterio 4 · movil ${vp.viewport}: el CPA con su semaforo va primero, el detalle esta plegado y se expande con teclado`, async ({ page }, testInfo) => {
     const errores = await abrir(page, `ok-movil-resumen-${vp.viewport}.html`, vp);
     const y = async (loc: import("@playwright/test").Locator) => (await loc.first().boundingBox())?.y ?? Number.NaN;
-    // Orden vertical: pestañas < CPA < barra del semaforo < supuestos < CRM < Inversion < Leads < grafico < detalles.
+    // Orden vertical: pestañas < CPA (con su estado de muestra, la barra del semaforo y el aviso minimo de supuestos + CRM dentro) < Inversion
+    // < Leads < fuentes agrupadas < grafico < detalles.
     const orden = [
       ["tablist", await y(page.getByRole("tablist"))],
       ["KPI CPA", await y(page.getByTestId("kpi-cpa"))],
-      ["chip preliminar", await y(page.getByTestId("cpa-lectura"))],
+      ["chip de muestra", await y(page.getByTestId("cpa-lectura"))],
       ["barra del semáforo", await y(page.getByTestId("semaforo-barra"))],
-      ["supuestos", await y(page.getByTestId("resumen-supuestos"))],
-      ["rentabilidad/CRM", await y(page.getByTestId("cpa-rentabilidad"))],
+      ["aviso mínimo (CRM + supuestos)", await y(page.getByTestId("aviso-minimo"))],
       ["KPI Inversión", await y(page.getByRole("group", { name: "Inversión" }))],
       ["KPI Leads", await y(page.getByRole("group", { name: "Leads atribuidos" }))],
+      ["fuentes agrupadas", await y(page.getByTestId("fuentes-resumen"))],
       ["gráfico", await y(page.locator('svg[role="img"][aria-label^="Serie temporal"]'))],
       ["detalle secundarios", await y(page.getByTestId("detalle-secundarios"))],
       ["detalle supuestos", await y(page.getByTestId("detalle-supuestos"))],
     ] as const;
     console.log(`ORDEN_MOVIL ${vp.viewport} ${JSON.stringify(orden.map(([n, v]) => `${n}@${Math.round(v)}`))}`);
     for (let i = 1; i < orden.length; i++) expect(orden[i][1], `${orden[i][0]} va despues de ${orden[i - 1][0]}`).toBeGreaterThanOrEqual(orden[i - 1][1]);
-    // Lo esencial (CPA, estado preliminar, supuestos, CRM) esta SIEMPRE visible sin expandir nada.
-    for (const id of ["cpa-lectura", "cpa-vs-objetivo", "semaforo-barra", "resumen-supuestos", "cpa-rentabilidad"]) await expect(page.getByTestId(id)).toBeVisible();
-    // En 390x844 toda la tarjeta del CPA cabe en el primer viewport; en 320x568 (pantalla minima) se mide cuanto se ve.
+    // Lo esencial (CPA, estado de muestra, supuestos, CRM) esta SIEMPRE visible sin expandir nada.
+    for (const id of ["cpa-lectura", "cpa-vs-objetivo", "cpa-muestra", "aviso-minimo", "semaforo-barra", "resumen-supuestos", "cpa-rentabilidad", "fuentes-resumen"]) await expect(page.getByTestId(id)).toBeVisible();
     const cpa = (await page.getByTestId("kpi-cpa").boundingBox()) as { y: number; height: number };
     console.log(`CPA_MOVIL ${vp.viewport} top=${Math.round(cpa.y)} bottom=${Math.round(cpa.y + cpa.height)} viewport=${vp.height}`);
-    if (vp.height >= 800) expect(cpa.y + cpa.height, "la tarjeta del CPA completa cabe en el primer viewport").toBeLessThanOrEqual(vp.height);
-    else expect(cpa.y, "el CPA empieza dentro del primer viewport").toBeLessThan(vp.height);
+    // La tarjeta COMPLETA del CPA cabe en el primer viewport en 390x844 y tambien en 320x568 (decision de Cesar, 10-nov).
+    expect(cpa.y + cpa.height, "la tarjeta del CPA completa cabe en el primer viewport").toBeLessThanOrEqual(vp.height);
     // Detalles plegados por defecto: su contenido no se ve.
     for (const id of ["detalle-secundarios", "detalle-supuestos", "detalle-secciones"]) expect(await page.getByTestId(id).evaluate((d) => (d as HTMLDetailsElement).open), id).toBe(false);
     await expect(page.getByRole("region", { name: "Indicadores secundarios" })).toBeHidden();
@@ -227,6 +227,86 @@ for (const vp of VPS.filter((v) => v.movil)) {
     await capturar(page, testInfo, `movil-expandido-${vp.viewport}`);
     expect(errores).toEqual([]);
   });
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+// DECISION 2 de Cesar (10-nov): en 320x568 (y 390x844) Inversion, CPA y Leads, con su valor legible, el estado de muestra y el aviso minimo
+// (CRM + supuestos) caben en el PRIMER viewport, sin scroll vertical ni horizontal.
+// ---------------------------------------------------------------------------------------------------------------------------
+for (const vp of VPS.filter((v) => v.movil)) {
+  test(`movil ${vp.viewport}: Inversión, CPA y Leads (valor y etiqueta), estado de muestra y aviso mínimo dentro del primer viewport`, async ({ page }, testInfo) => {
+    const errores = await abrir(page, `ok-movil-resumen-${vp.viewport}.html`, vp);
+    const medidas: Record<string, string> = {};
+    const dentro = async (nombre: string, loc: import("@playwright/test").Locator) => {
+      const b = await loc.first().boundingBox();
+      expect(b, `${nombre}: sin caja`).not.toBeNull();
+      const c = b as { x: number; y: number; width: number; height: number };
+      expect(c.y, `${nombre}: empieza dentro del viewport`).toBeGreaterThanOrEqual(0);
+      expect(c.y + c.height, `${nombre}: termina dentro del viewport (${vp.height} px)`).toBeLessThanOrEqual(vp.height);
+      expect(c.x, `${nombre}: no sale por la izquierda`).toBeGreaterThanOrEqual(0);
+      expect(c.x + c.width, `${nombre}: no sale por la derecha (${vp.width} px)`).toBeLessThanOrEqual(vp.width);
+      medidas[nombre] = `y ${Math.round(c.y)}-${Math.round(c.y + c.height)} x ${Math.round(c.x)}-${Math.round(c.x + c.width)}`;
+      return c;
+    };
+    const inv = page.getByRole("group", { name: "Inversión" });
+    const leads = page.getByRole("group", { name: "Leads atribuidos" });
+    const cpa = page.getByTestId("kpi-cpa");
+    for (const [nombre, tarjeta] of [["Inversión", inv], ["CPA", cpa], ["Leads", leads]] as const) {
+      await dentro(`${nombre}: etiqueta`, tarjeta.getByTestId("kpi-etiqueta"));
+      await dentro(`${nombre}: valor`, tarjeta.getByTestId("kpi-valor"));
+      // Legibilidad: valor >= 20 px y etiqueta >= 12 px (computado, no declarado).
+      const px = await tarjeta.evaluate((el) => ({
+        valor: parseFloat(getComputedStyle(el.querySelector("[data-testid=kpi-valor]") as Element).fontSize),
+        etiqueta: parseFloat(getComputedStyle(el.querySelector("[data-testid=kpi-etiqueta]") as Element).fontSize),
+      }));
+      expect(px.valor, `${nombre}: tamano del valor`).toBeGreaterThanOrEqual(20);
+      expect(px.etiqueta, `${nombre}: tamano de la etiqueta`).toBeGreaterThanOrEqual(12);
+    }
+    await dentro("Estado de muestra (chip)", page.getByTestId("cpa-lectura"));
+    await dentro("CPA vs objetivo", page.getByTestId("cpa-vs-objetivo"));
+    await dentro("Muestra: conversiones", page.getByTestId("cpa-muestra"));
+    await dentro("Barra del semáforo (con su marcador)", page.getByTestId("semaforo-barra"));
+    await dentro("Aviso mínimo (CRM + supuestos)", page.getByTestId("aviso-minimo"));
+    await dentro("Rentabilidad sin confirmar / CRM", page.getByTestId("cpa-rentabilidad"));
+    await dentro("Supuestos (objetivo y equilibrio)", page.getByTestId("resumen-supuestos"));
+    // Las pestañas y el bloque de opciones tambien estan a la vista y miden 44 px de alto (objetivo tactil).
+    for (const [nombre, loc] of [["Pestañas", page.getByRole("tablist")], ["Periodo y opciones", page.getByTestId("detalle-secciones").locator("summary")]] as const) {
+      const c = await dentro(nombre, loc);
+      expect(c.height, `${nombre}: objetivo tactil >= 44 px`).toBeGreaterThanOrEqual(43.5);
+    }
+    // Sin scroll vertical en el primer viewport no se exige (la pagina continua), pero SI sin scroll horizontal.
+    await sinDesborde(page, `primer viewport ${vp.viewport}`);
+    console.log(`MOVIL_PRIMER_VIEWPORT ${vp.viewport} ${JSON.stringify(medidas)}`);
+    await page.screenshot({ path: testInfo.outputPath(`primer-viewport-movil-${vp.viewport}.png`), animations: "disabled" });
+    const hash = createHash("sha256").update(readFileSync(testInfo.outputPath(`primer-viewport-movil-${vp.viewport}.png`))).digest("hex");
+    console.log(`CAPTURA primer-viewport-movil-${vp.viewport} sha256:${hash}`);
+    expect(errores).toEqual([]);
+  });
+}
+
+// ---------------------------------------------------------------------------------------------------------------------------
+// DECISION 1 de Cesar (10-nov): tres estados de muestra (0-4 muy limitados, 5-14 preliminar, 15+ seguimiento con incertidumbre).
+// ---------------------------------------------------------------------------------------------------------------------------
+for (const vp of VPS) {
+  for (const [clave, chip, muestra] of [
+    ["muy-limitada", "Datos muy limitados", "3 conversiones · hacen falta al menos 5"],
+    ["seguimiento", "Muestra de seguimiento", "17 conversiones · con incertidumbre: no es rentabilidad confirmada"],
+  ] as const) {
+    test(`muestra ${clave} a ${vp.viewport}: texto exacto, CRM y supuestos visibles, sin desbordes`, async ({ page }, testInfo) => {
+      const errores = await abrir(page, `muestra-${clave}-${vp.viewport}.html`, vp);
+      await expect(page.getByTestId("cpa-lectura")).toHaveText(chip);
+      await expect(page.getByTestId("cpa-muestra")).toHaveText(muestra);
+      await expect(page.getByTestId("cpa-rentabilidad")).toContainText("Rentabilidad: sin confirmar");
+      await expect(page.getByTestId("cpa-rentabilidad")).toContainText("cierres CRM pendientes");
+      await expect(page.getByTestId("resumen-supuestos")).toContainText(/Objetivo \$50\.00 · equilibrio \$75\.00/);
+      const cuerpo = (await page.locator("body").innerText()).replace(/no es rentabilidad confirmada/gi, "");
+      expect(cuerpo, "nunca afirma rentabilidad ni significacion estadistica").not.toMatch(/\brentables?\b|rentabilidad confirmada|estad[ií]sticamente|significativ|concluyente|\bprobad[oa]s?\b/i);
+      if (vp.movil) for (const id of ["cpa-lectura", "cpa-muestra", "aviso-minimo"]) expect((await page.getByTestId(id).boundingBox())!.y + (await page.getByTestId(id).boundingBox())!.height).toBeLessThanOrEqual(vp.height);
+      await sinDesborde(page, `muestra ${clave} ${vp.viewport}`);
+      await capturar(page, testInfo, `muestra-${clave}-${vp.viewport}`);
+      expect(errores).toEqual([]);
+    });
+  }
 }
 
 for (const vp of VPS.filter((v) => v.movil)) {
@@ -319,6 +399,10 @@ test("contraste AA de los textos (4.5:1; 3:1 en texto grande) calculado sobre lo
       ];
     }),
     { clave: "oscuro estado desactualizado 1440x900", html: "estado-desactualizado-1440x900.html", vp: { width: 1440, height: 900 } },
+    { clave: "oscuro muestra muy limitada 1440x900", html: "muestra-muy-limitada-1440x900.html", vp: { width: 1440, height: 900 } },
+    { clave: "oscuro muestra seguimiento 1440x900", html: "muestra-seguimiento-1440x900.html", vp: { width: 1440, height: 900 } },
+    { clave: "oscuro muestra muy limitada 320x568", html: "muestra-muy-limitada-320x568.html", vp: { width: 320, height: 568 } },
+    { clave: "oscuro muestra seguimiento 390x844", html: "muestra-seguimiento-390x844.html", vp: { width: 390, height: 844 } },
     { clave: "claro (control) 1440x900", html: "claro-escritorio-1440x900.html", vp: { width: 1440, height: 900 } },
     { clave: "claro (control) 390x844", html: "claro-movil-resumen-390x844.html", vp: { width: 390, height: 844 } },
   ];

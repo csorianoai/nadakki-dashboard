@@ -17,6 +17,10 @@ export interface KpiDominanteProps {
   borde?: "neutro" | "acento";
   /** Variacion abreviada («vs anterior», sin el valor): para tarjetas pequeñas en movil. */
   corto?: boolean;
+  /** Movil: relleno y huecos reducidos para que los tres indicadores quepan en el primer viewport (el valor sigue siendo grande y legible). */
+  compacto?: boolean;
+  /** Movil: no repite «Fuente · Dato al» dentro de la tarjeta; una linea agrupada (FuentesResumen) cubre la cifra por su nombre. */
+  sinFuente?: boolean;
   /** Contenido adicional bajo la variacion (lectura, supuestos, aviso de CRM). */
   children?: ReactNode;
   className?: string;
@@ -28,7 +32,7 @@ export interface KpiDominanteProps {
  * sin fuente o sin fecha => «pendiente de integracion»; periodo anterior nulo o 0 => «datos insuficientes» para comparar; nunca NaN.
  * Un costo que baja es mejora (mejor_si = "baja"). Locale y moneda salen del tenant (useFormato).
  */
-export function KpiDominante({ cifra, chip, tamano = "normal", borde = "neutro", corto = false, children, className }: KpiDominanteProps) {
+export function KpiDominante({ cifra, chip, tamano = "normal", borde = "neutro", corto = false, compacto = false, sinFuente = false, children, className }: KpiDominanteProps) {
   const formato = useFormato();
   const estado = estadoEfectivo(cifra);
 
@@ -53,13 +57,13 @@ export function KpiDominante({ cifra, chip, tamano = "normal", borde = "neutro",
     <section
       role="group"
       aria-label={cifra.etiqueta}
-      className={cn(TARJETA, "flex h-full flex-col gap-2 p-4 sm:p-5 lg:gap-2.5 lg:p-[22px]", borde === "acento" ? "kit-bd-acento" : "", className)}
+      className={cn(TARJETA, "flex h-full flex-col sm:p-5 lg:gap-2.5 lg:p-[22px]", compacto ? "gap-1 p-3 sm:gap-2" : "gap-2 p-4", borde === "acento" ? "kit-bd-acento" : "", className)}
     >
       <div className="flex min-w-0 items-center justify-between gap-2">
-        <span className={cn(ETIQUETA, "font-medium")}>{cifra.etiqueta}</span>
+        <span data-testid="kpi-etiqueta" className={cn(ETIQUETA, "font-medium")}>{cifra.etiqueta}</span>
         {chip}
       </div>
-      <span className={cn(CIFRA_GRANDE, tamano === "hero" ? "text-[40px] leading-[1.05]" : "text-[24px] leading-[1.1] min-[360px]:text-[28px]", "sm:text-[34px] lg:text-[40px] xl:text-[44px]")}>{formatearValor(cifra, formato)}</span>
+      <span data-testid="kpi-valor" className={cn(CIFRA_GRANDE, tamano === "hero" ? (compacto ? "text-[36px] leading-[1.05]" : "text-[40px] leading-[1.05]") : "text-[24px] leading-[1.1] min-[360px]:text-[28px]", "sm:text-[34px] lg:text-[40px] xl:text-[44px]")}>{formatearValor(cifra, formato)}</span>
       {variacion.estado === "ok" ? (
         <p data-testid="cifra-variacion" data-sentido={sentido} className={cn("m-0 flex flex-wrap items-center gap-x-1.5 text-[13px]", color)}>
           <Icono className="h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -72,11 +76,13 @@ export function KpiDominante({ cifra, chip, tamano = "normal", borde = "neutro",
         </p>
       )}
       {children}
-      <p className={cn("m-0 mt-auto pt-1", NOTA)}>
-        <span>Fuente: {cifra.fuente}</span>
-        <span aria-hidden> · </span>
-        <span>Dato al {formatearFecha(cifra.fecha_dato, formato)}</span>
-      </p>
+      {sinFuente ? null : (
+        <p className={cn("m-0 mt-auto pt-1", NOTA)}>
+          <span>Fuente: {cifra.fuente}</span>
+          <span aria-hidden> · </span>
+          <span>Dato al {formatearFecha(cifra.fecha_dato, formato)}</span>
+        </p>
+      )}
     </section>
   );
 }

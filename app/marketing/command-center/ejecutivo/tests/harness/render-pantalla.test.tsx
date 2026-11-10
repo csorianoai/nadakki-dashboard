@@ -9,7 +9,7 @@ import { join } from "path";
 import { fireEvent, render } from "@testing-library/react";
 import { CommandCenterEjecutivo } from "../../CommandCenterEjecutivo";
 import { AHORA_DEMO, DATOS_DEMO } from "../../demo/datos-demo";
-import type { EstadoPantalla, TemaPantalla } from "../../tipos";
+import type { DatosCommandCenter, EstadoPantalla, TemaPantalla } from "../../tipos";
 
 const OUT = process.env.COMMAND_CENTER_HARNESS_OUT;
 const run = OUT ? it : it.skip;
@@ -39,6 +39,8 @@ interface Caso {
   tema?: TemaPantalla;
   /** Abre los <details> (movil) para comprobar que lo expandido tampoco desborda. */
   expandido?: boolean;
+  /** Conversiones del periodo (por defecto las 13 del diseno): permite capturar los tres estados de muestra. */
+  conversiones?: number;
 }
 
 const CASOS: Caso[] = [
@@ -52,6 +54,11 @@ const CASOS: Caso[] = [
     { archivo: `ok-movil-resumen-${vp}.html`, vp, inicial: "resumen" },
     { archivo: `ok-movil-campanas-${vp}.html`, vp, inicial: "campanas" },
     { archivo: `ok-movil-calidad-${vp}.html`, vp, inicial: "calidad" },
+  ]),
+  // Tres estados de muestra (decision de Cesar, 10-nov-2026): 0-4 muy limitados, 5-14 preliminar (el caso base), 15+ seguimiento.
+  ...(["1920x1080", "1440x900", "390x844", "320x568"] as VP[]).flatMap((vp) => [
+    { archivo: `muestra-muy-limitada-${vp}.html`, vp, conversiones: 3 },
+    { archivo: `muestra-seguimiento-${vp}.html`, vp, conversiones: 17 },
   ]),
   ...(["1440x900", "390x844"] as VP[]).flatMap((vp) => [
     { archivo: `estado-vacio-${vp}.html`, vp, estado: "vacio" as const },
@@ -69,8 +76,9 @@ describe("harness de la pantalla patron (Executive Command Center)", () => {
     mkdirSync(OUT as string, { recursive: true });
     for (const c of CASOS) {
       conMatchMedia(MOVIL(c.vp));
+      const datos: DatosCommandCenter = c.conversiones === undefined ? DATOS_DEMO : { ...DATOS_DEMO, conversiones_total: c.conversiones };
       const { container, unmount } = render(
-        <CommandCenterEjecutivo datos={DATOS_DEMO} estado={c.estado} ahora={c.ahora ?? AHORA_DEMO} demo anchoGrafico={ANCHO[c.vp]} tema={c.tema} />
+        <CommandCenterEjecutivo datos={datos} estado={c.estado} ahora={c.ahora ?? AHORA_DEMO} demo anchoGrafico={ANCHO[c.vp]} tema={c.tema} />
       );
       // La seleccion de pestana inicial no es una prop de la pantalla: en movil se activa la pestana pedida simulando el clic.
       if (c.inicial && c.inicial !== "resumen") {
