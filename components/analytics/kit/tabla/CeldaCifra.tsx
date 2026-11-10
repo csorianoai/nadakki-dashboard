@@ -1,20 +1,15 @@
 "use client";
 
+import "../tema.css";
 import { estadoEfectivo, formatearFecha, formatearValor, type Cifra, type EstadoCifra } from "@/lib/analytics/cifra";
+import { useFormato } from "../FormatoProvider";
 import { cn } from "@/lib/utils";
 
 /**
- * Un nivel por cada escala de calor (0..4). Solo tokens forge; el VALOR siempre va escrito: el color no es la unica pista.
- * Contraste medido sobre los tokens por defecto (styles/forge-tokens-v2.css): texto forgeGray-900 sobre brand-50..300 da
- * 16.2, 14.2, 10.5 y 7.1:1; el nivel 4 usa brand-700 con texto blanco (brand-400 con gray-900 daba 4.49:1, bajo AA).
+ * Un nivel por cada escala de calor (0..4), con tokens semanticos del kit (--kit-calor-N y --kit-calor-texto-N, en claro y en
+ * oscuro). El VALOR siempre va escrito: el color no es la unica pista. El contraste de cada par lo mide tests/analytics/tema.test.ts.
  */
-const CLASES_CALOR = [
-  "bg-forgeBrand-50 text-forgeGray-900",
-  "bg-forgeBrand-100 text-forgeGray-900",
-  "bg-forgeBrand-200 text-forgeGray-900",
-  "bg-forgeBrand-300 text-forgeGray-900",
-  "bg-forgeBrand-700 text-white",
-] as const;
+const CLASES_CALOR = ["kit-calor-0", "kit-calor-1", "kit-calor-2", "kit-calor-3", "kit-calor-4"] as const;
 
 const TEXTO_ESTADO: Record<Exclude<EstadoCifra, "ok">, string> = {
   datos_insuficientes: "Datos insuficientes",
@@ -33,15 +28,16 @@ export interface CeldaCifraProps {
 
 /** Valor de una cifra dentro de una celda/tarjeta. Aplica las reglas duras: sin fuente+fecha o sin valor no hay cifra. */
 export function CeldaCifra({ cifra, nivel, className }: CeldaCifraProps) {
+  const formato = useFormato();
   const estado = estadoEfectivo(cifra);
   if (estado !== "ok") {
     return (
-      <span data-estado={estado} className={cn("text-forge-xs text-forgeGray-600", className)}>
+      <span data-estado={estado} className={cn("text-forge-xs kit-txt-2", className)}>
         {TEXTO_ESTADO[estado]}
       </span>
     );
   }
-  const fecha = formatearFecha(cifra.fecha_dato);
+  const fecha = formatearFecha(cifra.fecha_dato, formato);
   const conCalor = typeof nivel === "number";
   return (
     <span
@@ -53,7 +49,7 @@ export function CeldaCifra({ cifra, nivel, className }: CeldaCifraProps) {
         className
       )}
     >
-      <span>{formatearValor(cifra)}</span>
+      <span>{formatearValor(cifra, formato)}</span>
       <span className="sr-only">{`Fuente: ${cifra.fuente}, dato al ${fecha}`}</span>
     </span>
   );

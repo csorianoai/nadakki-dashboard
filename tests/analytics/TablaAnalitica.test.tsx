@@ -25,7 +25,7 @@ describe("TablaAnalitica · estructura", () => {
     montar();
     expect(screen.getByText("Alfa")).toBeInTheDocument();
     expect(screen.getAllByText("400").length).toBeGreaterThan(0);
-    expect(screen.getByText(/2,5\s?%/)).toBeInTheDocument();
+    expect(screen.getByText(/2\.5\s?%/)).toBeInTheDocument();
   });
 });
 
@@ -160,15 +160,15 @@ describe("TablaAnalitica · mapa de calor", () => {
     document.querySelectorAll("[data-calor]").forEach((el) => expect(el.getAttribute("data-calor")).toBe("0"));
     expect(document.body.textContent).not.toMatch(/NaN|Infinity/);
   });
-  it("contraste: niveles 0..3 con texto oscuro y nivel 4 con fondo oscuro y texto blanco (todos con tokens forge)", () => {
+  it("mapa de calor: cada nivel usa su clase semantica del kit (el contraste de los pares lo mide tema.test.ts)", () => {
     montar(FILAS_VEINTICINCO);
     const niveles = new Map<string, string>();
     document.querySelectorAll("[data-calor]").forEach((el) => niveles.set(el.getAttribute("data-calor") as string, el.className));
     fireEvent.click(screen.getByRole("button", { name: /siguiente/i }));
     fireEvent.click(screen.getByRole("button", { name: /siguiente/i }));
     document.querySelectorAll("[data-calor]").forEach((el) => niveles.set(el.getAttribute("data-calor") as string, el.className));
-    expect(niveles.get("0")).toMatch(/bg-forgeBrand-50 text-forgeGray-900/);
-    expect(niveles.get("4")).toMatch(/bg-forgeBrand-700 text-white/);
+    expect(niveles.get("0")).toMatch(/kit-calor-0/);
+    expect(niveles.get("4")).toMatch(/kit-calor-4/);
     for (const clase of niveles.values()) expect(clase).not.toMatch(/#|rgb|hsl/);
   });
   it("las columnas sin calor no llevan data-calor", () => {

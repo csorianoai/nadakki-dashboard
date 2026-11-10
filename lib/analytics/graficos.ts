@@ -4,6 +4,7 @@
  * un grafico sin fuente o sin fecha del dato es "pendiente de integracion", nunca un dato.
  */
 import { formatearFecha, type EstadoCifra } from "./cifra";
+import { FORMATO_POR_DEFECTO, formatearFechaCorta, type FormatoTenant } from "./formato";
 
 /** Metadatos comunes: titulo, procedencia del dato y estado declarado por quien consume. */
 export interface MetaGrafico {
@@ -159,19 +160,18 @@ export function calcularEmbudo(etapas: readonly EtapaEmbudo[]): { filas: FilaEmb
   return { filas, total };
 }
 
-/** "2026-11-10" -> "10 nov". Si no es fecha, devuelve el texto tal cual. */
-export function etiquetaCorta(x: string): string {
-  const f = formatearFecha(x);
-  return f ? f.replace(/\s\d{4}$/, "") : x;
+/** "2026-11-10" -> "10 nov" (dia y mes en el locale del tenant). Si no es fecha, devuelve el texto tal cual. */
+export function etiquetaCorta(x: string, f: FormatoTenant = FORMATO_POR_DEFECTO): string {
+  return formatearFechaCorta(x, f);
 }
 
-/** Texto corto de unidad para ejes y rotulos. */
-export function etiquetaUnidad(unidad: "numero" | "moneda" | "porcentaje" | "duracion_dias", moneda?: string): string {
+/** Texto corto de unidad para ejes y rotulos. La moneda por defecto es la del tenant. */
+export function etiquetaUnidad(unidad: "numero" | "moneda" | "porcentaje" | "duracion_dias", moneda?: string, f: FormatoTenant = FORMATO_POR_DEFECTO): string {
   switch (unidad) {
     case "porcentaje":
       return "%";
     case "moneda":
-      return moneda ?? "USD";
+      return moneda ?? f.moneda;
     case "duracion_dias":
       return "días";
     default:

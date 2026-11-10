@@ -1,5 +1,6 @@
 "use client";
 
+import "./tema.css";
 import { useId } from "react";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +26,7 @@ export interface BarraFiltrosProps {
 }
 
 const FOCO =
-  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-forgeBrand-600";
+  "kit-foco";
 
 /** Barra de filtros generica: un select nativo con etiqueta por filtro; apila en movil. */
 export function BarraFiltros({ filtros, onChange, onLimpiar, className }: BarraFiltrosProps) {
@@ -37,7 +38,7 @@ export function BarraFiltros({ filtros, onChange, onLimpiar, className }: BarraF
     <div role="search" aria-label="Filtros" className={cn("grid grid-cols-1 items-end gap-3 sm:grid-cols-2 lg:flex lg:flex-wrap", className)}>
       {filtros.map((f) => (
         <div key={f.id} className="min-w-0 lg:w-56">
-          <label htmlFor={`${id}-${f.id}`} className="mb-1 block text-forge-xs font-medium text-forgeGray-600">
+          <label htmlFor={`${id}-${f.id}`} className="mb-1 block text-forge-xs font-medium kit-txt-2">
             {f.etiqueta}
           </label>
           <select
@@ -45,7 +46,7 @@ export function BarraFiltros({ filtros, onChange, onLimpiar, className }: BarraF
             value={f.valor}
             onChange={(e) => onChange(f.id, e.target.value)}
             className={cn(
-              "min-h-[44px] w-full min-w-0 rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-card px-3 text-forge-sm text-forgeGray-800",
+              "min-h-[44px] w-full min-w-0 rounded-forge-sm border kit-ctl px-3 text-forge-sm",
               FOCO
             )}
           >
@@ -62,7 +63,7 @@ export function BarraFiltros({ filtros, onChange, onLimpiar, className }: BarraF
           type="button"
           onClick={onLimpiar}
           className={cn(
-            "min-h-[44px] rounded-forge-sm border border-forgeGray-200 bg-forgeSurface-card px-4 text-forge-sm font-medium text-forgeGray-800 hover:bg-forgeGray-50",
+            "min-h-[44px] rounded-forge-sm border kit-ctl px-4 text-forge-sm font-medium",
             FOCO
           )}
         >
