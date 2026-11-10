@@ -21,6 +21,7 @@ import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import { useTenant } from "@/contexts/TenantContext";
 import { fetchSocialStatus } from "@/lib/api/marketing";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 type ConnState = "connected" | "disconnected" | "error" | "unknown";
 type SendgridState = "configured" | "not_configured" | "unknown";
@@ -77,7 +78,7 @@ function deriveConnState(rows: SocialRow[], key: "meta" | "google", statusError:
 
 async function fetchSendgridState(tenantId: string): Promise<SendgridState> {
   try {
-    const r = await fetch(`/api/v1/tenants/${encodeURIComponent(tenantId)}/config`, {
+    const r = await apiFetch(`/api/v1/tenants/${encodeURIComponent(tenantId)}/config`, {
       method: "GET",
       headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
     });

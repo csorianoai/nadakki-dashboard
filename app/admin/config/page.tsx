@@ -6,6 +6,7 @@ import { Settings, Save, RefreshCw, Loader2 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import { useTenant } from "@/contexts/TenantContext";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 /** Same-origin; proxied via next.config rewrites */
 const API_URL = "";
@@ -50,7 +51,7 @@ export default function AdminConfigPage() {
   const handleSave = () => {
     if (!tenantId) return;
     setSaving(true);
-    fetch(`${API_URL}/api/v1/tenants/${tenantId}/config`, {
+    apiFetch(`${API_URL}/api/v1/tenants/${tenantId}/config`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json", "X-Tenant-ID": tenantId },
       body: JSON.stringify({
