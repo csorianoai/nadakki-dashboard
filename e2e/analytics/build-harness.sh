@@ -6,5 +6,5 @@ OUT="${OUT:-/tmp/kit-harness}"
 mkdir -p "$OUT"
 ANALYTICS_HARNESS_OUT="$OUT" npx jest tests/analytics/harness --silent
 { cat styles/forge-tokens-v2.css; printf '\n@tailwind base;\n@tailwind components;\n@tailwind utilities;\n'; } > "$OUT/in.css"
-npx tailwindcss -c tailwind.config.js -i "$OUT/in.css" -o "$OUT/kit.css" --content "$OUT/kit.html,$OUT/graficos-1440x900.html,$OUT/graficos-390x844.html,$OUT/graficos-320x568.html"
+npx tailwindcss -c tailwind.config.js -i "$OUT/in.css" -o "$OUT/kit.css" --content "$OUT/*.html"
 echo "HARNESS_OK $OUT"
