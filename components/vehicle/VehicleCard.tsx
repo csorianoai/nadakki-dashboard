@@ -34,12 +34,22 @@ function CardPhoto({
 }) {
   return (
     <div className={cn("relative overflow-hidden rounded-r-sm bg-nk-surface-2", aspectClass)}>
-      <div
-        className="absolute inset-0"
-        style={{ background: vehicle.grad }}
-        role="img"
-        aria-label={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-      />
+      {vehicle.primaryPhotoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={vehicle.primaryPhotoUrl}
+          alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : (
+        <div
+          className="absolute inset-0"
+          style={{ background: vehicle.grad }}
+          role="img"
+          aria-label={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+        />
+      )}
       <QualityBadge status={status} className="absolute left-2 top-2 md:left-3 md:top-3" />
       <div className="absolute right-2 top-2 md:right-3 md:top-3">
         <SaveButton saved={saved} onToggle={onSaveToggle ?? (() => undefined)} />
@@ -100,7 +110,17 @@ export const VehicleCard = memo(function VehicleCard({
         )}
       >
         <div className="relative aspect-[3/2] w-full">
-          <div className="absolute inset-0" style={{ background: vehicle.grad }} aria-hidden />
+          {vehicle.primaryPhotoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={vehicle.primaryPhotoUrl}
+              alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          ) : (
+            <div className="absolute inset-0" style={{ background: vehicle.grad }} aria-hidden />
+          )}
           <QualityBadge status={status} className="absolute left-2 top-2" />
         </div>
         <div className="space-y-1 p-3">

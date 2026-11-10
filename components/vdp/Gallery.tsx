@@ -17,7 +17,9 @@ export function Gallery({ vehicle }: { vehicle: Vehicle }) {
   const [idx, setIdx] = useState(0);
   const total = photoCount(vehicle);
   const status = priceStatus(vehicle.badge, vehicle.match);
-  const thumbCount = Math.min(5, total ?? 0);
+  const urls = vehicle.photos && vehicle.photos.length > 0 ? vehicle.photos : undefined;
+  const thumbCount = urls ? urls.length : Math.min(5, total ?? 0);
+  const current = urls ? urls[idx] : idx === 0 ? vehicle.primaryPhotoUrl : undefined;
 
   return (
     <div className="space-y-3">
@@ -26,11 +28,15 @@ export function Gallery({ vehicle }: { vehicle: Vehicle }) {
         style={{
           background: getVehicleGradient(vehicle),
           aspectRatio: "16/10",
-          filter: THUMBNAIL_FILTERS[idx] ?? "hue-rotate(0deg)",
+          filter: urls ? undefined : THUMBNAIL_FILTERS[idx] ?? "hue-rotate(0deg)",
         }}
         role="img"
         aria-label={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
       >
+        {current ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={current} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        ) : null}
         <QualityBadge status={status} className="absolute left-3 top-3" />
         <div className="absolute right-3 top-3 flex gap-2">
           <button
@@ -53,7 +59,12 @@ export function Gallery({ vehicle }: { vehicle: Vehicle }) {
             <Camera className="h-3 w-3" aria-hidden />
             {idx + 1}/{total}
           </span>
-        ) : null}
+        ) : (
+          <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+            <Camera className="h-3 w-3" aria-hidden />
+            Sin fotos todavia
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-5 gap-2">
@@ -69,13 +80,18 @@ export function Gallery({ vehicle }: { vehicle: Vehicle }) {
             aria-label={`Foto ${i + 1}`}
             aria-current={idx === i}
           >
-            <div
-              className="absolute inset-0"
-              style={{
-                background: getVehicleGradient(vehicle),
-                filter: THUMBNAIL_FILTERS[i] ?? undefined,
-              }}
-            />
+            {urls ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={urls[i]} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            ) : (
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: getVehicleGradient(vehicle),
+                  filter: THUMBNAIL_FILTERS[i] ?? undefined,
+                }}
+              />
+            )}
           </button>
         ))}
       </div>
