@@ -1,0 +1,208 @@
+{
+  "meta": {
+    "title": {
+      "es": "Vende o alquila tu propiedad · Valoración gratuita",
+      "en": "Sell or rent your property · Free valuation"
+    },
+    "description": {
+      "es": "Solicita una valoración gratuita y sin compromiso de tu propiedad frente al agua en el Sur de Florida.",
+      "en": "Request a free, no-obligation valuation of your waterfront property in South Florida."
+    }
+  },
+  "eyebrow": {
+    "es": "Vende o alquila tu propiedad",
+    "en": "Sell or rent your property"
+  },
+  "title": {
+    "es": "¿Cuánto vale tu propiedad?",
+    "en": "What is your property worth?"
+  },
+  "lead": {
+    "es": "Solicita una valoración gratuita y sin compromiso. La preparo con ventas comparables recientes y la competencia activa en tu edificio o calle, y te la explico.",
+    "en": "Request a free, no-obligation valuation. I prepare it from recent comparable sales and active competition in your building or street, and I walk you through it."
+  },
+  "promises": {
+    "es": [
+      "Gratuita y sin compromiso",
+      "Tres pasos, menos de dos minutos",
+      "En español o en inglés"
+    ],
+    "en": [
+      "Free and without obligation",
+      "Three steps, under two minutes",
+      "In English or Spanish"
+    ]
+  },
+  "howEyebrow": {
+    "es": "Cómo trabajo",
+    "en": "How I work"
+  },
+  "howTitle": {
+    "es": "De la valoración al cierre",
+    "en": "From valuation to closing"
+  },
+  "how": [
+    {
+      "h": {
+        "es": "Valoración",
+        "en": "Valuation"
+      },
+      "p": {
+        "es": "Ventas comparables, propiedades activas y estado de tu propiedad, explicados en un informe escrito.",
+        "en": "Comparable sales, active listings and the condition of your property, explained in a written report."
+      }
+    },
+    {
+      "h": {
+        "es": "Preparación",
+        "en": "Preparation"
+      },
+      "p": {
+        "es": "Recomendaciones de reparaciones, presentación y documentos, incluidas aprobaciones de la asociación y declaraciones.",
+        "en": "Recommendations on repairs, staging and documents, including association approvals and disclosures."
+      }
+    },
+    {
+      "h": {
+        "es": "Lanzamiento y visitas",
+        "en": "Launch and showings"
+      },
+      "p": {
+        "es": "Material profesional, publicación en el MLS, campañas y visitas privadas con visitantes calificados.",
+        "en": "Professional media, MLS listing, campaigns and private showings with qualified visitors."
+      }
+    },
+    {
+      "h": {
+        "es": "Negociación y cierre",
+        "en": "Negotiation and closing"
+      },
+      "p": {
+        "es": "Revisión de ofertas, inspecciones, tasación y coordinación con la compañía de títulos hasta el cierre.",
+        "en": "Offer review, inspections, appraisal and coordination with the title company through closing."
+      }
+    }
+  ],
+  "mktTitle": {
+    "es": "Lo que hago para promocionar tu propiedad",
+    "en": "What I do to market your property"
+  },
+  "mktText": {
+    "es": "Cada propiedad tiene su propio plan, dirigido a los compradores o inquilinos con más probabilidad de actuar, en EE. UU. y en el exterior.",
+    "en": "Each property gets its own plan, aimed at the buyers or tenants most likely to act, in the U.S. and abroad."
+  },
+  "marketing": [
+    {
+      "h": {
+        "es": "Fotografía y video",
+        "en": "Photography and video"
+      },
+      "p": {
+        "es": "Fotos y video profesionales, incluidas tomas aéreas donde estén permitidas.",
+        "en": "Professional photos and video, including aerial footage where permitted."
+      }
+    },
+    {
+      "h": {
+        "es": "Plano y recorrido 3D",
+        "en": "Floor plan and 3D tour"
+      },
+      "p": {
+        "es": "Plano con medidas y recorrido virtual para compradores a distancia.",
+        "en": "A measured floor plan and a virtual tour for remote buyers."
+      }
+    },
+    {
+      "h": {
+        "es": "Ficha bilingüe",
+        "en": "Bilingual listing"
+      },
+      "p": {
+        "es": "Descripción y materiales en español e inglés.",
+        "en": "Description and materials in English and Spanish."
+      }
+    },
+    {
+      "h": {
+        "es": "MLS y portales",
+        "en": "MLS and syndication"
+      },
+      "p": {
+        "es": "Publicación en el MLS y difusión a los principales portales inmobiliarios.",
+        "en": "MLS listing and distribution to the major real estate portals."
+      }
+    },
+    {
+      "h": {
+        "es": "Campañas digitales",
+        "en": "Digital campaigns"
+      },
+      "p": {
+        "es": "Campañas en buscadores y redes sociales en EE. UU. y Latinoamérica.",
+        "en": "Paid search and social campaigns in the U.S. and Latin America."
+      }
+    },
+    {
+      "h": {
+        "es": "Red de agentes",
+        "en": "Broker network"
+      },
+      "p": {
+        "es": "Contacto directo con agentes que trabajan con compradores de tu zona.",
+        "en": "Direct outreach to agents who work with buyers in your area."
+      }
+    },
+    {
+      "h": {
+        "es": "Visitas privadas",
+        "en": "Private showings"
+      },
+      "p": {
+        "es": "Visitas agendadas solo con visitantes precalificados.",
+        "en": "Scheduled showings with pre-qualified visitors only."
+      }
+    },
+    {
+      "h": {
+        "es": "Informe semanal",
+        "en": "Weekly report"
+      },
+      "p": {
+        "es": "Visualizaciones, consultas, visitas y comentarios, cada semana.",
+        "en": "Views, inquiries, showings and feedback, every week."
+      }
+    }
+  ],
+  "rentTitle": {
+    "es": "¿Prefieres alquilarla?",
+    "en": "Prefer to rent it out?"
+  },
+  "rentText": {
+    "es": "Promociono la propiedad para alquiler anual o de temporada, evalúo solicitudes según las normas de la asociación y la ley, y coordino el contrato y la entrega. Elige “Alquilarla” en el formulario.",
+    "en": "I market the property for annual or seasonal leases, screen applications according to the association’s rules and the law, and coordinate the lease and move-in. Choose “Rent it out” in the form."
+  },
+  "feeTitle": {
+    "es": "Condiciones claras",
+    "en": "Clear terms"
+  },
+  "feeText": {
+    "es": "Las comisiones son negociables y se acuerdan por escrito antes de iniciar cualquier promoción.",
+    "en": "Commissions are negotiable and are agreed in writing before any marketing begins."
+  },
+  "abroadTitle": {
+    "es": "Propietarios que viven fuera de EE. UU.",
+    "en": "Owners who live outside the U.S."
+  },
+  "abroadText": {
+    "es": "Gestiono la venta o el alquiler sin que tengas que viajar: visitas con video, firma remota o con poder apostillado, y coordinación con tu contador para la retención FIRPTA cuando aplique.",
+    "en": "I handle the sale or lease without you having to travel: video showings, remote signing or an apostilled power of attorney, and coordination with your accountant on FIRPTA withholding when it applies."
+  },
+  "soldTitle": {
+    "es": "Ventas realizadas",
+    "en": "Recent sales"
+  },
+  "mktEyebrow": {
+    "es": "Plan de marketing",
+    "en": "Marketing plan"
+  }
+}

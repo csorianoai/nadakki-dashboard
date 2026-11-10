@@ -1,0 +1,352 @@
+openapi: "3.1.0"
+x-contract-id: C-SITES-LEADS
+x-contract-status: proposed
+info:
+  title: C-SITES-LEADS - captacion de contactos de Nadakki Sites
+  version: "1.1.0"
+  x-changelog: [{"version": "1.1.0", "kind": "additive", "summary": "Aditivo. LeadSubmission gana ad_click y ga_client_id; Lead espeja DATA 1.1.0; rutas admin nuevas (etapas por tenant, cambio de etapa, exportacion CSV de conversiones, importacion .eml/.mbox); eventos nuevos sites.lead.stage_changed y sites.lead.imported; sites.lead.created gana campos opcionales sin identificadores."}]
+  description: "Captacion de contactos. Endpoint PUBLICO (sin JWT) POST /api/v1/sites/public/{site_id}/leads, llamado por el formulario del sitio o por el route handler del motor. Identidad: X-Site-Key = 'v1.<site_id>.<firma>' donde firma = base64url(HMAC-SHA256(clave_de_firma_de_sitio, 'v1.' + site_id)); el core verifica la firma, exige que site_id del path coincida y SOLO ENTONCES resuelve el tenant y fija app.current_tenant_id. Nunca se acepta tenant en query, cabecera ni cuerpo. Anti-spam: honeypot `company_website` (debe venir vacio), tiempo minimo de relleno (form_rendered_at: >=3 s y <=24 h), Idempotency-Key, rate limits. Honeypot lleno o relleno demasiado rapido: respuesta 202 INDISTINGUIBLE, sin guardar ni emitir evento. 202 significa 'recibido y encolado de forma durable'; el procesamiento (persistir, proyectar a re_leads si vertical=realestate, avisar al agente) es asincrono y emite sites.lead.created. Consentimiento POR CANAL (email, phone_sms, whatsapp) con text_version del texto mostrado (el servidor guarda hash y fecha). Las rutas /sites/{site_id}/leads*, /sites/{site_id}/leads/import y /crm/* son administrativas (JWT, tenant del token). Ejemplos SINTETICOS. AVISO: los límites, plazos y umbrales numéricos (altas por hora, vigencias, tasas de rebote y queja, límites de envío) son PROVISIONALES y no están medidos; deben confirmarse antes de congelar el contrato."
+servers: [{"url": "https://api.nadakki.example/api/v1/sites"}]
+tags: [{"name": "public"}, {"name": "admin"}]
+paths:
+  "/public/{site_id}/leads":
+    post:
+      operationId: submitLead
+      tags: ["public"]
+      summary: Envia un contacto desde el formulario del sitio
+      security: [{"siteKey": []}]
+      description: "Sin JWT. Orden de comprobacion: firma de X-Site-Key (401), coincidencia path/clave (403), tamano (413), esquema (422), idempotencia (409/replay), anti-spam silencioso, rate limit (429). Repeticion con la misma Idempotency-Key y cuerpo: 202 con 'Idempotent-Replayed: true' y la misma reference, sin segundo lead ni evento. Emite sites.lead.created tras persistir."
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"$ref": "#/components/parameters/IdempotencyKey"}, {"name": "X-Site-Key", "in": "header", "required": true, "description": "Ver info.description.", "schema": {"type": "string", "pattern": "^v1\\.[0-9a-f-]{36}\\.[A-Za-z0-9_-]{43}$"}}, {"name": "Accept-Language", "in": "header", "schema": {"type": "string"}}]
+      requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/LeadSubmission"}, "examples": {"synth": {"value": {"name": "Visitante SYNTH", "email": "visitante@synth.invalid", "message": "Quiero ver este condominio.", "locale": "es", "source_page": "/es/propiedades/synth-condo-01", "interest": {"kind": "listing", "slug": "synth-condo-01"}, "consents": [{"channel": "email", "granted": true, "text_version": "consent-email-2026-10", "text_locale": "es"}, {"channel": "phone_sms", "granted": false, "text_version": "consent-sms-2026-10", "text_locale": "es"}, {"channel": "whatsapp", "granted": false, "text_version": "consent-wa-2026-10", "text_locale": "es"}], "form_rendered_at": "2026-11-07T14:59:40Z", "company_website": ""}}}}}}
+      responses:
+        "202": {"description": "Recibido y encolado.", "headers": {"RateLimit-Limit": {"$ref": "#/components/headers/RateLimit-Limit"}, "RateLimit-Remaining": {"$ref": "#/components/headers/RateLimit-Remaining"}, "RateLimit-Reset": {"$ref": "#/components/headers/RateLimit-Reset"}, "Idempotent-Replayed": {"description": "true si es una repeticion.", "schema": {"type": "string", "enum": ["true"]}}}, "content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/LeadAccepted"}, "examples": {"synth": {"value": {"reference": "00000000-0000-4000-8000-000000000201", "status": "accepted", "received_at": "2026-11-07T15:00:00Z"}}}}}}
+        "401": {"description": "SITE_KEY_INVALID: firma ausente o invalida.", "content": {"application/problem+json": {"schema": {"$ref": "schema.json#/$defs/Problem"}}}}
+        "403": {"description": "SITE_KEY_MISMATCH (path distinto de la clave) o SITE_NOT_ACCEPTING_LEADS (sitio no published/suspendido).", "content": {"application/problem+json": {"schema": {"$ref": "schema.json#/$defs/Problem"}}}}
+        "409": {"description": "IDEMPOTENCY_KEY_REUSED: misma clave con cuerpo distinto.", "content": {"application/problem+json": {"schema": {"$ref": "schema.json#/$defs/Problem"}}}}
+        "413": {"description": "PAYLOAD_TOO_LARGE (> 16 KiB).", "content": {"application/problem+json": {"schema": {"$ref": "schema.json#/$defs/Problem"}}}}
+        "422": {"description": "VALIDATION_ERROR, CONSENT_TEXT_UNKNOWN o TENANT_FIELD_FORBIDDEN.", "content": {"application/problem+json": {"schema": {"$ref": "schema.json#/$defs/Problem"}}}}
+        "429": {"description": "RATE_LIMITED. Limites por defecto (configurables): 5 por 10 min por IP+sitio; 60/h por sitio; 20/h por IP global. Tras 429 el cliente espera Retry-After.", "headers": {"Retry-After": {"$ref": "#/components/headers/Retry-After"}, "RateLimit-Limit": {"$ref": "#/components/headers/RateLimit-Limit"}, "RateLimit-Remaining": {"$ref": "#/components/headers/RateLimit-Remaining"}, "RateLimit-Reset": {"$ref": "#/components/headers/RateLimit-Reset"}, "RateLimit-Policy": {"$ref": "#/components/headers/RateLimit-Policy"}, "X-RateLimit-Scope": {"$ref": "#/components/headers/X-RateLimit-Scope"}}, "content": {"application/problem+json": {"schema": {"$ref": "schema.json#/$defs/Problem"}, "examples": {"limited": {"value": {"type": "about:blank", "title": "Demasiadas peticiones", "status": 429, "code": "RATE_LIMITED", "detail": "Limite por IP y sitio agotado."}}}}}}
+        "503": {"description": "UNAVAILABLE: cola durable no disponible; Retry-After. Nunca se pierde un contacto aceptado con 202.", "content": {"application/problem+json": {"schema": {"$ref": "schema.json#/$defs/Problem"}}}}
+  "/sites/{site_id}/leads":
+    get:
+      operationId: listLeads
+      tags: ["admin"]
+      summary: Lista contactos del sitio (Contactos del dashboard)
+      security: [{"bearerAuth": []}]
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"name": "status", "in": "query", "schema": {"type": "string", "enum": ["received", "projected", "projection_failed"], "readOnly": true}}, {"name": "channel", "in": "query", "description": "Solo leads con consentimiento vigente en ese canal.", "schema": {"$ref": "schema.json#/$defs/ConsentChannel"}}, {"name": "created_since", "in": "query", "schema": {"$ref": "schema.json#/$defs/Timestamp"}}, {"$ref": "#/components/parameters/Limit"}, {"$ref": "#/components/parameters/Cursor"}]
+      responses:
+        "200": {"description": "Pagina de leads (con PII del propio tenant).", "content": {"application/json": {"schema": {"type": "object", "required": ["items", "next_cursor"], "properties": {"items": {"type": "array", "items": {"$ref": "schema.json#/$defs/Lead"}}, "next_cursor": {"type": ["string", "null"]}}}, "examples": {"synth": {"value": {"items": [{"id": "00000000-0000-4000-8000-0000000000c7", "tenant_id": "00000000-0000-4000-8000-0000000000a1", "vertical": "realestate", "site_id": "00000000-0000-4000-8000-0000000000b1", "idempotency_key": "synth-idem-0000001", "name": "Visitante SYNTH", "email": "visitante@synth.invalid", "message": "Quiero ver este condominio.", "locale": "es", "source_page": "/es/propiedades/synth-condo-01", "interest": {"kind": "listing", "slug": "synth-condo-01"}, "utm": {}, "consents": [{"consent_id": "00000000-0000-4000-8000-0000000000d1", "channel": "email", "status": "granted", "text_version": "consent-email-2026-10", "text_locale": "es", "recorded_at": "2026-11-07T15:00:00Z", "supersedes_id": null}], "contactable_channels": ["email"], "status": "received", "projected_ref": null, "created_at": "2026-11-07T15:00:00Z"}], "next_cursor": null}}}}}}
+        default: {"$ref": "#/components/responses/Error"}
+  "/sites/{site_id}/leads/{lead_id}":
+    get:
+      operationId: getLead
+      tags: ["admin"]
+      summary: Obtiene un contacto
+      security: [{"bearerAuth": []}]
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"name": "lead_id", "in": "path", "required": true, "schema": {"$ref": "schema.json#/$defs/Uuid"}}]
+      responses:
+        "200": {"description": "El lead.", "content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/Lead"}, "examples": {"synth": {"value": {"id": "00000000-0000-4000-8000-0000000000c7", "tenant_id": "00000000-0000-4000-8000-0000000000a1", "vertical": "realestate", "site_id": "00000000-0000-4000-8000-0000000000b1", "idempotency_key": "synth-idem-0000001", "name": "Visitante SYNTH", "email": "visitante@synth.invalid", "message": "Quiero ver este condominio.", "locale": "es", "source_page": "/es/propiedades/synth-condo-01", "interest": {"kind": "listing", "slug": "synth-condo-01"}, "utm": {}, "consents": [{"consent_id": "00000000-0000-4000-8000-0000000000d1", "channel": "email", "status": "granted", "text_version": "consent-email-2026-10", "text_locale": "es", "recorded_at": "2026-11-07T15:00:00Z", "supersedes_id": null}], "contactable_channels": ["email"], "status": "received", "projected_ref": null, "created_at": "2026-11-07T15:00:00Z"}}}}}}
+        default: {"$ref": "#/components/responses/Error"}
+  "/sites/{site_id}/leads/{lead_id}/consents/{channel}/revoke":
+    post:
+      operationId: revokeLeadConsent
+      tags: ["admin"]
+      summary: Revoca el consentimiento de un canal
+      security: [{"bearerAuth": []}]
+      description: "Crea un registro revoked que sustituye al vigente (append-only), quita el canal de contactable_channels y emite sites.lead.consent_revoked. Sin consentimiento vigente en ese canal: 409 CONFLICT."
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"name": "lead_id", "in": "path", "required": true, "schema": {"$ref": "schema.json#/$defs/Uuid"}}, {"name": "channel", "in": "path", "required": true, "schema": {"$ref": "schema.json#/$defs/ConsentChannel"}}, {"$ref": "#/components/parameters/IdempotencyKey"}]
+      requestBody: {"content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/ConsentRevokeRequest"}, "examples": {"synth": {"value": {"reason": "El contacto lo pidio por telefono."}}}}}}
+      responses:
+        "200": {"description": "Lead actualizado.", "content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/Lead"}, "examples": {"synth": {"value": {"id": "00000000-0000-4000-8000-0000000000c7", "tenant_id": "00000000-0000-4000-8000-0000000000a1", "vertical": "realestate", "site_id": "00000000-0000-4000-8000-0000000000b1", "idempotency_key": "synth-idem-0000001", "name": "Visitante SYNTH", "email": "visitante@synth.invalid", "message": "Quiero ver este condominio.", "locale": "es", "source_page": "/es/propiedades/synth-condo-01", "interest": {"kind": "listing", "slug": "synth-condo-01"}, "utm": {}, "consents": [{"consent_id": "00000000-0000-4000-8000-0000000000d1", "channel": "email", "status": "granted", "text_version": "consent-email-2026-10", "text_locale": "es", "recorded_at": "2026-11-07T15:00:00Z", "supersedes_id": null}], "contactable_channels": [], "status": "received", "projected_ref": null, "created_at": "2026-11-07T15:00:00Z"}}}}}}
+        default: {"$ref": "#/components/responses/Error"}
+  /crm/stages:
+    get:
+      operationId: listPipelineStages
+      tags: [admin]
+      summary: Etapas del embudo del tenant
+      security:
+      - bearerAuth: []
+      description: Tenant SOLO del claim tenant_id. Si el tenant aun no tiene etapas, el servidor las aprovisiona con los valores por defecto de schema.json#/$defs/PipelineStage (nuevo, cualificado, visita, oferta, contrato, perdido).
+      responses:
+        '200':
+          description: Etapas ordenadas por position.
+          content:
+            application/json:
+              schema: {$ref: schema.json#/$defs/PipelineStageList}
+              examples:
+                synth:
+                  value:
+                    stages:
+                    - key: cualificado
+                      label: {es: Cualificado, en: Qualified}
+                      position: 1
+                      kind: open
+                      conversion_kind: qualified_lead
+                      is_initial: false
+                      archived: false
+                      id: 00000000-0000-4000-8000-0000000000e1
+                      tenant_id: 00000000-0000-4000-8000-0000000000a1
+                      created_at: '2026-11-09T12:00:00Z'
+                      updated_at: '2026-11-09T12:00:00Z'
+        default: {$ref: '#/components/responses/Error'}
+    put:
+      operationId: replacePipelineStages
+      tags: [admin]
+      summary: Reemplaza la configuracion de etapas
+      security:
+      - bearerAuth: []
+      description: 'Idempotente por naturaleza (reemplazo completo). Cambiar conversion_kind de una etapa afecta solo a cambios de etapa futuros; los eventos ya guardados conservan su foto. 422: STAGE_IMMUTABLE (key o kind cambiados), STAGE_IN_USE (clave omitida: se archiva), STAGE_INVALID (reglas de PipelineStageSet).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: schema.json#/$defs/PipelineStageSet}
+            examples:
+              synth:
+                value:
+                  stages:
+                  - key: nuevo
+                    label: {es: Nuevo, en: New}
+                    position: 0
+                    kind: open
+                    conversion_kind: null
+                    is_initial: true
+                    archived: false
+                  - key: cualificado
+                    label: {es: Cualificado, en: Qualified}
+                    position: 1
+                    kind: open
+                    conversion_kind: qualified_lead
+                    is_initial: false
+                    archived: false
+      responses:
+        '200':
+          description: Etapas guardadas.
+          content:
+            application/json:
+              schema: {$ref: schema.json#/$defs/PipelineStageList}
+        default: {$ref: '#/components/responses/Error'}
+  /sites/{site_id}/leads/{lead_id}/stage:
+    post:
+      operationId: changeLeadStage
+      tags: [admin]
+      summary: Cambia la etapa de un contacto
+      security:
+      - bearerAuth: []
+      description: Guarda el evento de etapa (append-only), actualiza current_stage_key y emite sites.lead.stage_changed. El cambio NUNCA espera a marketing ni a Google. Pasar de una etapa won a una lost marca retracts_stage_event_id (solo contrato -> perdido; oferta -> cualificado no retira nada). Si hay eventos pendientes de conversion que ya no tienen sentido, quedan skipped/superseded. Misma Idempotency-Key y cuerpo repite la respuesta sin reemitir.
+      parameters:
+      - {$ref: '#/components/parameters/SiteIdPath'}
+      - name: lead_id
+        in: path
+        required: true
+        schema: {$ref: schema.json#/$defs/Uuid}
+      - {$ref: '#/components/parameters/IdempotencyKey'}
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: schema.json#/$defs/StageChangeRequest}
+            examples:
+              synth:
+                value:
+                  to_stage_key: contrato
+                  value: {amount: '12000.00', currency: USD}
+      responses:
+        '200':
+          description: Evento de etapa creado.
+          content:
+            application/json:
+              schema: {$ref: schema.json#/$defs/LeadStageEvent}
+              examples:
+                synth:
+                  value:
+                    id: 00000000-0000-4000-8000-0000000000e1
+                    tenant_id: 00000000-0000-4000-8000-0000000000a1
+                    site_id: 00000000-0000-4000-8000-0000000000b1
+                    lead_id: 00000000-0000-4000-8000-0000000000c7
+                    from_stage_key: oferta
+                    to_stage_key: contrato
+                    from_kind: open
+                    to_kind: won
+                    conversion_kind: sale
+                    value: {amount: '12000.00', currency: USD}
+                    changed_at: '2026-11-09T15:00:00Z'
+                    changed_by: 00000000-0000-4000-8000-0000000000f1
+                    conversion_state: pending
+                    adjustment_state: not_applicable
+                    skip_reason: null
+                    export_id: null
+                    exported_at: null
+                    retracts_stage_event_id: null
+        default: {$ref: '#/components/responses/Error'}
+  /sites/{site_id}/leads/{lead_id}/stage-events:
+    get:
+      operationId: listLeadStageEvents
+      tags: [admin]
+      summary: Historial de etapas de un contacto
+      security:
+      - bearerAuth: []
+      parameters:
+      - {$ref: '#/components/parameters/SiteIdPath'}
+      - name: lead_id
+        in: path
+        required: true
+        schema: {$ref: schema.json#/$defs/Uuid}
+      responses:
+        '200':
+          description: Eventos del mas nuevo al mas viejo.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items: {$ref: schema.json#/$defs/LeadStageEvent}
+        default: {$ref: '#/components/responses/Error'}
+  /crm/conversions/exports:
+    post:
+      operationId: createConversionExport
+      tags: [admin]
+      summary: Prepara el CSV de conversiones para marketing
+      security:
+      - bearerAuth: []
+      description: 'Primer corte de C-MKT-CONVERSIONS: el agente descarga el CSV y lo sube a marketing, que lo valida y exige aprobacion por lote. Sites no envia nada a Google ni a GA4. dry_run=true (defecto) cuenta sin marcar. Con dry_run=false marca las filas como exported y crea el lote. Excluye click_consent denied o unknown, not_required sin consent_region (fail-closed, skip_reason consent_unknown), contactos importados y filas ya exportadas. Por defecto el CSV no lleva correo ni telefono (include_identifiers=false). Una fila por evento de etapa elegible; las retiradas (solo contrato -> perdido) van como row_type=retraction. Las ventanas de carga y de ajustes de Google NO las aplica Sites: estan sin verificar con la API y las valida marketing.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: schema.json#/$defs/ConversionExportRequest}
+            examples:
+              synth:
+                value: {from: '2026-10-01T00:00:00Z', to: '2026-11-09T00:00:00Z', dry_run: true}
+      responses:
+        '201':
+          description: Lote (o conteo en dry_run).
+          content:
+            application/json:
+              schema: {$ref: schema.json#/$defs/ConversionExport}
+              examples:
+                synth:
+                  value:
+                    id: null
+                    tenant_id: 00000000-0000-4000-8000-0000000000a1
+                    dry_run: true
+                    row_count: 3
+                    retraction_count: 1
+                    skipped_counts: {no_click_id: 2, consent_denied: 1, consent_unknown: 1, imported_history: 40, superseded: 0}
+                    download_path: null
+                    created_at: '2026-11-09T15:00:00Z'
+                    created_by: 00000000-0000-4000-8000-0000000000f1
+        default: {$ref: '#/components/responses/Error'}
+  /crm/conversions/exports/{export_id}:
+    get:
+      operationId: getConversionExport
+      tags: [admin]
+      summary: Metadatos de un lote exportado
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: export_id
+        in: path
+        required: true
+        schema: {$ref: schema.json#/$defs/Uuid}
+      responses:
+        '200':
+          description: El lote.
+          content:
+            application/json:
+              schema: {$ref: schema.json#/$defs/ConversionExport}
+        default: {$ref: '#/components/responses/Error'}
+  /crm/conversions/exports/{export_id}/download:
+    get:
+      operationId: downloadConversionExport
+      tags: [admin]
+      summary: Descarga el CSV del lote
+      security:
+      - bearerAuth: []
+      parameters:
+      - name: export_id
+        in: path
+        required: true
+        schema: {$ref: schema.json#/$defs/Uuid}
+      description: 'Cabecera y columnas de schema.json#/$defs/ConversionCsvRow. Correo y telefono vacios salvo include_identifiers=true y ad_user_data=granted por fila; aun asi Cache-Control: no-store.'
+      responses:
+        '200':
+          description: CSV.
+          headers:
+            Cache-Control:
+              schema: {type: string, const: no-store}
+          content:
+            text/csv:
+              schema: {type: string}
+              examples:
+                synth:
+                  value: "row_type,order_id,stage_event_id,site_id,kind,occurred_at,click_id_type,click_id,value,currency,consent,consent_region,ad_user_data,ad_personalization,ga_client_id,email,phone,landing_path,original_stage_event_id,original_occurred_at,adjustment_at,reason\nconversion,00000000-0000-4000-8000-0000000000c7,00000000-0000-4000-8000-0000000000e1,00000000-0000-4000-8000-0000000000b1,sale,2026-11-09T15:00:00Z,gclid,SYNTH_GCLID_0001,12000.00,USD,granted,ES,granted,granted,,,,/es/propiedades/synth-condo-01,,,,\n"
+        default: {$ref: '#/components/responses/Error'}
+  /sites/{site_id}/leads/import:
+    post:
+      operationId: importLeads
+      tags: [admin]
+      summary: Importa contactos historicos desde avisos de correo
+      security:
+      - bearerAuth: []
+      description: 'Multipart con un archivo .eml o .mbox que sube el agente (sin acceso al buzon). dry_run=true (defecto) analiza y cuenta sin escribir. Limites PROVISIONALES: 25 MiB y 5000 mensajes por subida (413 PAYLOAD_TOO_LARGE). Idempotente por hash del Message-ID. Consentimiento: la linea de consentimiento de llamada/SMS/WhatsApp del aviso se importa con la fecha del correo; el de correo electronico no consta y se importa como no concedido.'
+      parameters:
+      - {$ref: '#/components/parameters/SiteIdPath'}
+      - name: dry_run
+        in: query
+        schema: {type: boolean, default: true}
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: {type: string, format: binary}
+      responses:
+        '200':
+          description: Informe.
+          content:
+            application/json:
+              schema: {$ref: schema.json#/$defs/ImportReport}
+              examples:
+                synth:
+                  value:
+                    import_id: null
+                    dry_run: true
+                    file_kind: mbox
+                    messages_total: 120
+                    parsed: 112
+                    duplicates: 3
+                    unrecognized: 5
+                    created: 0
+                    unrecognized_positions: [4, 17, 33, 58, 91]
+        '413':
+          description: PAYLOAD_TOO_LARGE.
+          content:
+            application/problem+json:
+              schema: {$ref: schema.json#/$defs/Problem}
+        '422':
+          description: 'VALIDATION_ERROR: ni .eml ni .mbox.'
+          content:
+            application/problem+json:
+              schema: {$ref: schema.json#/$defs/Problem}
+        default: {$ref: '#/components/responses/Error'}
+components:
+  securitySchemes:
+    siteKey:
+      type: apiKey
+      in: header
+      name: X-Site-Key
+      description: "site_id firmado con HMAC (no es secreto del navegador: es un identificador infalsificable y rotable). Rotacion invalida las claves previas."
+    bearerAuth: {"type": "http", "scheme": "bearer", "bearerFormat": "JWT", "description": "Solo rutas administrativas; el tenant sale del claim tenant_id."}
+  parameters: {"IdempotencyKey": {"name": "Idempotency-Key", "in": "header", "required": true, "description": "Clave opaca de 16 a 128 caracteres, unica por tenant y operacion. Misma clave y mismo cuerpo repite la respuesta original (200) sin reemitir eventos; misma clave y cuerpo distinto: 409 IDEMPOTENCY_KEY_REUSED.", "schema": {"type": "string", "minLength": 16, "maxLength": 128}}, "Limit": {"name": "limit", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 200, "default": 50}}, "Cursor": {"name": "cursor", "in": "query", "description": "Cursor opaco devuelto en next_cursor; invalido o caducado: 422 VALIDATION_ERROR.", "schema": {"type": "string", "maxLength": 512}}, "SiteIdPath": {"name": "site_id", "in": "path", "required": true, "schema": {"$ref": "schema.json#/$defs/Uuid"}}}
+  headers: {"Retry-After": {"description": "Segundos de espera antes de reintentar.", "schema": {"type": "integer", "minimum": 1}}, "RateLimit-Limit": {"description": "Cuota de la ventana vigente (draft IETF RateLimit headers).", "schema": {"type": "integer"}}, "RateLimit-Remaining": {"description": "Peticiones restantes en la ventana.", "schema": {"type": "integer"}}, "RateLimit-Reset": {"description": "Segundos hasta reinicio de la ventana.", "schema": {"type": "integer"}}, "RateLimit-Policy": {"description": "Politica aplicada, p. ej. 5;w=600 (5 por 600 s).", "schema": {"type": "string"}}, "X-RateLimit-Scope": {"description": "Cubo agotado.", "schema": {"type": "string", "enum": ["ip_site", "site", "ip_global"]}}}
+  responses:
+    Error:
+      description: "Error (rutas admin): 401 UNAUTHENTICATED, 403 FORBIDDEN/TENANT_MISMATCH, 404 NOT_FOUND, 409 CONFLICT, 422 VALIDATION_ERROR, 429 RATE_LIMITED."
+      content: {"application/problem+json": {"schema": {"$ref": "schema.json#/$defs/Problem"}}}

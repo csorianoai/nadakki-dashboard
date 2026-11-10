@@ -1,0 +1,21 @@
+contract: C-SITES-RENDER
+version: "1.0.0"
+builds_on: [{"contract": "C-SITES-DATA", "version": "1.0.0"}]
+description: "Evento de revalidacion core -> motor. Mismo sobre que el resto de eventos Sites; la carga no contiene contenido ni datos de marca ni PII."
+envelope: {"$ref": "schema.json#/$defs/EventEnvelope"}
+delivery:
+  transport: "POST HTTPS al origen del motor registrado por entorno (ruta de revalidacion); sin URLs de proveedores en el contrato."
+  body: EventEnvelope en JSON (UTF-8), payload = RevalidationPayload.
+  headers: {"Content-Type": "application/json", "X-Nadakki-Event-Id": "event_id", "X-Nadakki-Timestamp": "segundos Unix de envio", "X-Nadakki-Key-Id": "id del secreto HMAC", "X-Nadakki-Delivery-Attempt": "1..N", "X-Nadakki-Signature": "v1=hex(HMAC-SHA256(secreto, timestamp + '.' + cuerpo_crudo))"}
+  verification: "Tiempo constante; ventana +-300 s; el secreto es por motor, nunca viaja y rota con dos Key-Id vigentes durante 24 h."
+  response_semantics: {"2xx": "ack, no reintenta", "400/401/403": "no reintenta, dead-letter y alerta", "408/429/5xx/timeout(10 s)": "reintenta con backoff 1m, 5m, 30m, 2h, 12h; luego dead-letter"}
+  ordering: "No garantizado; el motor compara content_version y descarta eventos con version menor a la que ya sirve."
+events:
+  - name: sites.render.revalidation_requested
+    version: 1
+    producer: SITES-RUNTIME (reacciona a sites.content.changed, sites.site.published/unpublished, sites.media.revoked, sites.domain.status_changed)
+    consumers: ["ENGINE (motor de sitios, ruta de revalidacion)"]
+    payload: {"$ref": "schema.json#/$defs/RevalidationPayload"}
+    idempotency:
+      key: "reval:{site_id}:{content_version}:{kind}:{slug|host}"
+      guarantee: "uno por (site_id, content_version, kind, slug); el motor deduplica por event_id; entrega al-menos-una-vez."

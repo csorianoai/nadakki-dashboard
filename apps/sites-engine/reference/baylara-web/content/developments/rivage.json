@@ -1,0 +1,70 @@
+{
+  "slug": "rivage",
+  "sample": false,
+  "authorized": true,
+  "order": 19,
+  "sourceId": "1351",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/1351/rivage",
+  "name": "Rivage",
+  "area": "Bal Harbour",
+  "zone": "bal-harbour",
+  "address": "10245 Collins Ave, Bal Harbour, FL 33154",
+  "devType": "condo",
+  "status": "preconstruction",
+  "deliveryYear": 2027,
+  "delivery": {
+    "es": "Entrega estimada: 2027",
+    "en": "Estimated delivery: 2027"
+  },
+  "priceFrom": 13000000,
+  "beds": "3 – 6",
+  "units": 56,
+  "floors": 25,
+  "sqft": "3,300 – 12,600",
+  "developer": null,
+  "architect": null,
+  "interiorDesigner": null,
+  "landscape": null,
+  "description": {
+    "es": [
+      "Rivage es un condominio en preconstrucción en Bal Harbour, en 10245 Collins Ave, Bal Harbour, FL 33154. Contempla 56 residencias en 25 pisos, de 3 – 6 habitaciones y de 3,300 – 12,600 sq ft.",
+      "Entrega estimada: 2027. Precios desde $13,000,000."
+    ],
+    "en": [
+      "Rivage is a condominium in pre-construction in Bal Harbour, at 10245 Collins Ave, Bal Harbour, FL 33154. It comprises 56 residences over 25 floors, with 3 – 6 bedrooms and of 3,300 – 12,600 sq ft.",
+      "Estimated delivery: 2027. Prices from $13,000,000."
+    ]
+  },
+  "interior": {
+    "es": [
+      "Ascensor privado con entrada directa a cada residencia",
+      "Terrazas de hasta 12 pies de profundidad"
+    ],
+    "en": [
+      "Private elevator opening directly into every residence",
+      "Terraces up to 12 feet deep"
+    ]
+  },
+  "amenities": null,
+  "images": [
+    "dev-rivage-01",
+    "dev-rivage-02",
+    "dev-rivage-03",
+    "dev-rivage-04",
+    "dev-rivage-05",
+    "dev-rivage-06",
+    "dev-rivage-07",
+    "dev-rivage-08",
+    "dev-rivage-09",
+    "dev-rivage-10",
+    "dev-rivage-11",
+    "dev-rivage-12"
+  ],
+  "heroImages": [
+    "dev-rivage-01"
+  ],
+  "geo": {
+    "lat": 25.8970373,
+    "lng": -80.123492
+  }
+}

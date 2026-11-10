@@ -1,0 +1,35 @@
+contract: C-SITES-LEADS
+version: "1.1.0"
+builds_on: [{"contract": "C-SITES-DATA", "version": "1.1.0"}]
+changelog: [{"version": "1.1.0", "kind": "additive", "summary": "Aditivo. LeadSubmission gana ad_click y ga_client_id; Lead espeja DATA 1.1.0; rutas admin nuevas (etapas por tenant, cambio de etapa, exportacion CSV de conversiones, importacion .eml/.mbox); eventos nuevos sites.lead.stage_changed y sites.lead.imported; sites.lead.created gana campos opcionales sin identificadores."}]
+description: "Eventos de captacion. Nombre `sites.lead.created` (E8 lo llama `lead.created`; se usa el prefijo sites. para respetar el patron del sobre). Sin PII en cargas. Entrega al-menos-una-vez; deduplicar por idempotency_key."
+envelope: {"$ref": "schema.json#/$defs/EventEnvelope"}
+events:
+  - name: sites.lead.created
+    version: 1
+    producer: SITES-RUNTIME (processLead, tras persistir sites_leads)
+    consumers: ["SITES-RULES", "SITES-MAIL (aviso al agente)", "DASH-SITES (Contactos)", "proyeccion re_leads (vertical=realestate)", "auditoria"]
+    payload: {"$ref": "schema.json#/$defs/LeadCreatedPayload"}
+    idempotency:
+      key: "lead:{lead_id}:created"
+      guarantee: "un evento por lead persistido; reintentos de cola y repeticiones idempotentes no reemiten. No se emite para leads descartados por anti-spam."
+  - name: sites.lead.consent_revoked
+    version: 1
+    producer: SITES-RUNTIME (revokeLeadConsent)
+    consumers: ["SITES-MAIL (detiene envios al canal)", "DASH-SITES", "auditoria"]
+    payload: {"$ref": "schema.json#/$defs/LeadConsentRevokedPayload"}
+    idempotency: {"key": "leadconsent:{consent_id}:revoked", "guarantee": "uno por revocacion; los consumidores detienen envios pendientes de ese lead+canal al recibirlo."}
+  - name: sites.lead.stage_changed
+    version: 1
+    producer: SITES-API (changeLeadStage, tras guardar el evento de etapa)
+    consumers: ["DASH-SITES (ficha del contacto)", "CORE-MARKETING (C-MKT-CONVERSIONS; primer corte por CSV subido por el agente, el evento queda para el envio automatico posterior)", "auditoria"]
+    payload: {"$ref": "schema.json#/$defs/LeadStageChangedPayload"}
+    idempotency:
+      key: "leadstage:{stage_event_id}"
+      guarantee: "un evento por cambio de etapa; reintentos no reemiten. No se emite para contactos importados (sites.lead.imported) ni para cambios rechazados (409/422). Un fallo de marketing o de Google nunca bloquea el cambio de etapa."
+  - name: sites.lead.imported
+    version: 1
+    producer: SITES-API (importLeads con dry_run=false)
+    consumers: ["DASH-SITES (Contactos)", "auditoria"]
+    payload: {"$ref": "schema.json#/$defs/LeadsImportedPayload"}
+    idempotency: {"key": "leadimport:{import_id}", "guarantee": "uno por importacion real; los contactos importados NO emiten sites.lead.created, no disparan aviso por correo ni proyeccion a re_leads."}

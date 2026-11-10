@@ -1,0 +1,23 @@
+{
+  "meta": {
+    "title": { "es": "Zonas frente al agua del Sur de Florida", "en": "South Florida waterfront areas" },
+    "description": { "es": "Guía de Sunny Isles Beach, Bal Harbour, Aventura, Miami Beach y Fort Lauderdale: estilo de vida y propiedades.", "en": "Guide to Sunny Isles Beach, Bal Harbour, Aventura, Miami Beach and Fort Lauderdale: lifestyle and properties." }
+  },
+  "eyebrow": { "es": "Zonas", "en": "Areas" },
+  "title": { "es": "Cinco zonas frente al agua", "en": "Five waterfront areas" },
+  "lead": { "es": "De Miami Beach a Fort Lauderdale, cada zona tiene su ritmo y su tipo de propiedad.", "en": "From Miami Beach to Fort Lauderdale, each area has its own pace and type of property." },
+  "zoneEyebrow": { "es": "Guía de zona", "en": "Area guide" },
+  "life": { "es": "Estilo de vida", "en": "Living here" },
+  "prices": { "es": "Precios de referencia", "en": "Reference prices" },
+  "pricesNote": { "es": "Datos del MLS. Solo de referencia; cada propiedad se valora individualmente.", "en": "MLS data. Reference only; every property is valued individually." },
+  "updated": { "es": "Actualizado", "en": "Updated" },
+  "inTitle": { "es": "Propiedades en", "en": "Properties in" },
+  "ctaTitle": { "es": "¿Te interesa esta zona?", "en": "Considering this area?" },
+  "ctaText": { "es": "Puedo mostrarte edificios, calles y ventas recientes, en persona o por videollamada.", "en": "I can walk you through buildings, streets and recent sales — in person or by video call." },
+  "priceLabels": {
+    "medianCondo": { "es": "Precio mediano de apartamento", "en": "Median condo price" },
+    "medianPsf": { "es": "Precio mediano por ft²", "en": "Median price per sq ft" },
+    "typicalHoa": { "es": "Mantenimiento típico / mes", "en": "Typical HOA / month" },
+    "medianDom": { "es": "Días medianos en el mercado", "en": "Median days on market" }
+  }
+}

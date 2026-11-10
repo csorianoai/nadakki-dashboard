@@ -1,0 +1,71 @@
+{
+  "slug": "aman-miami-beach",
+  "sample": false,
+  "authorized": true,
+  "order": 6,
+  "sourceId": "1651",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/1651/aman-miami-beach",
+  "name": "Aman Miami Beach",
+  "area": "Miami Beach",
+  "zone": "miami-beach",
+  "address": "3425 Collins Ave, Miami Beach, FL 33140",
+  "devType": "hotel",
+  "status": null,
+  "deliveryYear": 2025,
+  "delivery": {
+    "es": "Entrega estimada: 2025",
+    "en": "Estimated delivery: 2025"
+  },
+  "priceFrom": 4000000,
+  "beds": "1 – 3",
+  "units": 79,
+  "floors": 29,
+  "sqft": "2,450",
+  "developer": "OKO Group",
+  "architect": "Kengo Kuma & Revuelta",
+  "interiorDesigner": null,
+  "landscape": null,
+  "description": {
+    "es": [
+      "Aman Miami Beach es un hotel en Miami Beach, en 3425 Collins Ave, Miami Beach, FL 33140. Contempla 79 residencias en 29 pisos, de 1 – 3 habitaciones y de 2,450 sq ft.",
+      "Equipo: arquitectura de Kengo Kuma & Revuelta; desarrollo de OKO Group. Entrega estimada: 2025. Precios desde $4,000,000."
+    ],
+    "en": [
+      "Aman Miami Beach is a hotel in Miami Beach, at 3425 Collins Ave, Miami Beach, FL 33140. It comprises 79 residences over 29 floors, with 1 – 3 bedrooms and of 2,450 sq ft.",
+      "Team: architecture by Kengo Kuma & Revuelta; developed by OKO Group. Estimated delivery: 2025. Prices from $4,000,000."
+    ]
+  },
+  "interior": null,
+  "amenities": {
+    "es": [
+      "Recepción y conserjería",
+      "Vestíbulo",
+      "Salón social",
+      "Piscina",
+      "Seguridad 24 horas"
+    ],
+    "en": [
+      "Reception and concierge",
+      "Lobby",
+      "Social room",
+      "Pool",
+      "24-hour security"
+    ]
+  },
+  "images": [
+    "dev-aman-miami-beach-01",
+    "dev-aman-miami-beach-02",
+    "dev-aman-miami-beach-03",
+    "dev-aman-miami-beach-04",
+    "dev-aman-miami-beach-05",
+    "dev-aman-miami-beach-06",
+    "dev-aman-miami-beach-07"
+  ],
+  "heroImages": [
+    "dev-aman-miami-beach-01"
+  ],
+  "geo": {
+    "lat": 25.8087025,
+    "lng": -80.1225487
+  }
+}

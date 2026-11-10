@@ -1,0 +1,68 @@
+{
+  "slug": "bay-harbor-towers",
+  "sample": false,
+  "authorized": true,
+  "order": 21,
+  "sourceId": "1643",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/1643/bay-harbor-towers",
+  "name": "Bay Harbor Towers",
+  "area": "Bay Harbor Islands",
+  "zone": "bal-harbour",
+  "address": "10143 Bay Harbor Dr, Bay Harbor Islands, FL 33154",
+  "devType": "condo",
+  "status": "preconstruction",
+  "deliveryYear": 2027,
+  "delivery": {
+    "es": "Entrega estimada: 2027",
+    "en": "Estimated delivery: 2027"
+  },
+  "priceFrom": 2600000,
+  "beds": "2 – 4",
+  "units": 44,
+  "floors": 8,
+  "sqft": "1,870 – 3,393",
+  "developer": null,
+  "architect": "Kobi Karp",
+  "interiorDesigner": "Steven G",
+  "landscape": null,
+  "description": {
+    "es": [
+      "Bay Harbor Towers es un condominio en preconstrucción en Bay Harbor Islands, en 10143 Bay Harbor Dr, Bay Harbor Islands, FL 33154. Contempla 44 residencias en 8 pisos, de 2 – 4 habitaciones y de 1,870 – 3,393 sq ft.",
+      "Equipo: arquitectura de Kobi Karp; interiorismo de Steven G. Entrega estimada: 2027. Precios desde $2,600,000."
+    ],
+    "en": [
+      "Bay Harbor Towers is a condominium in pre-construction in Bay Harbor Islands, at 10143 Bay Harbor Dr, Bay Harbor Islands, FL 33154. It comprises 44 residences over 8 floors, with 2 – 4 bedrooms and of 1,870 – 3,393 sq ft.",
+      "Team: architecture by Kobi Karp; interiors by Steven G. Estimated delivery: 2027. Prices from $2,600,000."
+    ]
+  },
+  "interior": null,
+  "amenities": {
+    "es": [
+      "Certificación Florida Green Building Coalition",
+      "Marina privada con 13 amarres",
+      "Recepción 24/7, conserjería y valet"
+    ],
+    "en": [
+      "Florida Green Building Coalition certification",
+      "Private marina with 13 boat slips",
+      "24/7 reception, concierge and valet"
+    ]
+  },
+  "images": [
+    "dev-bay-harbor-towers-01",
+    "dev-bay-harbor-towers-02",
+    "dev-bay-harbor-towers-03",
+    "dev-bay-harbor-towers-04",
+    "dev-bay-harbor-towers-05",
+    "dev-bay-harbor-towers-06",
+    "dev-bay-harbor-towers-07",
+    "dev-bay-harbor-towers-08"
+  ],
+  "heroImages": [
+    "dev-bay-harbor-towers-01"
+  ],
+  "geo": {
+    "lat": 25.8921372,
+    "lng": -80.1307331
+  }
+}

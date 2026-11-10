@@ -1,0 +1,332 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://contracts.nadakki.example/C-SITES-LEADS/1.1.0/schema.json", "title": "C-SITES-LEADS - tipos de captacion de contactos",
+  "description": "Cuerpo del formulario publico, respuesta 202, lead completo (admin) y cargas de eventos. Nombres de campo de C-SITES-DATA (Lead, ConsentRecord); sin $ref entre contratos.",
+  "x-contract": {"id": "C-SITES-LEADS", "version": "1.1.0", "status": "proposed", "changelog": [{"version": "1.1.0", "kind": "additive", "summary": "Aditivo. LeadSubmission gana ad_click y ga_client_id; Lead espeja DATA 1.1.0; rutas admin nuevas (etapas por tenant, cambio de etapa, exportacion CSV de conversiones, importacion .eml/.mbox); eventos nuevos sites.lead.stage_changed y sites.lead.imported; sites.lead.created gana campos opcionales sin identificadores."}]}, "x-contract-uses": [{"id": "C-SITES-DATA", "version": "1.1.0"}],
+  "$defs": {
+    "ConsentInput": {
+      "type": "object", "additionalProperties": false,
+      "description": "Un elemento por canal mostrado en el formulario (granted=false si la casilla no se marco). Canal repetido: 422. text_version desconocida para ese canal+idioma: 422 CONSENT_TEXT_UNKNOWN.",
+      "required": ["channel", "granted", "text_version", "text_locale"],
+      "properties": {"channel": {"$ref": "#/$defs/ConsentChannel"}, "granted": {"type": "boolean"}, "text_version": {"type": "string", "minLength": 1, "maxLength": 40}, "text_locale": {"$ref": "#/$defs/Lang"}}
+    },
+    "ConsentChannel": {"type": "string", "enum": ["email", "phone_sms", "whatsapp"]}, "Lang": {"type": "string", "enum": ["es", "en"]},
+    "LeadSubmission": {
+      "type": "object", "additionalProperties": false, "anyOf": [{"required": ["email"]}, {"required": ["phone"]}],
+      "description": "Sin tenant_id ni site_id en el cuerpo (el site_id va en el path y firmado en X-Site-Key). Un campo desconocido: 422.", "required": ["name", "message", "locale", "source_page", "consents", "form_rendered_at"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 120}, "email": {"$ref": "#/$defs/Email"}, "phone": {"$ref": "#/$defs/Phone"}, "message": {"type": "string", "minLength": 0, "maxLength": 4000},
+        "locale": {"$ref": "#/$defs/Lang"}, "source_page": {"type": "string", "minLength": 1, "maxLength": 300},
+        "interest": {
+          "oneOf": [
+            {
+              "type": "object", "additionalProperties": false, "required": ["kind", "slug"], "properties": {"kind": {"type": "string", "enum": ["listing", "development", "zone", "building"]}, "slug": {"$ref": "#/$defs/Slug"}}
+            },
+            {"type": "null"}
+          ]
+        },
+        "utm": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "source": {"type": "string", "minLength": 1, "maxLength": 100}, "medium": {"type": "string", "minLength": 1, "maxLength": 100}, "campaign": {"type": "string", "minLength": 1, "maxLength": 100}
+          }
+        },
+        "consents": {"type": "array", "items": {"$ref": "#/$defs/ConsentInput"}, "minItems": 1, "maxItems": 3},
+        "ad_click": {"oneOf": [{"$ref": "#/$defs/AdClick"}, {"type": "null"}], "description": "Lo arma el motor leyendo la cookie __Host-nk_click en el servidor (autenticado por X-Site-Key). Ausente si no hubo clic."},
+        "ga_client_id": {"oneOf": [{"$ref": "#/$defs/GaClientId"}, {"type": "null"}], "description": "Cookie _ga del dominio del cliente, si existe y hay consentimiento de analitica."},
+        "form_rendered_at": {"$ref": "#/$defs/Timestamp", "description": "Instante en que se pinto el formulario (tiempo minimo de relleno)."},
+        "company_website": {"type": "string", "maxLength": 200, "description": "HONEYPOT: campo oculto; debe venir vacio o ausente."}
+      }
+    },
+    "Email": {"type": "string", "format": "email", "maxLength": 254}, "Phone": {"type": "string", "pattern": "^\\+[1-9][0-9]{6,14}$", "description": "E.164."},
+    "Slug": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 96}, "Timestamp": {"type": "string", "format": "date-time", "description": "RFC 3339, UTC."},
+    "LeadAccepted": {
+      "type": "object", "additionalProperties": false, "description": "Identica para leads reales y descartados por anti-spam; reference no es lead_id.", "required": ["reference", "status", "received_at"],
+      "properties": {"reference": {"$ref": "#/$defs/Uuid"}, "status": {"const": "accepted"}, "received_at": {"$ref": "#/$defs/Timestamp"}}
+    },
+    "Uuid": {"type": "string", "format": "uuid"}, "ConsentRevokeRequest": {"type": "object", "additionalProperties": false, "properties": {"reason": {"type": "string", "minLength": 1, "maxLength": 300}}},
+    "Lead": {
+      "type": "object", "additionalProperties": false, "description": "sites_leads generico (decision 10b). Proyecta a re_leads solo si vertical=realestate. Contiene PII: nunca va en eventos.",
+      "required": ["id", "tenant_id", "vertical", "site_id", "idempotency_key", "name", "message", "locale", "source_page", "consents", "contactable_channels", "status", "created_at"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "tenant_id": {"$ref": "#/$defs/TenantId", "readOnly": true}, "vertical": {"$ref": "#/$defs/Vertical", "readOnly": true, "description": "Heredado del sitio."},
+        "site_id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "idempotency_key": {"type": "string", "minLength": 16, "maxLength": 128, "readOnly": true}, "name": {"type": "string", "minLength": 1, "maxLength": 120},
+        "email": {"$ref": "#/$defs/Email"}, "phone": {"$ref": "#/$defs/Phone"}, "message": {"type": "string", "minLength": 0, "maxLength": 4000}, "locale": {"$ref": "#/$defs/Lang"},
+        "source_page": {"type": "string", "minLength": 1, "maxLength": 300},
+        "interest": {
+          "oneOf": [
+            {
+              "type": "object", "additionalProperties": false, "required": ["kind", "slug"], "properties": {"kind": {"type": "string", "enum": ["listing", "development", "zone", "building"]}, "slug": {"$ref": "#/$defs/Slug"}}
+            },
+            {"type": "null"}
+          ]
+        },
+        "utm": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "source": {"type": "string", "minLength": 1, "maxLength": 100}, "medium": {"type": "string", "minLength": 1, "maxLength": 100}, "campaign": {"type": "string", "minLength": 1, "maxLength": 100}
+          }
+        },
+        "consents": {"type": "array", "items": {"$ref": "#/$defs/ConsentRecord"}},
+        "contactable_channels": {"type": "array", "items": {"$ref": "#/$defs/ConsentChannel"}, "readOnly": true, "description": "Canales con consentimiento vigente (derivado)."},
+        "status": {"type": "string", "enum": ["received", "projected", "projection_failed"], "readOnly": true},
+        "projected_ref": {
+          "oneOf": [
+            {"type": "object", "additionalProperties": false, "required": ["kind", "id"], "properties": {"kind": {"type": "string", "enum": ["re_lead"]}, "id": {"$ref": "#/$defs/Uuid"}}},
+            {"type": "null"}
+          ],
+          "readOnly": true
+        },
+        "ad_click": {"oneOf": [{"$ref": "#/$defs/AdClick"}, {"type": "null"}], "readOnly": true, "description": "Clic de anuncio capturado con el lead; nulo si no hubo. Inmutable."},
+        "ga_client_id": {"oneOf": [{"$ref": "#/$defs/GaClientId"}, {"type": "null"}], "readOnly": true},
+        "source": {"type": "string", "enum": ["web_form", "email_import"], "readOnly": true, "description": "Origen del contacto. email_import = historico importado de avisos de correo (sin ids de clic; nunca genera conversiones)."},
+        "current_stage_key": {"$ref": "#/$defs/StageKey", "readOnly": true, "description": "Etapa actual; para leads sin cambios es la etapa inicial del tenant."},
+        "created_at": {"$ref": "#/$defs/Timestamp", "readOnly": true}
+      },
+      "x-contract-ref": "C-SITES-DATA@1.1.0#/$defs/Lead"
+    },
+    "TenantId": {
+      "$ref": "#/$defs/Uuid", "readOnly": true,
+      "description": "Tenant propietario. Lo fija el servidor: del claim tenant_id del JWT (API admin) o del site_id firmado (API publica). Nunca lo envia el cliente; un valor enviado se rechaza con 422 TENANT_FIELD_FORBIDDEN."
+    },
+    "Vertical": {"type": "string", "pattern": "^[a-z_]{2,32}$", "description": "realestate | dealer | legal | ..."},
+    "ConsentRecord": {
+      "type": "object", "additionalProperties": false, "description": "Append-only. Consentimiento POR CANAL con la version del texto mostrado y su fecha; revocar crea un registro nuevo que sustituye al anterior.",
+      "required": ["consent_id", "channel", "status", "text_version", "text_locale", "recorded_at"],
+      "properties": {
+        "consent_id": {"$ref": "#/$defs/Uuid"}, "channel": {"$ref": "#/$defs/ConsentChannel"}, "status": {"type": "string", "enum": ["granted", "denied", "revoked"]},
+        "text_version": {"type": "string", "minLength": 1, "maxLength": 40}, "text_locale": {"$ref": "#/$defs/Lang"}, "text_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}, "recorded_at": {"$ref": "#/$defs/Timestamp"},
+        "supersedes_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}
+      }
+    },
+    "Problem": {
+      "type": "object", "required": ["type", "title", "status", "code"], "description": "RFC 9457 (application/problem+json) + `code` estable.",
+      "properties": {
+        "type": {"type": "string", "format": "uri-reference"}, "title": {"type": "string"}, "status": {"type": "integer", "minimum": 400, "maximum": 599}, "detail": {"type": "string"}, "instance": {"type": "string"},
+        "code": {
+          "type": "string",
+          "enum": ["UNAUTHENTICATED", "FORBIDDEN", "TENANT_MISMATCH", "TENANT_FIELD_FORBIDDEN", "NOT_FOUND", "VALIDATION_ERROR", "CONFLICT", "IDEMPOTENCY_KEY_REUSED", "RATE_LIMITED", "SITE_KEY_INVALID", "SITE_KEY_MISMATCH", "SITE_NOT_ACCEPTING_LEADS", "PAYLOAD_TOO_LARGE", "CONSENT_TEXT_UNKNOWN", "UNAVAILABLE"],
+          "description": "Estable dentro de 1.x."
+        },
+        "errors": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["field", "message"], "properties": {"field": {"type": "string"}, "message": {"type": "string"}}}}
+      }
+    },
+    "LeadCreatedPayload": {
+      "type": "object", "additionalProperties": false, "description": "Sin nombre, email, telefono ni mensaje (PII fuera de eventos).",
+      "required": ["lead_id", "vertical", "locale", "source_page", "contactable_channels", "consents", "has_email", "has_phone", "origin", "created_at"],
+      "properties": {
+        "lead_id": {"$ref": "#/$defs/Uuid"}, "vertical": {"$ref": "#/$defs/Vertical"}, "locale": {"$ref": "#/$defs/Lang"}, "source_page": {"type": "string", "minLength": 1, "maxLength": 300},
+        "interest": {
+          "oneOf": [
+            {
+              "type": "object", "additionalProperties": false, "required": ["kind", "slug"], "properties": {"kind": {"type": "string", "enum": ["listing", "development", "zone", "building"]}, "slug": {"$ref": "#/$defs/Slug"}}
+            },
+            {"type": "null"}
+          ]
+        },
+        "contactable_channels": {"type": "array", "items": {"$ref": "#/$defs/ConsentChannel"}},
+        "consents": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["channel", "status", "text_version", "text_locale", "recorded_at"],
+            "properties": {
+              "channel": {"$ref": "#/$defs/ConsentChannel"}, "status": {"type": "string", "enum": ["granted", "denied", "revoked"]}, "text_version": {"type": "string", "minLength": 1, "maxLength": 40},
+              "text_locale": {"$ref": "#/$defs/Lang"}, "recorded_at": {"$ref": "#/$defs/Timestamp"}
+            }
+          }
+        },
+        "ad_click_id_types": {"type": "array", "uniqueItems": true, "items": {"type": "string", "enum": ["gclid", "gbraid", "wbraid", "fbclid"]}, "description": "Que tipos de id se capturaron; nunca sus valores."},
+        "click_consent": {"oneOf": [{"$ref": "#/$defs/ClickConsent"}, {"type": "null"}]},
+        "has_ga_client_id": {"type": "boolean"},
+        "has_email": {"type": "boolean"}, "has_phone": {"type": "boolean"}, "origin": {"type": "string", "enum": ["web_form"]}, "created_at": {"$ref": "#/$defs/Timestamp"}
+      }
+    },
+    "LeadConsentRevokedPayload": {
+      "type": "object", "additionalProperties": false, "description": "consent_id es el registro NUEVO de revocacion; supersedes_id el original.", "required": ["lead_id", "consent_id", "supersedes_id", "channel", "recorded_at"],
+      "properties": {
+        "lead_id": {"$ref": "#/$defs/Uuid"}, "consent_id": {"$ref": "#/$defs/Uuid"}, "supersedes_id": {"$ref": "#/$defs/Uuid"}, "channel": {"$ref": "#/$defs/ConsentChannel"}, "recorded_at": {"$ref": "#/$defs/Timestamp"}
+      }
+    },
+    "EventEnvelope": {
+      "type": "object", "additionalProperties": false, "description": "Sobre comun Sites. El consumidor filtra por tenant_id y deduplica por idempotency_key (al-menos-una-vez).",
+      "required": ["event_id", "event_name", "event_version", "tenant_id", "occurred_at", "idempotency_key", "payload"],
+      "properties": {
+        "event_id": {"$ref": "#/$defs/Uuid"}, "event_name": {"type": "string", "pattern": "^sites\\.[a-z_]+\\.[a-z_]+$"}, "event_version": {"type": "integer", "minimum": 1}, "tenant_id": {"$ref": "#/$defs/TenantId"},
+        "site_id": {"$ref": "#/$defs/Uuid"}, "occurred_at": {"$ref": "#/$defs/Timestamp"}, "idempotency_key": {"type": "string", "minLength": 8, "maxLength": 128},
+        "actor_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "payload": {"type": "object", "description": "El $def indicado por `payload` en events.yaml. Unico nombre de campo permitido."}
+      }
+    },
+    "AdClickId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{1,255}$",
+      "description": "Identificador de clic de anuncio (gclid, gbraid, wbraid o fbclid). Solo esos caracteres y 255 como maximo; el limite es PROVISIONAL (la longitud real que admiten Google y Meta esta sin verificar con la API). Nunca se refleja en HTML de la web publica ni va en eventos; solo aparece como texto en el aviso privado al agente (C-SITES-MAIL).",
+      "x-contract-ref": "C-SITES-DATA@1.1.0#/$defs/AdClickId"
+    },
+    "ClickConsent": {
+      "type": "string",
+      "enum": ["granted", "denied", "unknown", "not_required"],
+      "description": "Resumen del consentimiento publicitario del visitante al capturar el clic. granted = ad_storage y ad_user_data concedidos; denied = alguno denegado; unknown = no consta (sin geolocalizacion, banner sin responder en region de consentimiento obligatorio, valor ausente): se trata como denied, nunca se infiere; not_required = region conocida (consent_region presente) fuera de la lista de consentimiento obligatorio (EEE, Reino Unido y Suiza al arrancar; la lista y la regla por estado de EE. UU. las valida el abogado y son configurables). Con denied o unknown no se guardan ids. La exportacion de conversiones solo incluye granted y not_required.",
+      "x-contract-ref": "C-SITES-DATA@1.1.0#/$defs/ClickConsent"
+    },
+    "ConsentSignal": {
+      "type": "string",
+      "enum": ["granted", "denied"],
+      "x-contract-ref": "C-SITES-DATA@1.1.0#/$defs/ConsentSignal"
+    },
+    "ConsentSignals": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Las cuatro senales de Consent Mode v2 tal como las fijo el visitante. Ausente = no consultada.",
+      "properties": {"ad_storage": {"$ref": "#/$defs/ConsentSignal"}, "ad_user_data": {"$ref": "#/$defs/ConsentSignal"}, "ad_personalization": {"$ref": "#/$defs/ConsentSignal"}, "analytics_storage": {"$ref": "#/$defs/ConsentSignal"}},
+      "x-contract-ref": "C-SITES-DATA@1.1.0#/$defs/ConsentSignals"
+    },
+    "GaClientId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{1,64}$",
+      "description": "client_id de GA4 tomado de la cookie _ga del dominio del cliente. Identificador seudonimo, no PII nueva. Como se extrae del valor de la cookie: sin verificar con la documentacion de Google. Nulo si no hay etiqueta o falta consentimiento de analitica.",
+      "x-contract-ref": "C-SITES-DATA@1.1.0#/$defs/GaClientId"
+    },
+    "AdClick": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Datos de clic de anuncio de un contacto. Se capturan en el servidor del motor (cookie __Host-nk_click, 90 dias), se guardan con el lead y NO se modifican despues. Con click_consent=denied o unknown solo viaja click_consent (y consent_signals, consent_region): ningun id (lo exige el esquema). click_consent=not_required exige consent_region (lo exige el esquema). Se admite cualquier combinacion de ids; la exportacion elige uno por fila (prioridad gclid, gbraid, wbraid).",
+      "required": ["click_consent"],
+      "properties": {"gclid": {"$ref": "#/$defs/AdClickId"}, "gbraid": {"$ref": "#/$defs/AdClickId"}, "wbraid": {"$ref": "#/$defs/AdClickId"}, "fbclid": {"$ref": "#/$defs/AdClickId"}, "landing_path": {"type": "string", "minLength": 1, "maxLength": 300, "pattern": "^/", "description": "Ruta de entrada del clic, sin parametros (query). Empieza por / (tambien evita celdas CSV interpretables como formula)."}, "clicked_at": {"$ref": "#/$defs/Timestamp"}, "click_consent": {"$ref": "#/$defs/ClickConsent"}, "consent_region": {"type": "string", "pattern": "^[A-Z]{2}(-[A-Z0-9]{1,3})?$", "description": "Pais (ISO 3166-1 alfa-2) o subdivision (ISO 3166-2) del visitante al capturar, de la cabecera de geolocalizacion de la plataforma (FUENTE-INDIRECTA, sin medir). Ausente = desconocida: marketing la trata como region de consentimiento obligatorio (fail-closed). click_consent=not_required exige que este presente."}, "consent_signals": {"$ref": "#/$defs/ConsentSignals"}},
+      "allOf": [{"if": {"required": ["click_consent"], "properties": {"click_consent": {"enum": ["denied", "unknown"]}}}, "then": {"not": {"anyOf": [{"required": ["gclid"]}, {"required": ["gbraid"]}, {"required": ["wbraid"]}, {"required": ["fbclid"]}]}}}, {"if": {"required": ["click_consent"], "properties": {"click_consent": {"const": "not_required"}}}, "then": {"required": ["consent_region"]}}],
+      "x-contract-ref": "C-SITES-DATA@1.1.0#/$defs/AdClick"
+    },
+    "StageKey": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{1,31}$",
+      "description": "Clave de etapa. Inmutable una vez creada; el nombre visible va en label.",
+      "x-contract-ref": "C-SITES-DATA@1.1.0#/$defs/StageKey"
+    },
+    "StageKind": {
+      "type": "string",
+      "enum": ["open", "won", "lost"],
+      "description": "Semantica fija de la etapa para informes y retiradas; no depende del nombre.",
+      "x-contract-ref": "C-SITES-DATA@1.1.0#/$defs/StageKind"
+    },
+    "ConversionKind": {
+      "type": "string",
+      "enum": ["lead", "qualified_lead", "customer", "sale"],
+      "description": "Tipo de conversion que la etapa genera hacia marketing (C-MKT-CONVERSIONS, BORRADOR #2625: nombres sin congelar). Sites no conoce acciones de conversion ni nombres de recurso de Google: marketing traduce kind a accion.",
+      "x-contract-ref": "C-SITES-DATA@1.1.0#/$defs/ConversionKind"
+    },
+    "PipelineStage": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Etapa del embudo de un tenant (sites_pipeline_stages). Valores por defecto al aprovisionar: nuevo (open, inicial, sin conversion), cualificado (open, qualified_lead), visita (open), oferta (open), contrato (won, sale), perdido (lost). El tenant puede renombrar, reordenar, archivar y anadir; key y kind no cambian.",
+      "required": ["key", "label", "position", "kind", "is_initial", "archived"],
+      "properties": {"id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "tenant_id": {"$ref": "#/$defs/TenantId"}, "key": {"$ref": "#/$defs/StageKey"}, "label": {"$ref": "#/$defs/I18nText"}, "position": {"type": "integer", "minimum": 0, "maximum": 99}, "kind": {"$ref": "#/$defs/StageKind"}, "conversion_kind": {"oneOf": [{"$ref": "#/$defs/ConversionKind"}, {"type": "null"}]}, "is_initial": {"type": "boolean", "description": "Exactamente una etapa activa lo es: la de los leads nuevos."}, "archived": {"type": "boolean", "description": "Archivada: no se puede elegir, pero conserva su historial."}, "created_at": {"$ref": "#/$defs/Timestamp", "readOnly": true}, "updated_at": {"$ref": "#/$defs/Timestamp", "readOnly": true}},
+      "x-contract-ref": "C-SITES-DATA@1.1.0#/$defs/PipelineStage"
+    },
+    "ConversionState": {
+      "type": "string",
+      "enum": ["not_applicable", "pending", "exported", "skipped"],
+      "description": "not_applicable = la etapa no genera conversion; pending = elegible y aun no exportada; exported = incluida en una exportacion CSV; skipped = no elegible (ver skip_reason). El estado posterior en Google lo lleva marketing, no Sites.",
+      "x-contract-ref": "C-SITES-DATA@1.1.0#/$defs/ConversionState"
+    },
+    "ConversionSkipReason": {
+      "type": "string",
+      "enum": ["no_click_id", "consent_denied", "consent_unknown", "imported_history", "superseded"],
+      "description": "no_click_id = sin id de clic ni correo/telefono con ad_user_data concedido; consent_denied; consent_unknown (click_consent unknown, o not_required sin consent_region: fail-closed); imported_history = contacto importado de avisos; superseded = el contacto paso a una etapa lost antes de exportarse.",
+      "x-contract-ref": "C-SITES-DATA@1.1.0#/$defs/ConversionSkipReason"
+    },
+    "LeadStageEvent": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Cambio de etapa de un contacto (sites_lead_stage_events). Append-only. conversion_kind es la foto de la etapa en ese momento. retracts_stage_event_id solo se rellena al pasar de una etapa won a una lost (decision de Cesar: solo contrato -> perdido; oferta -> cualificado no retira nada) y apunta al ultimo evento won del contacto; si ese evento no llego a exportarse, queda skipped/superseded y no hay retirada.",
+      "required": ["id", "tenant_id", "lead_id", "to_stage_key", "to_kind", "changed_at", "conversion_state", "adjustment_state"],
+      "properties": {"id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "tenant_id": {"$ref": "#/$defs/TenantId"}, "site_id": {"$ref": "#/$defs/Uuid", "readOnly": true}, "lead_id": {"$ref": "#/$defs/Uuid"}, "from_stage_key": {"oneOf": [{"$ref": "#/$defs/StageKey"}, {"type": "null"}]}, "to_stage_key": {"$ref": "#/$defs/StageKey"}, "from_kind": {"oneOf": [{"$ref": "#/$defs/StageKind"}, {"type": "null"}]}, "to_kind": {"$ref": "#/$defs/StageKind"}, "conversion_kind": {"oneOf": [{"$ref": "#/$defs/ConversionKind"}, {"type": "null"}]}, "value": {"oneOf": [{"$ref": "#/$defs/Money"}, {"type": "null"}]}, "changed_at": {"$ref": "#/$defs/Timestamp"}, "changed_by": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "conversion_state": {"$ref": "#/$defs/ConversionState"}, "adjustment_state": {"$ref": "#/$defs/ConversionState"}, "skip_reason": {"oneOf": [{"$ref": "#/$defs/ConversionSkipReason"}, {"type": "null"}]}, "export_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "exported_at": {"oneOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]}, "retracts_stage_event_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}},
+      "x-contract-ref": "C-SITES-DATA@1.1.0#/$defs/LeadStageEvent"
+    },
+    "DecimalString": {
+      "type": "string",
+      "pattern": "^[0-9]{1,18}(\\.[0-9]{1,8})?$",
+      "description": "Decimal exacto no negativo como cadena; nunca float."
+    },
+    "Money": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["amount", "currency"],
+      "properties": {"amount": {"$ref": "#/$defs/DecimalString"}, "currency": {"type": "string", "pattern": "^[A-Z]{3}$"}}
+    },
+    "I18nText": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "i18n {es,en}; 'es' obligatorio.",
+      "required": ["es"],
+      "properties": {"es": {"type": "string", "minLength": 1, "maxLength": 5000}, "en": {"type": "string", "minLength": 1, "maxLength": 5000}}
+    },
+    "PipelineStageInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Entrada de la configuracion de etapas. key y kind de una etapa existente no pueden cambiar (422 STAGE_IMMUTABLE).",
+      "required": ["key", "label", "position", "kind", "is_initial", "archived"],
+      "properties": {"key": {"$ref": "#/$defs/StageKey"}, "label": {"$ref": "#/$defs/I18nText"}, "position": {"type": "integer", "minimum": 0, "maximum": 99}, "kind": {"$ref": "#/$defs/StageKind"}, "conversion_kind": {"oneOf": [{"$ref": "#/$defs/ConversionKind"}, {"type": "null"}]}, "is_initial": {"type": "boolean", "description": "Exactamente una etapa activa lo es: la de los leads nuevos."}, "archived": {"type": "boolean", "description": "Archivada: no se puede elegir, pero conserva su historial."}}
+    },
+    "PipelineStageSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Conjunto completo de etapas del tenant (PUT reemplaza). Reglas: exactamente una is_initial activa; al menos una open; maximo 20; una clave existente no se puede omitir (se archiva), 422 STAGE_IN_USE.",
+      "required": ["stages"],
+      "properties": {"stages": {"type": "array", "minItems": 2, "maxItems": 20, "items": {"$ref": "#/$defs/PipelineStageInput"}}}
+    },
+    "PipelineStageList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stages"],
+      "properties": {"stages": {"type": "array", "items": {"$ref": "#/$defs/PipelineStage"}}}
+    },
+    "StageChangeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Sin tenant_id en el cuerpo. El cambio es siempre 'ahora' (sin fechas hacia atras). Misma etapa: 409 STAGE_UNCHANGED. Etapa archivada o desconocida: 422 STAGE_UNKNOWN.",
+      "required": ["to_stage_key"],
+      "properties": {"to_stage_key": {"$ref": "#/$defs/StageKey"}, "value": {"oneOf": [{"$ref": "#/$defs/Money"}, {"type": "null"}], "description": "Valor del negocio en esa etapa (oferta, contrato). Si no se conoce, nulo: no se inventa."}}
+    },
+    "ConversionExportRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Pide una exportacion CSV de conversiones y retiradas elegibles del tenant. dry_run=true (por defecto) solo cuenta y no marca nada. Con dry_run=false marca las filas como exported y crea el lote. Excluye click_consent denied o unknown, not_required sin consent_region (fail-closed, skip_reason consent_unknown), contactos importados y filas ya exportadas (salvo include_exported).",
+      "required": ["from", "to"],
+      "properties": {"from": {"$ref": "#/$defs/Timestamp"}, "to": {"$ref": "#/$defs/Timestamp"}, "site_id": {"$ref": "#/$defs/Uuid"}, "conversion_kinds": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/ConversionKind"}}, "include_exported": {"type": "boolean", "default": false}, "include_identifiers": {"type": "boolean", "default": false, "description": "false (defecto): el CSV NO lleva correo ni telefono, solo ids de clic. true: los incluye en claro solo en filas con ad_user_data=granted. Activarlo es decision de Cesar (el dato personal viajaria Sites -> agente -> marketing en un fichero)."}, "dry_run": {"type": "boolean", "default": true}}
+    },
+    "ConversionExport": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Lote de exportacion. id y download_path son nulos en dry_run.",
+      "required": ["id", "dry_run", "row_count", "retraction_count", "skipped_counts", "created_at"],
+      "properties": {"id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "tenant_id": {"$ref": "#/$defs/TenantId"}, "dry_run": {"type": "boolean"}, "row_count": {"type": "integer", "minimum": 0}, "retraction_count": {"type": "integer", "minimum": 0}, "skipped_counts": {"type": "object", "additionalProperties": false, "properties": {"no_click_id": {"type": "integer", "minimum": 0}, "consent_denied": {"type": "integer", "minimum": 0}, "consent_unknown": {"type": "integer", "minimum": 0}, "imported_history": {"type": "integer", "minimum": 0}, "superseded": {"type": "integer", "minimum": 0}}}, "download_path": {"oneOf": [{"type": "string"}, {"type": "null"}]}, "created_at": {"$ref": "#/$defs/Timestamp"}, "created_by": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}}
+    },
+    "ConversionCsvRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Una fila del CSV (UTF-8, RFC 4180, cabecera en este orden, fechas RFC 3339 UTC, celdas vacias para nulos): row_type, order_id, stage_event_id, site_id, kind, occurred_at, click_id_type, click_id, value, currency, consent, consent_region, ad_user_data, ad_personalization, ga_client_id, email, phone, landing_path, original_stage_event_id, original_occurred_at, adjustment_at, reason. row_type=conversion: una fila por evento de etapa elegible; order_id = lead_id (estable). row_type=retraction: una fila por retirada, con el mismo click_id y los datos del evento original (original_*), adjustment_at = changed_at del evento lost y reason = 'stage_lost'; sin valor ni email/phone. consent solo admite granted o not_required (Sites nunca exporta denied ni unknown); consent_region vacio = desconocida (marketing aplica fail-closed). email y phone van VACIOS salvo que la exportacion se pida con include_identifiers=true y la fila tenga ad_user_data=granted (en una region not_required sin esa senal explicita las filas van solo con click_id; si tambien se exportan ahi es decision de Cesar); cuando van, en claro: marketing calcula el hash en su backend y no los guarda; Sites nunca hashea ni envia a Google. Neutralizacion de formulas CSV: toda celda de texto que empiece por = + - @ TAB o CR se escribe con un apostrofo (') delante y el consumidor lo quita; landing_path siempre empieza por /. ga_client_id se exporta para el corte de GA4 (posterior a Google Ads).",
+      "required": ["row_type", "order_id", "stage_event_id", "site_id", "kind", "occurred_at", "consent"],
+      "properties": {"row_type": {"type": "string", "enum": ["conversion", "retraction"]}, "order_id": {"$ref": "#/$defs/Uuid"}, "stage_event_id": {"$ref": "#/$defs/Uuid"}, "site_id": {"$ref": "#/$defs/Uuid"}, "kind": {"$ref": "#/$defs/ConversionKind"}, "occurred_at": {"$ref": "#/$defs/Timestamp"}, "click_id_type": {"type": "string", "enum": ["gclid", "gbraid", "wbraid"]}, "click_id": {"$ref": "#/$defs/AdClickId"}, "value": {"$ref": "#/$defs/DecimalString"}, "currency": {"type": "string", "pattern": "^[A-Z]{3}$"}, "consent": {"type": "string", "enum": ["granted", "not_required"]}, "consent_region": {"type": "string", "pattern": "^[A-Z]{2}(-[A-Z0-9]{1,3})?$"}, "ad_user_data": {"$ref": "#/$defs/ConsentSignal"}, "ad_personalization": {"$ref": "#/$defs/ConsentSignal"}, "ga_client_id": {"$ref": "#/$defs/GaClientId"}, "email": {"type": "string", "format": "email", "maxLength": 254}, "phone": {"type": "string", "pattern": "^\\+[1-9][0-9]{6,14}$"}, "landing_path": {"type": "string", "maxLength": 300, "pattern": "^/"}, "original_stage_event_id": {"$ref": "#/$defs/Uuid"}, "original_occurred_at": {"$ref": "#/$defs/Timestamp"}, "adjustment_at": {"$ref": "#/$defs/Timestamp"}, "reason": {"type": "string", "enum": ["stage_lost"]}},
+      "allOf": [{"if": {"required": ["consent"], "properties": {"consent": {"const": "not_required"}}}, "then": {"required": ["consent_region"]}}, {"if": {"anyOf": [{"required": ["email"]}, {"required": ["phone"]}]}, "then": {"required": ["ad_user_data"], "properties": {"ad_user_data": {"const": "granted"}}}}]
+    },
+    "ImportReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Resultado de importar avisos historicos (.eml o .mbox subidos por el agente; sin acceso al buzon). Sin PII: los no reconocidos se identifican por posicion. Limites PROVISIONALES: 25 MiB y 5000 mensajes por subida. Idempotente por hash del Message-ID. Los importados entran en la etapa inicial con source=email_import, sin ids de clic, sin conversiones, y NO emiten sites.lead.created ni avisos.",
+      "required": ["dry_run", "file_kind", "messages_total", "parsed", "duplicates", "unrecognized", "created"],
+      "properties": {"import_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "dry_run": {"type": "boolean"}, "file_kind": {"type": "string", "enum": ["eml", "mbox"]}, "messages_total": {"type": "integer", "minimum": 0}, "parsed": {"type": "integer", "minimum": 0}, "duplicates": {"type": "integer", "minimum": 0}, "unrecognized": {"type": "integer", "minimum": 0}, "created": {"type": "integer", "minimum": 0}, "unrecognized_positions": {"type": "array", "maxItems": 100, "items": {"type": "integer", "minimum": 1}}}
+    },
+    "LeadStageChangedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Sin nombre, correo, telefono ni identificadores de clic (PII e ids fuera de eventos). Quien necesite los ids los lee por la exportacion autenticada.",
+      "required": ["lead_id", "stage_event_id", "to_stage_key", "to_kind", "changed_at", "conversion_state"],
+      "properties": {"lead_id": {"$ref": "#/$defs/Uuid"}, "site_id": {"$ref": "#/$defs/Uuid"}, "stage_event_id": {"$ref": "#/$defs/Uuid"}, "from_stage_key": {"oneOf": [{"$ref": "#/$defs/StageKey"}, {"type": "null"}]}, "to_stage_key": {"$ref": "#/$defs/StageKey"}, "from_kind": {"oneOf": [{"$ref": "#/$defs/StageKind"}, {"type": "null"}]}, "to_kind": {"$ref": "#/$defs/StageKind"}, "conversion_kind": {"oneOf": [{"$ref": "#/$defs/ConversionKind"}, {"type": "null"}]}, "value": {"oneOf": [{"$ref": "#/$defs/Money"}, {"type": "null"}]}, "conversion_state": {"$ref": "#/$defs/ConversionState"}, "click_id_type": {"oneOf": [{"type": "string", "enum": ["gclid", "gbraid", "wbraid"]}, {"type": "null"}]}, "click_consent": {"oneOf": [{"$ref": "#/$defs/ClickConsent"}, {"type": "null"}]}, "has_ga_client_id": {"type": "boolean"}, "retracts_stage_event_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "changed_at": {"$ref": "#/$defs/Timestamp"}}
+    },
+    "LeadsImportedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Un evento por importacion real (no dry_run). Sin PII.",
+      "required": ["import_id", "site_id", "created", "duplicates", "unrecognized", "imported_at"],
+      "properties": {"import_id": {"$ref": "#/$defs/Uuid"}, "site_id": {"$ref": "#/$defs/Uuid"}, "created": {"type": "integer", "minimum": 0}, "duplicates": {"type": "integer", "minimum": 0}, "unrecognized": {"type": "integer", "minimum": 0}, "imported_at": {"$ref": "#/$defs/Timestamp"}}
+    }
+  }
+}

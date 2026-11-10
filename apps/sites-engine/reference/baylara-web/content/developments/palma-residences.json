@@ -1,0 +1,78 @@
+{
+  "slug": "palma-residences",
+  "sample": false,
+  "authorized": true,
+  "order": 10,
+  "sourceId": "1738",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/1738/palma-residences",
+  "name": "Palma Residences",
+  "area": "Miami Beach",
+  "zone": "miami-beach",
+  "address": "666 71st St, Miami Beach, FL 33141",
+  "devType": "condo",
+  "status": "preconstruction",
+  "deliveryYear": 2027,
+  "delivery": {
+    "es": "Entrega estimada: 2027",
+    "en": "Estimated delivery: 2027"
+  },
+  "priceFrom": 650000,
+  "beds": "1 – 2",
+  "units": 126,
+  "floors": 13,
+  "sqft": "405 – 1,342",
+  "developer": null,
+  "architect": null,
+  "interiorDesigner": null,
+  "landscape": null,
+  "description": {
+    "es": [
+      "Palma Residences es un condominio en preconstrucción en Miami Beach, en 666 71st St, Miami Beach, FL 33141. Contempla 126 residencias en 13 pisos, de 1 – 2 habitaciones y de 405 – 1,342 sq ft.",
+      "Entrega estimada: 2027. Precios desde $650,000."
+    ],
+    "en": [
+      "Palma Residences is a condominium in pre-construction in Miami Beach, at 666 71st St, Miami Beach, FL 33141. It comprises 126 residences over 13 floors, with 1 – 2 bedrooms and of 405 – 1,342 sq ft.",
+      "Estimated delivery: 2027. Prices from $650,000."
+    ]
+  },
+  "interior": null,
+  "amenities": {
+    "es": [
+      "Piscina estilo resort con camas de día y cabañas",
+      "Gimnasio",
+      "Jardines frondosos",
+      "Salón y recepción",
+      "Cocina de verano con bar y terraza para eventos",
+      "Vestíbulo de doble altura con ventanales"
+    ],
+    "en": [
+      "Resort-style pool with daybeds and cabanas",
+      "Gym",
+      "Lush landscaping",
+      "Lounge and reception desk",
+      "Summer kitchen with bar and pool-deck event area",
+      "Double-height lobby with floor-to-ceiling windows"
+    ]
+  },
+  "images": [
+    "dev-palma-residences-01",
+    "dev-palma-residences-02",
+    "dev-palma-residences-03",
+    "dev-palma-residences-04",
+    "dev-palma-residences-05",
+    "dev-palma-residences-06",
+    "dev-palma-residences-07",
+    "dev-palma-residences-08",
+    "dev-palma-residences-09",
+    "dev-palma-residences-10",
+    "dev-palma-residences-11",
+    "dev-palma-residences-12"
+  ],
+  "heroImages": [
+    "dev-palma-residences-01"
+  ],
+  "geo": {
+    "lat": 25.8557311,
+    "lng": -80.1245825
+  }
+}

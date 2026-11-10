@@ -1,0 +1,77 @@
+{
+  "slug": "the-delmore",
+  "sample": false,
+  "authorized": true,
+  "order": 18,
+  "sourceId": "1991",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/1991/the-delmore",
+  "name": "The Delmore",
+  "area": "Surfside",
+  "zone": null,
+  "address": "8778 Collins Ave, Surfside, FL 33154",
+  "devType": "condo",
+  "status": "preconstruction",
+  "deliveryYear": 2029,
+  "delivery": {
+    "es": "Entrega estimada: 2029",
+    "en": "Estimated delivery: 2029"
+  },
+  "priceFrom": 15000000,
+  "beds": "4 – 5",
+  "units": 37,
+  "floors": 12,
+  "sqft": "5,000 – 12,000",
+  "developer": null,
+  "architect": null,
+  "interiorDesigner": "Hirsch Bedner Associates",
+  "landscape": null,
+  "description": {
+    "es": [
+      "The Delmore es un condominio en preconstrucción en Surfside, en 8778 Collins Ave, Surfside, FL 33154. Contempla 37 residencias en 12 pisos, de 4 – 5 habitaciones y de 5,000 – 12,000 sq ft.",
+      "Equipo: interiorismo de Hirsch Bedner Associates. Entrega estimada: 2029. Precios desde $15,000,000."
+    ],
+    "en": [
+      "The Delmore is a condominium in pre-construction in Surfside, at 8778 Collins Ave, Surfside, FL 33154. It comprises 37 residences over 12 floors, with 4 – 5 bedrooms and of 5,000 – 12,000 sq ft.",
+      "Team: interiors by Hirsch Bedner Associates. Estimated delivery: 2029. Prices from $15,000,000."
+    ]
+  },
+  "interior": {
+    "es": [
+      "Garaje privado climatizado en cada residencia"
+    ],
+    "en": [
+      "Private climate-controlled garage for each residence"
+    ]
+  },
+  "amenities": {
+    "es": [
+      "Certificación LEED Silver",
+      "Unos 55,000 sq ft de amenidades",
+      "Restaurante, salón y bar para residentes",
+      "Piscina cubierta de 75 pies, jacuzzi y zonas de relajación"
+    ],
+    "en": [
+      "LEED Silver certification",
+      "About 55,000 sq ft of amenity space",
+      "Residents’ dining, lounge and signature bar",
+      "75-foot indoor lap pool, jacuzzi and relaxation areas"
+    ]
+  },
+  "images": [
+    "dev-the-delmore-01",
+    "dev-the-delmore-02",
+    "dev-the-delmore-03",
+    "dev-the-delmore-04",
+    "dev-the-delmore-05",
+    "dev-the-delmore-06",
+    "dev-the-delmore-07",
+    "dev-the-delmore-08"
+  ],
+  "heroImages": [
+    "dev-the-delmore-01"
+  ],
+  "geo": {
+    "lat": 25.8732034,
+    "lng": -80.122049
+  }
+}

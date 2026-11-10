@@ -1,0 +1,15 @@
+{
+  "meta": {
+    "title": { "es": "Mercado: informes mensuales frente al agua", "en": "Market: monthly waterfront reports" },
+    "description": { "es": "Informes mensuales por zona y por edificio: precio mediano, precio por pie cuadrado y días en el mercado.", "en": "Monthly reports by area and building: median price, price per square foot and days on market." }
+  },
+  "eyebrow": { "es": "Mercado", "en": "Market" },
+  "title": { "es": "Informes mensuales por zona y por edificio", "en": "Monthly reports by area and building" },
+  "lead": { "es": "Las cifras de cada informe indican su fuente y su fecha.", "en": "Each report’s figures state their source and date." },
+  "archive": { "es": "Archivo", "en": "Archive" },
+  "none": { "es": "El primer informe mensual se publicará aquí. Suscríbete para recibirlo.", "en": "The first monthly report will be published here. Subscribe to receive it." },
+  "byZone": { "es": "Por zona", "en": "By area" },
+  "byBuilding": { "es": "Por edificio", "en": "By building" },
+  "subTitle": { "es": "Recibe el informe cada mes", "en": "Get the report every month" },
+  "subText": { "es": "Un email al mes, en español o inglés. Puedes darte de baja cuando quieras.", "en": "One email a month, in English or Spanish. Unsubscribe anytime." }
+}

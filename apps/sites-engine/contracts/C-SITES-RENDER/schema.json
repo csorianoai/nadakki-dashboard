@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://contracts.nadakki.example/C-SITES-RENDER/1.0.0/schema.json", "title": "C-SITES-RENDER - tipos de lectura publica para el motor",
+  "description": "Vistas publicas (sin tenant_id ni ids internos) derivadas por nombre de C-SITES-DATA; los nombres de campo coinciden con DATA. Sin $ref entre contratos: x-contract-ref.",
+  "x-contract": {"id": "C-SITES-RENDER", "version": "1.0.0", "status": "proposed"}, "x-contract-uses": [{"id": "C-SITES-DATA", "version": "1.0.0"}],
+  "$defs": {
+    "PublicMedia": {
+      "type": "object", "additionalProperties": false, "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/MediaAsset",
+      "description": "Solo medios approved. `credit` = fuente/autor a mostrar. Las URLs son del CDN de Nadakki. storage_key, sha256 y permiso no se exponen.", "required": ["id", "mime_type", "alt", "variants"],
+      "properties": {
+        "id": {"$ref": "#/$defs/Uuid"}, "width": {"oneOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]}, "height": {"oneOf": [{"type": "integer", "minimum": 1}, {"type": "null"}]},
+        "mime_type": {"type": "string", "pattern": "^image/(jpeg|png|webp|avif)$"}, "alt": {"$ref": "#/$defs/I18nTextStrict"}, "credit": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 200}, {"type": "null"}]},
+        "variants": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["width", "format", "url"],
+            "properties": {"width": {"type": "integer", "minimum": 1}, "format": {"type": "string", "enum": ["avif", "webp", "jpeg"]}, "url": {"type": "string", "format": "uri"}}
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "Uuid": {"type": "string", "format": "uuid"},
+    "I18nTextStrict": {
+      "type": "object", "additionalProperties": false, "required": ["es", "en"], "properties": {"es": {"type": "string", "minLength": 1, "maxLength": 5000}, "en": {"type": "string", "minLength": 1, "maxLength": 5000}}
+    },
+    "PublicLegal": {
+      "type": "object", "additionalProperties": false, "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/LegalProfile",
+      "description": "Datos legales VERIFICADOS que el renderizador inyecta junto a cada contacto (bloques legal_*). El motor no puede omitirlos.", "required": ["brokerage_legal_name", "agent_registered_last_name", "license_no"],
+      "properties": {
+        "brokerage_legal_name": {"type": "string", "minLength": 1, "maxLength": 200}, "dba": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 200}, {"type": "null"}]},
+        "agent_registered_last_name": {"type": "string", "minLength": 1, "maxLength": 120}, "license_no": {"type": "string", "minLength": 1, "maxLength": 64},
+        "team_name_approved": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 120}, {"type": "null"}]}
+      }
+    },
+    "ResolveResult": {
+      "type": "object", "additionalProperties": false, "description": "Resolucion por host. No incluye tenant_id (difiere de E1 4.1 a proposito: minimo privilegio).",
+      "required": ["site_id", "vertical", "template_id", "template_version", "languages", "default_language", "content_version", "host", "host_kind", "primary_host", "state", "redirect"],
+      "properties": {
+        "site_id": {"$ref": "#/$defs/Uuid"}, "vertical": {"$ref": "#/$defs/Vertical"}, "template_id": {"type": "string", "minLength": 1, "maxLength": 64}, "template_version": {"type": "integer", "minimum": 1},
+        "languages": {"type": "array", "items": {"$ref": "#/$defs/Lang"}, "minItems": 1, "uniqueItems": true}, "default_language": {"$ref": "#/$defs/Lang"}, "content_version": {"type": "integer", "minimum": 0},
+        "host": {"$ref": "#/$defs/Host"}, "host_kind": {"type": "string", "enum": ["nadakki_subdomain", "custom"]}, "primary_host": {"$ref": "#/$defs/Host"},
+        "state": {"type": "string", "enum": ["serve", "redirect"], "description": "redirect: el motor responde 301 a redirect.to_host (host en releasing)."},
+        "redirect": {
+          "oneOf": [
+            {
+              "type": "object", "additionalProperties": false, "required": ["to_host", "status", "until"], "properties": {"to_host": {"$ref": "#/$defs/Host"}, "status": {"const": 301}, "until": {"$ref": "#/$defs/Timestamp"}}
+            },
+            {"type": "null"}
+          ]
+        }
+      }
+    },
+    "Vertical": {"type": "string", "pattern": "^[a-z_]{2,32}$", "description": "realestate | dealer | legal | ..."}, "Lang": {"type": "string", "enum": ["es", "en"]},
+    "Host": {"type": "string", "pattern": "^(?=.{4,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$", "description": "Hostname en minusculas, sin esquema ni puerto."},
+    "Timestamp": {"type": "string", "format": "date-time", "description": "RFC 3339, UTC."},
+    "Manifest": {
+      "type": "object", "additionalProperties": false, "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/Site", "description": "Manifiesto del sitio publicado.",
+      "required": ["site_id", "content_version", "generated_at", "vertical", "template", "name", "languages", "default_language", "theme", "contact", "legal", "hosts", "indexable", "required_blocks", "routes"],
+      "properties": {
+        "site_id": {"$ref": "#/$defs/Uuid"}, "content_version": {"type": "integer", "minimum": 0}, "generated_at": {"$ref": "#/$defs/Timestamp"}, "vertical": {"$ref": "#/$defs/Vertical"},
+        "template": {
+          "type": "object", "additionalProperties": false, "required": ["id", "version"], "properties": {"id": {"type": "string", "minLength": 1, "maxLength": 64}, "version": {"type": "integer", "minimum": 1}}
+        },
+        "name": {"$ref": "#/$defs/I18nText"}, "languages": {"type": "array", "items": {"$ref": "#/$defs/Lang"}, "minItems": 1, "uniqueItems": true}, "default_language": {"$ref": "#/$defs/Lang"}, "theme": {"type": "object"},
+        "contact": {"$ref": "#/$defs/SiteContact"}, "legal": {"$ref": "#/$defs/PublicLegal"},
+        "hosts": {
+          "type": "array",
+          "items": {"type": "object", "additionalProperties": false, "required": ["host", "is_primary"], "properties": {"host": {"$ref": "#/$defs/Host"}, "is_primary": {"type": "boolean"}}}
+        },
+        "indexable": {"type": "boolean", "description": "false en hosts de nadakki_subdomain no primarios o sitios en revision."},
+        "required_blocks": {
+          "type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 64}, "description": "Bloques legal_* que el renderizador DEBE inyectar (p. ej. legal_brokerage, legal_eho, legal_privacy)."
+        },
+        "routes": {
+          "type": "array",
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["kind", "key", "slugs", "lastmod"],
+            "properties": {
+              "kind": {"type": "string", "enum": ["page", "listing", "development", "zone", "building"]}, "key": {"type": "string", "minLength": 1, "maxLength": 96},
+              "slugs": {"type": "object", "additionalProperties": false, "required": ["es"], "properties": {"es": {"$ref": "#/$defs/Slug"}, "en": {"$ref": "#/$defs/Slug"}}}, "lastmod": {"$ref": "#/$defs/Timestamp"}
+            }
+          },
+          "description": "Rutas publicables (sitemap)."
+        },
+        "counts": {"type": "object", "additionalProperties": {"type": "integer", "minimum": 0}}
+      }
+    },
+    "I18nText": {
+      "type": "object", "additionalProperties": false, "description": "i18n {es,en}; 'es' obligatorio, 'en' opcional salvo que se indique I18nTextStrict.", "required": ["es"],
+      "properties": {"es": {"type": "string", "minLength": 1, "maxLength": 5000}, "en": {"type": "string", "minLength": 1, "maxLength": 5000}}
+    },
+    "SiteContact": {
+      "type": "object", "additionalProperties": false, "description": "Contacto PUBLICO del sitio (nunca privado).",
+      "properties": {"phone": {"$ref": "#/$defs/Phone"}, "whatsapp": {"$ref": "#/$defs/Phone"}, "email": {"$ref": "#/$defs/Email"}, "address": {"type": "string", "minLength": 1, "maxLength": 300}}
+    },
+    "Phone": {"type": "string", "pattern": "^\\+[1-9][0-9]{6,14}$", "description": "E.164."}, "Email": {"type": "string", "format": "email", "maxLength": 254},
+    "Slug": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$", "maxLength": 96},
+    "PublicPage": {
+      "type": "object", "additionalProperties": false, "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/Page", "required": ["page_key", "slug", "title", "body"],
+      "properties": {
+        "page_key": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,47}$"},
+        "slug": {"type": "object", "additionalProperties": false, "required": ["es"], "properties": {"es": {"$ref": "#/$defs/Slug"}, "en": {"$ref": "#/$defs/Slug"}}}, "title": {"$ref": "#/$defs/I18nText"},
+        "meta_description": {"$ref": "#/$defs/I18nText"}, "body": {"type": "array", "items": {"$ref": "#/$defs/Block"}, "maxItems": 200}, "updated_at": {"oneOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]}
+      }
+    },
+    "Block": {
+      "type": "object", "additionalProperties": false, "required": ["block_id", "type"],
+      "properties": {
+        "block_id": {"type": "string", "minLength": 1, "maxLength": 64},
+        "type": {
+          "type": "string", "pattern": "^(?!legal_)[a-z][a-z0-9_.-]{0,63}$", "description": "El prefijo `legal_` esta reservado: esos bloques (corretaje, EHO, licencia) los inyecta el renderizador y no se pueden poner ni quitar."
+        },
+        "data": {"type": "object"}, "i18n": {"type": "object", "additionalProperties": {"$ref": "#/$defs/I18nText"}}
+      }
+    },
+    "PublicListing": {
+      "type": "object", "additionalProperties": false, "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/Listing", "required": ["item_kind", "slug", "title", "features", "featured"],
+      "properties": {
+        "item_kind": {"type": "string", "enum": ["property", "generic"]}, "vertical_attrs": {"type": "object"}, "slug": {"$ref": "#/$defs/Slug"}, "title": {"$ref": "#/$defs/I18nText"}, "description": {"$ref": "#/$defs/I18nText"},
+        "features": {"type": "array", "items": {"$ref": "#/$defs/I18nText"}, "maxItems": 100}, "geo": {"oneOf": [{"$ref": "#/$defs/GeoPoint"}, {"type": "null"}]}, "featured": {"type": "boolean"},
+        "price": {"oneOf": [{"$ref": "#/$defs/Money"}, {"type": "null"}], "description": "Proyeccion de solo lectura desde re_listings (no esta en el DDL de sites_listings)."},
+        "published_at": {"oneOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]}, "updated_at": {"oneOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]}, "zone_slug": {"oneOf": [{"$ref": "#/$defs/Slug"}, {"type": "null"}]},
+        "building_slug": {"oneOf": [{"$ref": "#/$defs/Slug"}, {"type": "null"}]}, "development_slug": {"oneOf": [{"$ref": "#/$defs/Slug"}, {"type": "null"}]}, "media": {"type": "array", "items": {"$ref": "#/$defs/PublicMedia"}}
+      },
+      "description": "zone_id/building_id/development_id/listing_id se sustituyen por *_slug; media va embebida y ordenada."
+    },
+    "GeoPoint": {
+      "type": "object", "additionalProperties": false, "required": ["lat", "lng"], "properties": {"lat": {"type": "number", "minimum": -90, "maximum": 90}, "lng": {"type": "number", "minimum": -180, "maximum": 180}}
+    },
+    "Money": {
+      "type": "object", "additionalProperties": false, "required": ["amount", "currency"], "properties": {"amount": {"$ref": "#/$defs/DecimalString"}, "currency": {"type": "string", "pattern": "^[A-Z]{3}$"}}
+    },
+    "DecimalString": {"type": "string", "pattern": "^[0-9]{1,18}(\\.[0-9]{1,8})?$", "description": "Decimal exacto no negativo como cadena; nunca float."},
+    "PublicDevelopment": {
+      "type": "object", "additionalProperties": false, "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/Development", "required": ["slug", "name", "authorized"],
+      "properties": {
+        "slug": {"$ref": "#/$defs/Slug"}, "name": {"type": "string", "minLength": 1, "maxLength": 200}, "description": {"$ref": "#/$defs/I18nText"}, "area": {"type": "string", "minLength": 1, "maxLength": 120},
+        "address": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "line1": {"type": "string", "minLength": 1, "maxLength": 200}, "city": {"type": "string", "minLength": 1, "maxLength": 120}, "region": {"type": "string", "minLength": 1, "maxLength": 120},
+            "postal_code": {"type": "string", "minLength": 1, "maxLength": 20}, "country": {"type": "string", "pattern": "^[A-Z]{2}$"}
+          }
+        },
+        "dev_type": {"type": "string", "minLength": 1, "maxLength": 60}, "status": {"type": "string", "minLength": 1, "maxLength": 60}, "delivery_year": {"type": "integer", "minimum": 1900, "maximum": 2200},
+        "price_from": {"$ref": "#/$defs/DecimalString"}, "currency": {"type": "string", "pattern": "^[A-Z]{3}$"}, "developer": {"type": "string", "minLength": 1, "maxLength": 200},
+        "units": {"type": "array", "items": {"type": "object"}, "maxItems": 500}, "amenities": {"type": "array", "items": {"$ref": "#/$defs/I18nText"}, "maxItems": 100},
+        "geo": {"oneOf": [{"$ref": "#/$defs/GeoPoint"}, {"type": "null"}]}, "authorized": {"type": "boolean", "description": "Escribe solo staff (nunca cliente ni IA)."},
+        "updated_at": {"oneOf": [{"$ref": "#/$defs/Timestamp"}, {"type": "null"}]}, "zone_slug": {"oneOf": [{"$ref": "#/$defs/Slug"}, {"type": "null"}]}, "media": {"type": "array", "items": {"$ref": "#/$defs/PublicMedia"}}
+      }
+    },
+    "PublicZone": {
+      "type": "object", "additionalProperties": false, "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/Zone", "required": ["slug", "name"],
+      "properties": {
+        "slug": {"$ref": "#/$defs/Slug"}, "name": {"$ref": "#/$defs/I18nText"}, "lead": {"$ref": "#/$defs/I18nText"}, "body": {"$ref": "#/$defs/I18nText"},
+        "price_range": {"type": "object", "additionalProperties": false, "properties": {"min": {"$ref": "#/$defs/Money"}, "max": {"$ref": "#/$defs/Money"}}},
+        "schools": {"type": "array", "items": {"type": "object"}, "maxItems": 50}, "distances": {"type": "array", "items": {"type": "object"}, "maxItems": 50}, "source": {"type": "string", "minLength": 1, "maxLength": 200},
+        "source_date": {"$ref": "#/$defs/Date"}, "photo": {"oneOf": [{"$ref": "#/$defs/PublicMedia"}, {"type": "null"}]}
+      }
+    },
+    "Date": {"type": "string", "format": "date"},
+    "PublicBuilding": {
+      "type": "object", "additionalProperties": false, "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/Building", "required": ["slug", "name"],
+      "properties": {
+        "slug": {"$ref": "#/$defs/Slug"}, "name": {"type": "string", "minLength": 1, "maxLength": 200}, "summary": {"$ref": "#/$defs/I18nText"}, "hoa": {"type": "object"}, "rules": {"type": "object"},
+        "structural": {"type": "object"}, "data_source": {"type": "string", "minLength": 1, "maxLength": 200}, "data_date": {"$ref": "#/$defs/Date"}, "zone_slug": {"oneOf": [{"$ref": "#/$defs/Slug"}, {"type": "null"}]}
+      }
+    },
+    "Problem": {
+      "type": "object", "required": ["type", "title", "status", "code"], "description": "RFC 9457 (application/problem+json) + `code` estable.",
+      "properties": {
+        "type": {"type": "string", "format": "uri-reference"}, "title": {"type": "string"}, "status": {"type": "integer", "minimum": 400, "maximum": 599}, "detail": {"type": "string"}, "instance": {"type": "string"},
+        "code": {"type": "string", "enum": ["UNAUTHENTICATED", "FORBIDDEN", "NOT_FOUND", "HOST_NOT_FOUND", "SITE_UNPUBLISHED", "VALIDATION_ERROR", "RATE_LIMITED"], "description": "Estable dentro de 1.x."},
+        "errors": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["field", "message"], "properties": {"field": {"type": "string"}, "message": {"type": "string"}}}}
+      }
+    },
+    "RevalidationPayload": {
+      "type": "object", "additionalProperties": false, "description": "Sin datos de contenido ni de marca: solo que invalidar. kind=page usa page_key en slug; kind=host usa host; kind=site invalida todo.",
+      "required": ["site_id", "kind", "content_version"],
+      "properties": {
+        "site_id": {"$ref": "#/$defs/Uuid"}, "kind": {"type": "string", "enum": ["site", "manifest", "page", "listing", "development", "zone", "building", "media", "host"]},
+        "slug": {"oneOf": [{"type": "string", "minLength": 1, "maxLength": 96}, {"type": "null"}]}, "host": {"oneOf": [{"$ref": "#/$defs/Host"}, {"type": "null"}]}, "content_version": {"type": "integer", "minimum": 0}
+      }
+    },
+    "EventEnvelope": {
+      "type": "object", "additionalProperties": false, "description": "Sobre comun Sites. El consumidor filtra por tenant_id y deduplica por idempotency_key (al-menos-una-vez).",
+      "required": ["event_id", "event_name", "event_version", "tenant_id", "occurred_at", "idempotency_key", "payload"],
+      "properties": {
+        "event_id": {"$ref": "#/$defs/Uuid"}, "event_name": {"type": "string", "pattern": "^sites\\.[a-z_]+\\.[a-z_]+$"}, "event_version": {"type": "integer", "minimum": 1}, "tenant_id": {"$ref": "#/$defs/TenantId"},
+        "site_id": {"$ref": "#/$defs/Uuid"}, "occurred_at": {"$ref": "#/$defs/Timestamp"}, "idempotency_key": {"type": "string", "minLength": 8, "maxLength": 128},
+        "actor_id": {"oneOf": [{"$ref": "#/$defs/Uuid"}, {"type": "null"}]}, "payload": {"type": "object", "description": "El $def indicado por `payload` en events.yaml. Unico nombre de campo permitido."}
+      }
+    },
+    "TenantId": {
+      "$ref": "#/$defs/Uuid", "readOnly": true,
+      "description": "Tenant propietario. Lo fija el servidor: del claim tenant_id del JWT (API admin) o del site_id firmado (API publica). Nunca lo envia el cliente; un valor enviado se rechaza con 422 TENANT_FIELD_FORBIDDEN."
+    }
+  }
+}

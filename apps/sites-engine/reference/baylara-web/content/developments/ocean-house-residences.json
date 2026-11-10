@@ -1,0 +1,78 @@
+{
+  "slug": "ocean-house-residences",
+  "sample": false,
+  "authorized": true,
+  "order": 15,
+  "sourceId": "1987",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/1987/ocean-house-residences",
+  "name": "Ocean House Residences",
+  "area": "Surfside",
+  "zone": null,
+  "address": "9309 Collins Ave, Surfside, FL 33154",
+  "devType": "condo",
+  "status": "preconstruction",
+  "deliveryYear": 2027,
+  "delivery": {
+    "es": "Entrega estimada: 2027",
+    "en": "Estimated delivery: 2027"
+  },
+  "priceFrom": null,
+  "beds": "2 – 5",
+  "units": 25,
+  "floors": 12,
+  "sqft": "1,300 – 6,200",
+  "developer": null,
+  "architect": "Bernardo Fort-Brescia",
+  "interiorDesigner": null,
+  "landscape": null,
+  "description": {
+    "es": [
+      "Ocean House Residences es un condominio en preconstrucción en Surfside, en 9309 Collins Ave, Surfside, FL 33154. Contempla 25 residencias en 12 pisos, de 2 – 5 habitaciones y de 1,300 – 6,200 sq ft.",
+      "Equipo: arquitectura de Bernardo Fort-Brescia. Entrega estimada: 2027. Consultar precio."
+    ],
+    "en": [
+      "Ocean House Residences is a condominium in pre-construction in Surfside, at 9309 Collins Ave, Surfside, FL 33154. It comprises 25 residences over 12 floors, with 2 – 5 bedrooms and of 1,300 – 6,200 sq ft.",
+      "Team: architecture by Bernardo Fort-Brescia. Estimated delivery: 2027. Price upon request."
+    ]
+  },
+  "interior": null,
+  "amenities": {
+    "es": [
+      "Llegada ajardinada con porte-cochère cubierto",
+      "Piscina en la azotea con solárium",
+      "Estanques y cabañas para el descanso",
+      "Guardabicicletas cubierto",
+      "Acceso directo al mar",
+      "Recepción y conserjería 24 horas"
+    ],
+    "en": [
+      "Landscaped arrival with covered porte-cochère",
+      "Rooftop pool with sundeck",
+      "Reflecting ponds and cabanas",
+      "Covered bicycle storage",
+      "Direct ocean access",
+      "24/7 front desk and concierge"
+    ]
+  },
+  "images": [
+    "dev-ocean-house-residences-01",
+    "dev-ocean-house-residences-02",
+    "dev-ocean-house-residences-03",
+    "dev-ocean-house-residences-04",
+    "dev-ocean-house-residences-05",
+    "dev-ocean-house-residences-06",
+    "dev-ocean-house-residences-07",
+    "dev-ocean-house-residences-08",
+    "dev-ocean-house-residences-09",
+    "dev-ocean-house-residences-10",
+    "dev-ocean-house-residences-11",
+    "dev-ocean-house-residences-12"
+  ],
+  "heroImages": [
+    "dev-ocean-house-residences-01"
+  ],
+  "geo": {
+    "lat": 25.8820065,
+    "lng": -80.1216598
+  }
+}

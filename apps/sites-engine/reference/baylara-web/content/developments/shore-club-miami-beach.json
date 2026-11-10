@@ -1,0 +1,75 @@
+{
+  "slug": "shore-club-miami-beach",
+  "sample": false,
+  "authorized": true,
+  "order": 12,
+  "sourceId": "1649",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/1649/shore-club-miami-beach",
+  "name": "Shore Club Miami Beach",
+  "area": "South Beach",
+  "zone": "miami-beach",
+  "address": "1901 Collins Ave, Miami Beach, FL 33139",
+  "devType": "condo",
+  "status": null,
+  "deliveryYear": 2026,
+  "delivery": {
+    "es": "Entrega estimada: 2026",
+    "en": "Estimated delivery: 2026"
+  },
+  "priceFrom": 6000000,
+  "beds": "1 – 3",
+  "units": 49,
+  "floors": 17,
+  "sqft": "2,400 – 7,000",
+  "developer": "Witkoff",
+  "architect": null,
+  "interiorDesigner": null,
+  "landscape": null,
+  "description": {
+    "es": [
+      "Shore Club Miami Beach es un condominio en South Beach, en 1901 Collins Ave, Miami Beach, FL 33139. Contempla 49 residencias en 17 pisos, de 1 – 3 habitaciones y de 2,400 – 7,000 sq ft.",
+      "Equipo: desarrollo de Witkoff. Entrega estimada: 2026. Precios desde $6,000,000."
+    ],
+    "en": [
+      "Shore Club Miami Beach is a condominium in South Beach, at 1901 Collins Ave, Miami Beach, FL 33139. It comprises 49 residences over 17 floors, with 1 – 3 bedrooms and of 2,400 – 7,000 sq ft.",
+      "Team: developed by Witkoff. Estimated delivery: 2026. Prices from $6,000,000."
+    ]
+  },
+  "interior": null,
+  "amenities": {
+    "es": [
+      "Vestíbulo y servicio de valet",
+      "Aparcamiento de bicicletas",
+      "Café",
+      "Espacio de coworking y sala de paquetes",
+      "Gimnasio"
+    ],
+    "en": [
+      "Lobby and valet parking",
+      "Bike parking",
+      "Café",
+      "Co-working space and package room",
+      "Fitness center"
+    ]
+  },
+  "images": [
+    "dev-shore-club-miami-beach-01",
+    "dev-shore-club-miami-beach-02",
+    "dev-shore-club-miami-beach-03",
+    "dev-shore-club-miami-beach-04",
+    "dev-shore-club-miami-beach-05",
+    "dev-shore-club-miami-beach-06",
+    "dev-shore-club-miami-beach-07",
+    "dev-shore-club-miami-beach-08",
+    "dev-shore-club-miami-beach-09",
+    "dev-shore-club-miami-beach-10",
+    "dev-shore-club-miami-beach-11"
+  ],
+  "heroImages": [
+    "dev-shore-club-miami-beach-01"
+  ],
+  "geo": {
+    "lat": 25.7948625,
+    "lng": -80.1286393
+  }
+}
