@@ -9,14 +9,9 @@ import {
   fetchTimeline,
   fetchNotas,
   crearNota,
-  fetchVersiones,
   fetchAuditoria,
   fetchPermisos,
-  fetchEvidencia,
   fetchDocumentos,
-  compararVersiones,
-  enviarOverride,
-  cambiarEstado,
   generarExportacionPDF,
   generarExportacionZIP,
   type Expediente,
@@ -24,13 +19,9 @@ import {
   type Documento,
   type EstadoExpediente,
   type Permisos,
-  type VersionAnalisis,
   type EventoAuditoria,
-  type Evidencia,
 } from "@/lib/api/sic";
 import { PanelDecisionOverride } from "@/components/sic/PanelDecisionOverride";
-import { ComparadorVersiones } from "@/components/sic/ComparadorVersiones";
-import { PanelEvidencia } from "@/components/sic/PanelEvidencia";
 import { MemoEjecutivo } from "@/components/sic/MemoEjecutivo";
 import { PanelDocumentos } from "@/components/sic/PanelDocumentos";
 import { LoadingSic, EmptySic, ErrorSic, SuccessSic } from "@/components/sic/EstadosSic";
@@ -65,7 +56,6 @@ export default function SicExpedienteIdPage() {
   const [expediente, setExpediente] = useState<Expediente | null>(null);
   const [timeline, setTimeline] = useState<unknown[]>([]);
   const [notas, setNotas] = useState<Nota[]>([]);
-  const [versiones, setVersiones] = useState<VersionAnalisis[]>([]);
   const [auditoria, setAuditoria] = useState<unknown[]>([]);
   const [documentos, setDocumentos] = useState<Documento[]>([]);
   const [permisos, setPermisos] = useState<Permisos | null>(null);
@@ -73,10 +63,8 @@ export default function SicExpedienteIdPage() {
   const [error, setError] = useState<string | null>(null);
   const [nuevaNota, setNuevaNota] = useState("");
   const [creandoNota, setCreandoNota] = useState(false);
-  const [nuevoEstado, setNuevoEstado] = useState("");
   const [exportando, setExportando] = useState<string | null>(null);
   const [exitoExport, setExitoExport] = useState<string | null>(null);
-  const [evidenciaAuditoria, setEvidenciaAuditoria] = useState<Evidencia | null>(null);
 
   const cargar = useCallback(() => {
     if (!id) return;
@@ -92,16 +80,14 @@ export default function SicExpedienteIdPage() {
       fetchExpediente(id, tenant),
       fetchTimeline(id, tenant).catch(() => []),
       fetchNotas(id, tenant).catch(() => []),
-      fetchVersiones(id, tenant).catch(() => []),
       fetchAuditoria(id, tenant).catch(() => []),
       fetchPermisos(id, tenant).catch(() => null),
       fetchDocumentos(id, tenant).catch(() => []),
     ])
-      .then(([exp, tl, nt, vr, au, perm, docs]) => {
+      .then(([exp, tl, nt, au, perm, docs]) => {
         setExpediente(exp ?? null);
         setTimeline(Array.isArray(tl) ? tl : []);
         setNotas(Array.isArray(nt) ? nt : []);
-        setVersiones(Array.isArray(vr) ? vr : []);
         setAuditoria(Array.isArray(au) ? au : []);
         setPermisos(perm ?? null);
         setDocumentos(Array.isArray(docs) ? docs : []);
@@ -126,25 +112,8 @@ export default function SicExpedienteIdPage() {
     }
   }, [id, tenant, nuevaNota, cargar]);
 
-  const handleOverride = useCallback(
-    async (decision: string, justificacion: string) => {
-      if (!tenant) return;
-      await enviarOverride(id, tenant, { decision_final: decision, justificacion });
-      cargar();
-    },
-    [id, tenant, cargar]
-  );
-
-  const handleCambiarEstado = useCallback(async () => {
-    if (!nuevoEstado.trim() || !tenant) return;
-    try {
-      await cambiarEstado(id, tenant, nuevoEstado.trim());
-      setNuevoEstado("");
-      cargar();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e));
-    }
-  }, [id, tenant, nuevoEstado, cargar]);
+  // Sin ruta en el backend (404): la decision/override no se ofrece en la interfaz.
+  const sinOverride = useCallback(async () => undefined, []);
 
   const handleExportarPDF = useCallback(async () => {
     if (!tenant) return;
@@ -176,17 +145,8 @@ export default function SicExpedienteIdPage() {
     }
   }, [id, tenant, cargar]);
 
-  const handleCompararVersiones = useCallback(
-    (va: string, vb: string) => compararVersiones(id, tenant, va, vb),
-    [id, tenant]
-  );
-
-  const puedeOverride = permisos?.puede_override ?? false;
-  const puedeCambiarEstado = permisos?.puede_cambiar_estado ?? false;
   const puedeExportar = permisos?.puede_exportar !== false;
   const puedeVerAuditoria = permisos?.puede_ver_auditoria !== false;
-  const puedeAbrirComparador = permisos?.puede_abrir_comparador !== false;
-  const transiciones = permisos?.transiciones_disponibles ?? [];
 
   if (loading && !expediente) {
     return (
@@ -224,12 +184,6 @@ export default function SicExpedienteIdPage() {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <Link
-            href={`/sic/expedientes/${id}/replay`}
-            className="text-violet-400 hover:underline text-xs"
-          >
-            Replay
-          </Link>
           <span
             className={`px-2 py-1 rounded text-xs font-semibold ${
               ESTADOS_BADGE[(e.estado_expediente as EstadoExpediente) ?? ""] ?? "bg-zinc-700/30 text-zinc-400"
@@ -280,48 +234,11 @@ export default function SicExpedienteIdPage() {
           <Panel titulo="Controles del expediente">
             <div className="space-y-2 text-xs">
               <div className="flex flex-wrap gap-1">
-                <span className={`px-2 py-0.5 rounded ${puedeOverride ? "bg-emerald-500/20 text-emerald-300" : "bg-zinc-800/80 text-zinc-500"}`}>
-                  Decidir: {puedeOverride ? "Sí" : "No"}
-                </span>
-                <span className={`px-2 py-0.5 rounded ${puedeOverride ? "bg-emerald-500/20 text-emerald-300" : "bg-zinc-800/80 text-zinc-500"}`}>
-                  Override: {puedeOverride ? "Sí" : "No"}
-                </span>
-                <span className={`px-2 py-0.5 rounded ${puedeCambiarEstado ? "bg-emerald-500/20 text-emerald-300" : "bg-zinc-800/80 text-zinc-500"}`}>
-                  Transición: {puedeCambiarEstado ? "Sí" : "No"}
-                </span>
                 <span className={`px-2 py-0.5 rounded ${puedeExportar ? "bg-emerald-500/20 text-emerald-300" : "bg-zinc-800/80 text-zinc-500"}`}>
                   Exportar: {puedeExportar ? "Sí" : "No"}
                 </span>
               </div>
               {permisos?.rol && <p className="text-zinc-500">Rol actual: {permisos.rol}</p>}
-            </div>
-          </Panel>
-          <Panel titulo="Estado y transición">
-            <div className="space-y-2">
-              {puedeCambiarEstado && transiciones.length > 0 && (
-                <div>
-                  <select
-                    value={nuevoEstado}
-                    onChange={(e) => setNuevoEstado(e.target.value)}
-                    className="w-full bg-zinc-900/80 border border-zinc-700 rounded-lg px-2 py-1.5 text-zinc-200 text-xs focus-visible:outline focus-visible:ring-2 focus-visible:ring-violet-500/30"
-                  >
-                    <option value="">Cambiar a…</option>
-                    {transiciones.map((t) => (
-                      <option key={t} value={t}>{t}</option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={handleCambiarEstado}
-                    disabled={!nuevoEstado}
-                    className="mt-1 w-full rounded-lg px-2 py-1 bg-zinc-800 text-zinc-200 text-xs hover:bg-zinc-700 disabled:opacity-50"
-                  >
-                    Transicionar
-                  </button>
-                </div>
-              )}
-              {!puedeCambiarEstado && (
-                <p className="text-zinc-500 text-xs italic">No tiene permiso para cambiar estado.</p>
-              )}
             </div>
           </Panel>
           <Panel titulo="Datos del expediente">
@@ -349,12 +266,15 @@ export default function SicExpedienteIdPage() {
         </div>
 
         <div className="lg:col-span-5 space-y-4">
-          <Panel titulo="Panel de decisión y override">
+          <Panel titulo="Decisión">
             <PanelDecisionOverride
               expediente={e}
-              puedeOverride={puedeOverride}
-              onOverride={handleOverride}
+              puedeOverride={false}
+              onOverride={sinOverride}
             />
+            <p className="mt-2 text-zinc-500 text-xs italic">
+              Override y cambio de decisión: No disponible todavía.
+            </p>
           </Panel>
           <Panel titulo="Explicabilidad">
             <div className="text-zinc-500 text-sm p-4">
@@ -362,11 +282,7 @@ export default function SicExpedienteIdPage() {
             </div>
           </Panel>
           <Panel titulo="Comparador de versiones">
-            {puedeAbrirComparador ? (
-              <ComparadorVersiones versiones={versiones} onComparar={handleCompararVersiones} />
-            ) : (
-              <p className="text-zinc-500 text-xs italic">No tiene permiso para abrir el comparador.</p>
-            )}
+            <p className="text-zinc-500 text-xs italic">No disponible todavía.</p>
           </Panel>
           <Panel titulo="Memo ejecutivo">
             <MemoEjecutivo expediente={e} explicabilidad={null} />
@@ -419,44 +335,12 @@ export default function SicExpedienteIdPage() {
               <p className="text-zinc-500 text-xs">Sin eventos</p>
             ) : (
               <ul className="space-y-1 text-xs text-zinc-300">
-                {(auditoria as EventoAuditoria[]).map((a, i) => {
-                  const tieneEv = Boolean(a.evidencia_id);
-                  return (
-                    <li key={a.evento_id ?? i}>
-                      {tieneEv ? (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            fetchEvidencia(a.evidencia_id!, tenant, id)
-                              .then(setEvidenciaAuditoria)
-                              .catch(() =>
-                                setEvidenciaAuditoria({
-                                  evidencia_id: a.evidencia_id,
-                                  detalle: "Evidencia no disponible.",
-                                })
-                              );
-                          }}
-                          className="text-left hover:text-violet-400 hover:underline"
-                        >
-                          {a.tipo_evento ?? a.fecha_evento} — {a.detalle ?? ""}
-                          <span className="ml-1 text-violet-400/80 text-[10px]">[evidencia]</span>
-                        </button>
-                      ) : (
-                        <span>{a.tipo_evento ?? a.fecha_evento} — {a.detalle ?? ""}</span>
-                      )}
-                    </li>
-                  );
-                })}
+                {(auditoria as EventoAuditoria[]).map((a, i) => (
+                  <li key={a.evento_id ?? i}>
+                    <span>{a.tipo_evento ?? a.fecha_evento} — {a.detalle ?? ""}</span>
+                  </li>
+                ))}
               </ul>
-            )}
-            {evidenciaAuditoria && (
-              <div className="mt-3">
-                <PanelEvidencia
-                  evidencia={evidenciaAuditoria}
-                  expedienteId={id}
-                  onCerrar={() => setEvidenciaAuditoria(null)}
-                />
-              </div>
             )}
           </Panel>
           <Panel titulo="Exportaciones">
