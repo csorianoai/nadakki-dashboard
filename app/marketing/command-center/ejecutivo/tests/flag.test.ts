@@ -1,4 +1,4 @@
-import { analyticsDemoActivo } from "../flag";
+import { analyticsDemoActivo, fuenteDePantalla } from "../flag";
 
 describe("flag de la pantalla patron (VERCEL_ENV / NEXT_PUBLIC_ANALYTICS_DEMO)", () => {
   it("production + flag demo => APAGADO (pase lo que pase)", () => {
@@ -23,5 +23,18 @@ describe("flag de la pantalla patron (VERCEL_ENV / NEXT_PUBLIC_ANALYTICS_DEMO)",
     for (const v of ["true", "yes", "01", " 1", "1 "]) {
       expect(analyticsDemoActivo({ NEXT_PUBLIC_ANALYTICS_DEMO: v, NODE_ENV: "development" })).toBe(false);
     }
+  });
+});
+
+describe("fuenteDePantalla: demo solo donde el flag lo permite", () => {
+  it("produccion => real aunque se pida la demo", () => {
+    expect(fuenteDePantalla("demo", { VERCEL_ENV: "production", NEXT_PUBLIC_ANALYTICS_DEMO: "1" })).toBe("real");
+    expect(fuenteDePantalla(undefined, { VERCEL_ENV: "production" })).toBe("real");
+    expect(fuenteDePantalla(undefined, {})).toBe("real");
+  });
+  it("preview => demo por defecto; ?fuente=real => real", () => {
+    expect(fuenteDePantalla(undefined, { VERCEL_ENV: "preview" })).toBe("demo");
+    expect(fuenteDePantalla("real", { VERCEL_ENV: "preview" })).toBe("real");
+    expect(fuenteDePantalla("cualquier-cosa", { VERCEL_ENV: "preview" })).toBe("demo");
   });
 });

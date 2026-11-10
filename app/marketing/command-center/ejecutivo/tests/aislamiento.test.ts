@@ -36,8 +36,8 @@ describe("aislamiento de los datos DEMO", () => {
   it("page.tsx carga ./demo solo con import() dinamico y despues del flag", () => {
     const s = readFileSync(join(RAIZ, "page.tsx"), "utf8");
     expect(s).toMatch(/await import\(["']\.\/demo\/datos-demo["']\)/);
-    expect(s.indexOf("analyticsDemoActivo()")).toBeLessThan(s.indexOf('import("./demo/datos-demo")'));
-    expect(s).toMatch(/notFound\(\)/);
+    expect(s.indexOf("fuenteDePantalla(")).toBeLessThan(s.indexOf('import("./demo/datos-demo")'));
+    expect(s.indexOf('if (fuente === "real") return')).toBeLessThan(s.indexOf('import("./demo/datos-demo")'));
   });
 
   it("el modulo DEMO esta marcado como DEMO/PROTOTIPO en su cabecera", () => {
