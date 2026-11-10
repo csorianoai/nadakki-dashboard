@@ -95,6 +95,13 @@ jobs:
           PRODUCT_OR_HARNESS_CHANGED="NO"
           while IFS= read -r path || [ -n "${path}" ]; do
             [ -z "${path}" ] && continue
+            # apps/** (p. ej. el motor de Sites) tiene su propio manifiesto, lockfile y pruebas: no es producto ni arnes
+            # del panel. Sin esto, un PR que solo toca apps/ marca PRODUCT_OR_HARNESS_CHANGED=YES por package.json,
+            # package-lock.json o *.js, ninguna prueba del panel lo relaciona y el job sale con
+            # SOURCE_CHANGED_WITH_ZERO_RELATED_TESTS. Lo fija scripts/ci/aislamiento-apps.test.ts.
+            case "${path}" in
+              apps/*) continue ;;
+            esac
             base="$(basename "${path}")"
             case "${path}" in
               app/*|components/*|lib/*|hooks/*|types/*|tests/*)
