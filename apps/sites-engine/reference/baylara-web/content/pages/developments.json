@@ -1,0 +1,28 @@
+{
+  "meta": {
+    "title": {
+      "es": "Nuevos desarrollos: proyectos en la costa y en Miami",
+      "en": "New developments: projects on the coast and in Miami"
+    },
+    "descriptionTpl": {
+      "es": "Proyectos nuevos y en preconstrucción en {areas}: promotora, entrega estimada, precios desde y tipos de residencia.",
+      "en": "New and pre-construction projects in {areas}: developer, estimated delivery, starting prices and residence types."
+    }
+  },
+  "eyebrow": {
+    "es": "Preventa y obra nueva",
+    "en": "Pre-construction and new builds"
+  },
+  "title": {
+    "es": "Nuevos desarrollos",
+    "en": "New developments"
+  },
+  "lead": {
+    "es": "Proyectos en la costa y en Miami con información de la promotora: entrega, precios desde, tipos de residencia y amenidades.",
+    "en": "Projects on the coast and in Miami with developer information: delivery, starting prices, residence types and amenities."
+  },
+  "empty": {
+    "es": "Estamos preparando la selección de proyectos. Escríbeme y te envío los que encajan con lo que buscas.",
+    "en": "The project selection is being prepared. Write to me and I will send the ones that fit what you are looking for."
+  }
+}

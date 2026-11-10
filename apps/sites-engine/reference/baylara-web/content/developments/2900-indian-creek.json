@@ -1,0 +1,67 @@
+{
+  "slug": "2900-indian-creek",
+  "sample": false,
+  "authorized": true,
+  "order": 3,
+  "sourceId": "1749",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/1749/2900-indian-creek",
+  "name": "2900 Indian Creek",
+  "area": "Miami Beach",
+  "zone": "miami-beach",
+  "address": "2901 Indian Creek Dr, Miami Beach, FL 33140",
+  "devType": "condo",
+  "status": null,
+  "deliveryYear": 2026,
+  "delivery": {
+    "es": "Entrega estimada: 2026",
+    "en": "Estimated delivery: 2026"
+  },
+  "priceFrom": 1578750,
+  "beds": "1 – 2",
+  "units": 22,
+  "floors": 8,
+  "sqft": "1,750 – 4,800",
+  "developer": null,
+  "architect": null,
+  "interiorDesigner": null,
+  "landscape": null,
+  "description": {
+    "es": [
+      "2900 Indian Creek es un condominio en Miami Beach, en 2901 Indian Creek Dr, Miami Beach, FL 33140. Contempla 22 residencias en 8 pisos, de 1 – 2 habitaciones y de 1,750 – 4,800 sq ft.",
+      "Entrega estimada: 2026. Precios desde $1,578,750."
+    ],
+    "en": [
+      "2900 Indian Creek is a condominium in Miami Beach, at 2901 Indian Creek Dr, Miami Beach, FL 33140. It comprises 22 residences over 8 floors, with 1 – 2 bedrooms and of 1,750 – 4,800 sq ft.",
+      "Estimated delivery: 2026. Prices from $1,578,750."
+    ]
+  },
+  "interior": null,
+  "amenities": {
+    "es": [
+      "Membresía de club de playa",
+      "Piscina orientada al atardecer con ducha exterior",
+      "Camas de día y tumbonas bajo palmeras",
+      "Cocina de verano con barbacoa y comedor"
+    ],
+    "en": [
+      "Beach club membership",
+      "Sunset-facing pool with outdoor shower",
+      "Daybeds and loungers shaded by palms",
+      "Summer kitchen with barbecue and dining area"
+    ]
+  },
+  "images": [
+    "dev-2900-indian-creek-01",
+    "dev-2900-indian-creek-02",
+    "dev-2900-indian-creek-03",
+    "dev-2900-indian-creek-04",
+    "dev-2900-indian-creek-05"
+  ],
+  "heroImages": [
+    "dev-2900-indian-creek-01"
+  ],
+  "geo": {
+    "lat": 25.8054602,
+    "lng": -80.1259737
+  }
+}

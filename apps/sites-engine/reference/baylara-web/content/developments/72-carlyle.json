@@ -1,0 +1,58 @@
+{
+  "slug": "72-carlyle",
+  "sample": false,
+  "authorized": true,
+  "order": 4,
+  "sourceId": "2039",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/2039/72-carlyle",
+  "name": "72 Carlyle",
+  "area": "Miami Beach",
+  "zone": "miami-beach",
+  "address": "600 72nd St, Miami Beach, FL 33141",
+  "devType": "condo",
+  "status": "preconstruction",
+  "deliveryYear": 2027,
+  "delivery": {
+    "es": "Entrega estimada: 2027",
+    "en": "Estimated delivery: 2027"
+  },
+  "priceFrom": 1116500,
+  "beds": "1 – 2",
+  "units": 134,
+  "floors": 20,
+  "sqft": "600 – 1,400",
+  "developer": null,
+  "architect": "Piero Lissoni",
+  "interiorDesigner": "Piero Lissoni",
+  "landscape": null,
+  "description": {
+    "es": [
+      "72 Carlyle es un condominio en preconstrucción en Miami Beach, en 600 72nd St, Miami Beach, FL 33141. Contempla 134 residencias en 20 pisos, de 1 – 2 habitaciones y de 600 – 1,400 sq ft.",
+      "Equipo: arquitectura de Piero Lissoni; interiorismo de Piero Lissoni. Entrega estimada: 2027. Precios desde $1,116,500."
+    ],
+    "en": [
+      "72 Carlyle is a condominium in pre-construction in Miami Beach, at 600 72nd St, Miami Beach, FL 33141. It comprises 134 residences over 20 floors, with 1 – 2 bedrooms and of 600 – 1,400 sq ft.",
+      "Team: architecture by Piero Lissoni; interiors by Piero Lissoni. Estimated delivery: 2027. Prices from $1,116,500."
+    ]
+  },
+  "interior": null,
+  "amenities": null,
+  "images": [
+    "dev-72-carlyle-01",
+    "dev-72-carlyle-02",
+    "dev-72-carlyle-03",
+    "dev-72-carlyle-04",
+    "dev-72-carlyle-05",
+    "dev-72-carlyle-06",
+    "dev-72-carlyle-07",
+    "dev-72-carlyle-08",
+    "dev-72-carlyle-09"
+  ],
+  "heroImages": [
+    "dev-72-carlyle-01"
+  ],
+  "geo": {
+    "lat": 25.8568665,
+    "lng": -80.1244854
+  }
+}

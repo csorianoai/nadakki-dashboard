@@ -1,0 +1,36 @@
+{
+  "meta": {
+    "title": { "es": "Comprar en Punta Cana desde Florida", "en": "Buying in Punta Cana from Florida" },
+    "description": { "es": "Villas, apartamentos frente a la playa y preventas en Punta Cana, con el proceso explicado y coordinado desde Miami.", "en": "Villas, beachfront apartments and pre-construction in Punta Cana, with the process explained and coordinated from Miami." }
+  },
+  "eyebrow": { "es": "Punta Cana · República Dominicana", "en": "Punta Cana · Dominican Republic" },
+  "title": { "es": "Tu propiedad en Punta Cana, comprada desde Florida", "en": "A home in Punta Cana, bought from Florida" },
+  "lead": { "es": "Para compradores que viven en Florida: villas, apartamentos frente a la playa y proyectos en preventa, con el proceso explicado y coordinado desde Miami.", "en": "For buyers who live in Florida: villas, beachfront apartments and pre-construction projects, with the process explained and coordinated from Miami." },
+  "cta": { "es": "Planificar mi compra en Punta Cana", "en": "Plan my purchase in Punta Cana" },
+  "areasEyebrow": { "es": "Zonas", "en": "Areas" },
+  "areasTitle": { "es": "Dónde buscar", "en": "Where to look" },
+  "areas": [
+    { "n": "Cap Cana", "p": { "es": "Comunidad cerrada con marina, golf, villas y residencias frente al mar.", "en": "A gated community with a marina, golf and oceanfront villas and residences." } },
+    { "n": "Bávaro", "p": { "es": "Playas extensas, complejos de apartamentos y servicios cerca del aeropuerto.", "en": "Long beaches, apartment complexes and services close to the airport." } },
+    { "n": "Punta Cana", "p": { "es": "Comunidades residenciales consolidadas con golf, clubes de playa y villas.", "en": "Established residential communities with golf, beach clubs and villas." } }
+  ],
+  "propsTitle": { "es": "Propiedades en Punta Cana", "en": "Properties in Punta Cana" },
+  "procEyebrow": { "es": "Proceso", "en": "Process" },
+  "procTitle": { "es": "Cómo funciona una compra en República Dominicana", "en": "How a purchase in the Dominican Republic works" },
+  "steps": [
+    { "h": { "es": "Primera reunión en Florida", "en": "First meeting in Florida" }, "p": { "es": "Objetivos, presupuesto, plazos y si prefieres una propiedad terminada o en preventa.", "en": "Goals, budget, timing and whether you prefer a finished property or pre-construction." } },
+    { "h": { "es": "Selección y visita", "en": "Selection and visit" }, "p": { "es": "Una selección con recorridos en video y luego un viaje planificado para ver las finalistas.", "en": "A shortlist with video tours, followed by a planned trip to see the finalists." } },
+    { "h": { "es": "Debida diligencia legal", "en": "Legal due diligence" }, "p": { "es": "Tu abogado verifica el título, su estatus jurídico, los permisos y que los impuestos estén al día.", "en": "Your attorney checks the title, its legal status, permits and that taxes are up to date." } },
+    { "h": { "es": "Contrato y pagos", "en": "Contract and payments" }, "p": { "es": "Contrato de promesa de venta; en preventa, los pagos suelen seguir el avance de obra.", "en": "Promise-to-sell contract; for pre-construction, payments usually follow construction milestones." } },
+    { "h": { "es": "Cierre a distancia", "en": "Closing from abroad" }, "p": { "es": "Firma en persona o mediante poder apostillado, y pago del impuesto de transferencia.", "en": "Signing in person or through an apostilled power of attorney, and payment of the transfer tax." } },
+    { "h": { "es": "Registro del título", "en": "Title registration" }, "p": { "es": "Se emite el nuevo título a tu nombre; después, administración, seguro y alquiler si lo deseas.", "en": "The new title is issued in your name; then management, insurance and rentals if you want them." } }
+  ],
+  "notes": [
+    { "h": { "es": "Impuestos", "en": "Taxes" }, "p": { "es": "Al comprar se paga un impuesto de transferencia, y luego un impuesto anual sobre la propiedad por encima de un monto exento. Tu abogado confirma las tasas vigentes.", "en": "A transfer tax applies at purchase, plus an annual property tax above an exempt threshold. Your attorney confirms current rates." } },
+    { "h": { "es": "CONFOTUR", "en": "CONFOTUR" }, "p": { "es": "Algunos proyectos turísticos califican para incentivos fiscales bajo la Ley 158-01. Pregunta si el proyecto que te interesa está aprobado.", "en": "Some tourism projects qualify for tax incentives under Law 158-01. Ask whether the project you like is approved." } },
+    { "h": { "es": "Pagos desde EE. UU.", "en": "Paying from the U.S." }, "p": { "es": "Los fondos se envían por transferencia a una cuenta de garantía o del abogado. Confirma siempre las instrucciones por teléfono antes de enviar.", "en": "Funds are sent by wire to an escrow or attorney account. Always confirm instructions by phone before sending." } }
+  ],
+  "disclaimer": { "es": "Información general, no constituye asesoría legal ni fiscal. Cada compra la revisa un abogado independiente habilitado en República Dominicana.", "en": "General information, not legal or tax advice. Every purchase is reviewed by an independent attorney licensed in the Dominican Republic." },
+  "formTitle": { "es": "Cuéntame qué tienes en mente", "en": "Tell me what you have in mind" },
+  "formText": { "es": "Uso personal, renta o ambas; lista para entrar o en preventa. Podemos reunirnos en Miami o por video.", "en": "Personal use, rental income or both; ready to move in or pre-construction. We can meet in Miami or by video." }
+}

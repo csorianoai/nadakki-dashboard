@@ -1,0 +1,158 @@
+openapi: "3.1.0"
+x-contract-id: C-SITES-RENDER
+x-contract-status: proposed
+info:
+  title: C-SITES-RENDER - API publica de lectura para el motor de sitios
+  version: "1.0.0"
+  description: "API PUBLICA de lectura que consume el motor de sitios, bajo /api/v1/sites/public/* (no api/v1/public/**). Auth: token de servicio de SOLO LECTURA (credencial emitida por Nadakki; no es un rol de usuario); nunca JWT de usuario ni tenant en la peticion: el tenant se deduce de host/site_id en el servidor. Solo contenido published y medios approved; sin ids internos, tenant_id, storage_key ni contacto privado. El cliente final nunca ve proveedores: todas las URLs (CDN, hosts) son de Nadakki. Cache: ETag + Cache-Control (If-None-Match -> 304); la frescura la dirige el evento de revalidacion firmado HMAC (events.yaml). Errores: application/problem+json con `code` estable. Paginacion por cursor. Ejemplos SINTETICOS."
+servers: [{"url": "https://api.nadakki.example/api/v1/sites"}]
+security: [{"serviceToken": []}]
+tags: [{"name": "public"}]
+paths:
+  /public/resolve:
+    get:
+      operationId: resolveHost
+      tags: ["public"]
+      summary: Resuelve un host a su sitio publicado
+      description: "Host desconocido: 404 HOST_NOT_FOUND. Host conocido sin contenido published: 410 SITE_UNPUBLISHED. Host en releasing: 200 con state=redirect (301 temporal). Lee sites_host_directory."
+      parameters: [{"name": "host", "in": "query", "description": "Host de la peticion del visitante, en minusculas.", "required": true, "schema": {"$ref": "schema.json#/$defs/Host"}}, {"$ref": "#/components/parameters/IfNoneMatch"}]
+      responses:
+        "200": {"description": "OK.", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}, "X-Content-Version": {"$ref": "#/components/headers/X-Content-Version"}}, "content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/ResolveResult"}, "examples": {"synth": {"value": {"site_id": "00000000-0000-4000-8000-0000000000b1", "vertical": "realestate", "template_id": "realestate-agent-v1", "template_version": 1, "languages": ["es", "en"], "default_language": "es", "content_version": 3, "host": "www.synth-realty.example", "host_kind": "custom", "primary_host": "www.synth-realty.example", "state": "serve", "redirect": null}}}}}}
+        "304": {"$ref": "#/components/responses/NotModified"}
+        default: {"$ref": "#/components/responses/Error"}
+  "/public/{site_id}/manifest":
+    get:
+      operationId: getManifest
+      tags: ["public"]
+      summary: Manifiesto del sitio publicado
+      description: Rutas, tema, contacto, datos legales verificados y bloques obligatorios. Cambia con cada content_version.
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"$ref": "#/components/parameters/IfNoneMatch"}]
+      responses:
+        "200": {"description": "OK.", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}, "X-Content-Version": {"$ref": "#/components/headers/X-Content-Version"}}, "content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/Manifest"}, "examples": {"synth": {"value": {"site_id": "00000000-0000-4000-8000-0000000000b1", "content_version": 3, "generated_at": "2026-11-07T15:00:00Z", "vertical": "realestate", "template": {"id": "realestate-agent-v1", "version": 1}, "name": {"es": "SYNTH Realty", "en": "SYNTH Realty"}, "languages": ["es", "en"], "default_language": "es", "theme": {"primary": "#0a3d62"}, "contact": {"email": "hola@synth.invalid"}, "legal": {"brokerage_legal_name": "SYNTH Brokerage LLC", "agent_registered_last_name": "Synth", "license_no": "SYNTH-0001"}, "hosts": [{"host": "www.synth-realty.example", "is_primary": true}], "indexable": true, "required_blocks": ["legal_brokerage", "legal_eho", "legal_privacy"], "routes": [{"kind": "page", "key": "home", "slugs": {"es": "inicio", "en": "home"}, "lastmod": "2026-11-07T15:00:00Z"}, {"kind": "listing", "key": "synth-condo-01", "slugs": {"es": "synth-condo-01"}, "lastmod": "2026-11-07T15:00:00Z"}], "counts": {"listings": 1}}}}}}}
+        "304": {"$ref": "#/components/responses/NotModified"}
+        default: {"$ref": "#/components/responses/Error"}
+  "/public/{site_id}/pages/{page_key}":
+    get:
+      operationId: getPublicPage
+      tags: ["public"]
+      summary: Pagina publicada
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"name": "page_key", "in": "path", "required": true, "schema": {"type": "string", "pattern": "^[a-z][a-z0-9_]{0,47}$"}}, {"$ref": "#/components/parameters/IfNoneMatch"}]
+      responses:
+        "200": {"description": "OK.", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}, "X-Content-Version": {"$ref": "#/components/headers/X-Content-Version"}}, "content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/PublicPage"}, "examples": {"synth": {"value": {"page_key": "about", "slug": {"es": "sobre-mi", "en": "about"}, "title": {"es": "Sobre mi", "en": "About me"}, "body": []}}}}}}
+        "304": {"$ref": "#/components/responses/NotModified"}
+        default: {"$ref": "#/components/responses/Error"}
+  "/public/{site_id}/listings":
+    get:
+      operationId: listPublicListings
+      tags: ["public"]
+      summary: Lista listings publicados
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"name": "featured", "in": "query", "schema": {"type": "boolean"}}, {"name": "zone", "in": "query", "schema": {"$ref": "schema.json#/$defs/Slug"}}, {"name": "development", "in": "query", "schema": {"$ref": "schema.json#/$defs/Slug"}}, {"$ref": "#/components/parameters/Limit"}, {"$ref": "#/components/parameters/Cursor"}, {"name": "updated_since", "in": "query", "description": "Solo objetos cambiados desde este instante.", "schema": {"$ref": "schema.json#/$defs/Timestamp"}}, {"$ref": "#/components/parameters/IfNoneMatch"}]
+      responses:
+        "200": {"description": "OK.", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}, "X-Content-Version": {"$ref": "#/components/headers/X-Content-Version"}}, "content": {"application/json": {"schema": {"type": "object", "required": ["items", "next_cursor"], "properties": {"items": {"type": "array", "items": {"$ref": "schema.json#/$defs/PublicListing"}}, "next_cursor": {"type": ["string", "null"]}}}, "examples": {"synth": {"value": {"items": [{"item_kind": "property", "slug": "synth-condo-01", "title": {"es": "Condominio SYNTH", "en": "SYNTH condo"}, "features": [{"es": "Vista al mar"}], "featured": true, "price": {"amount": "450000", "currency": "USD"}, "zone_slug": "synth-district", "media": [{"id": "00000000-0000-4000-8000-0000000000c0", "width": 1600, "height": 900, "mime_type": "image/webp", "alt": {"es": "Sala con vista", "en": "Living room with view"}, "credit": "Propietario", "variants": [{"width": 800, "format": "webp", "url": "https://cdn.nadakki.example/t/synth/0001-800.webp"}, {"width": 1600, "format": "avif", "url": "https://cdn.nadakki.example/t/synth/0001-1600.avif"}]}]}], "next_cursor": null}}}}}}
+        "304": {"$ref": "#/components/responses/NotModified"}
+        default: {"$ref": "#/components/responses/Error"}
+  "/public/{site_id}/listings/{slug}":
+    get:
+      operationId: getPublicListing
+      tags: ["public"]
+      summary: Obtiene Listing publicado por slug
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"name": "slug", "in": "path", "required": true, "schema": {"$ref": "schema.json#/$defs/Slug"}}, {"$ref": "#/components/parameters/IfNoneMatch"}]
+      responses:
+        "200": {"description": "OK.", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}, "X-Content-Version": {"$ref": "#/components/headers/X-Content-Version"}}, "content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/PublicListing"}, "examples": {"synth": {"value": {"item_kind": "property", "slug": "synth-condo-01", "title": {"es": "Condominio SYNTH", "en": "SYNTH condo"}, "features": [{"es": "Vista al mar"}], "featured": true, "price": {"amount": "450000", "currency": "USD"}, "zone_slug": "synth-district", "media": [{"id": "00000000-0000-4000-8000-0000000000c0", "width": 1600, "height": 900, "mime_type": "image/webp", "alt": {"es": "Sala con vista", "en": "Living room with view"}, "credit": "Propietario", "variants": [{"width": 800, "format": "webp", "url": "https://cdn.nadakki.example/t/synth/0001-800.webp"}, {"width": 1600, "format": "avif", "url": "https://cdn.nadakki.example/t/synth/0001-1600.avif"}]}]}}}}}}
+        "304": {"$ref": "#/components/responses/NotModified"}
+        default: {"$ref": "#/components/responses/Error"}
+  "/public/{site_id}/developments":
+    get:
+      operationId: listPublicDevelopments
+      tags: ["public"]
+      summary: Lista developments publicados
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"name": "zone", "in": "query", "schema": {"$ref": "schema.json#/$defs/Slug"}}, {"$ref": "#/components/parameters/Limit"}, {"$ref": "#/components/parameters/Cursor"}, {"name": "updated_since", "in": "query", "description": "Solo objetos cambiados desde este instante.", "schema": {"$ref": "schema.json#/$defs/Timestamp"}}, {"$ref": "#/components/parameters/IfNoneMatch"}]
+      responses:
+        "200": {"description": "OK.", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}, "X-Content-Version": {"$ref": "#/components/headers/X-Content-Version"}}, "content": {"application/json": {"schema": {"type": "object", "required": ["items", "next_cursor"], "properties": {"items": {"type": "array", "items": {"$ref": "schema.json#/$defs/PublicDevelopment"}}, "next_cursor": {"type": ["string", "null"]}}}, "examples": {"synth": {"value": {"items": [{"slug": "synth-tower", "name": "SYNTH Tower", "authorized": false, "price_from": "380000", "currency": "USD", "media": [{"id": "00000000-0000-4000-8000-0000000000c0", "width": 1600, "height": 900, "mime_type": "image/webp", "alt": {"es": "Sala con vista", "en": "Living room with view"}, "credit": "Propietario", "variants": [{"width": 800, "format": "webp", "url": "https://cdn.nadakki.example/t/synth/0001-800.webp"}, {"width": 1600, "format": "avif", "url": "https://cdn.nadakki.example/t/synth/0001-1600.avif"}]}]}], "next_cursor": null}}}}}}
+        "304": {"$ref": "#/components/responses/NotModified"}
+        default: {"$ref": "#/components/responses/Error"}
+  "/public/{site_id}/developments/{slug}":
+    get:
+      operationId: getPublicDevelopment
+      tags: ["public"]
+      summary: Obtiene Development publicado por slug
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"name": "slug", "in": "path", "required": true, "schema": {"$ref": "schema.json#/$defs/Slug"}}, {"$ref": "#/components/parameters/IfNoneMatch"}]
+      responses:
+        "200": {"description": "OK.", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}, "X-Content-Version": {"$ref": "#/components/headers/X-Content-Version"}}, "content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/PublicDevelopment"}, "examples": {"synth": {"value": {"slug": "synth-tower", "name": "SYNTH Tower", "authorized": false, "price_from": "380000", "currency": "USD", "media": [{"id": "00000000-0000-4000-8000-0000000000c0", "width": 1600, "height": 900, "mime_type": "image/webp", "alt": {"es": "Sala con vista", "en": "Living room with view"}, "credit": "Propietario", "variants": [{"width": 800, "format": "webp", "url": "https://cdn.nadakki.example/t/synth/0001-800.webp"}, {"width": 1600, "format": "avif", "url": "https://cdn.nadakki.example/t/synth/0001-1600.avif"}]}]}}}}}}
+        "304": {"$ref": "#/components/responses/NotModified"}
+        default: {"$ref": "#/components/responses/Error"}
+  "/public/{site_id}/zones":
+    get:
+      operationId: listPublicZones
+      tags: ["public"]
+      summary: Lista zones publicados
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"$ref": "#/components/parameters/Limit"}, {"$ref": "#/components/parameters/Cursor"}, {"name": "updated_since", "in": "query", "description": "Solo objetos cambiados desde este instante.", "schema": {"$ref": "schema.json#/$defs/Timestamp"}}, {"$ref": "#/components/parameters/IfNoneMatch"}]
+      responses:
+        "200": {"description": "OK.", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}, "X-Content-Version": {"$ref": "#/components/headers/X-Content-Version"}}, "content": {"application/json": {"schema": {"type": "object", "required": ["items", "next_cursor"], "properties": {"items": {"type": "array", "items": {"$ref": "schema.json#/$defs/PublicZone"}}, "next_cursor": {"type": ["string", "null"]}}}, "examples": {"synth": {"value": {"items": [{"slug": "synth-district", "name": {"es": "Distrito SYNTH", "en": "SYNTH District"}, "source": "SYNTH Census", "source_date": "2026-01-15", "photo": null}], "next_cursor": null}}}}}}
+        "304": {"$ref": "#/components/responses/NotModified"}
+        default: {"$ref": "#/components/responses/Error"}
+  "/public/{site_id}/zones/{slug}":
+    get:
+      operationId: getPublicZone
+      tags: ["public"]
+      summary: Obtiene Zone publicado por slug
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"name": "slug", "in": "path", "required": true, "schema": {"$ref": "schema.json#/$defs/Slug"}}, {"$ref": "#/components/parameters/IfNoneMatch"}]
+      responses:
+        "200": {"description": "OK.", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}, "X-Content-Version": {"$ref": "#/components/headers/X-Content-Version"}}, "content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/PublicZone"}, "examples": {"synth": {"value": {"slug": "synth-district", "name": {"es": "Distrito SYNTH", "en": "SYNTH District"}, "source": "SYNTH Census", "source_date": "2026-01-15", "photo": null}}}}}}
+        "304": {"$ref": "#/components/responses/NotModified"}
+        default: {"$ref": "#/components/responses/Error"}
+  "/public/{site_id}/buildings":
+    get:
+      operationId: listPublicBuildings
+      tags: ["public"]
+      summary: Lista buildings publicados
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"name": "zone", "in": "query", "schema": {"$ref": "schema.json#/$defs/Slug"}}, {"$ref": "#/components/parameters/Limit"}, {"$ref": "#/components/parameters/Cursor"}, {"name": "updated_since", "in": "query", "description": "Solo objetos cambiados desde este instante.", "schema": {"$ref": "schema.json#/$defs/Timestamp"}}, {"$ref": "#/components/parameters/IfNoneMatch"}]
+      responses:
+        "200": {"description": "OK.", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}, "X-Content-Version": {"$ref": "#/components/headers/X-Content-Version"}}, "content": {"application/json": {"schema": {"type": "object", "required": ["items", "next_cursor"], "properties": {"items": {"type": "array", "items": {"$ref": "schema.json#/$defs/PublicBuilding"}}, "next_cursor": {"type": ["string", "null"]}}}, "examples": {"synth": {"value": {"items": [{"slug": "synth-building", "name": "SYNTH Building", "data_source": "SYNTH Registry", "data_date": "2026-01-15", "zone_slug": "synth-district"}], "next_cursor": null}}}}}}
+        "304": {"$ref": "#/components/responses/NotModified"}
+        default: {"$ref": "#/components/responses/Error"}
+  "/public/{site_id}/buildings/{slug}":
+    get:
+      operationId: getPublicBuilding
+      tags: ["public"]
+      summary: Obtiene Building publicado por slug
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"name": "slug", "in": "path", "required": true, "schema": {"$ref": "schema.json#/$defs/Slug"}}, {"$ref": "#/components/parameters/IfNoneMatch"}]
+      responses:
+        "200": {"description": "OK.", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}, "X-Content-Version": {"$ref": "#/components/headers/X-Content-Version"}}, "content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/PublicBuilding"}, "examples": {"synth": {"value": {"slug": "synth-building", "name": "SYNTH Building", "data_source": "SYNTH Registry", "data_date": "2026-01-15", "zone_slug": "synth-district"}}}}}}
+        "304": {"$ref": "#/components/responses/NotModified"}
+        default: {"$ref": "#/components/responses/Error"}
+  "/public/{site_id}/media/{asset_id}":
+    get:
+      operationId: getPublicMedia
+      tags: ["public"]
+      summary: Metadatos y variantes de un medio approved
+      description: "Medio no approved o revocado: 404 NOT_FOUND (nunca 403)."
+      parameters: [{"$ref": "#/components/parameters/SiteIdPath"}, {"name": "asset_id", "in": "path", "required": true, "schema": {"$ref": "schema.json#/$defs/Uuid"}}, {"$ref": "#/components/parameters/IfNoneMatch"}]
+      responses:
+        "200": {"description": "OK.", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}, "X-Content-Version": {"$ref": "#/components/headers/X-Content-Version"}}, "content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/PublicMedia"}, "examples": {"synth": {"value": {"id": "00000000-0000-4000-8000-0000000000c0", "width": 1600, "height": 900, "mime_type": "image/webp", "alt": {"es": "Sala con vista", "en": "Living room with view"}, "credit": "Propietario", "variants": [{"width": 800, "format": "webp", "url": "https://cdn.nadakki.example/t/synth/0001-800.webp"}, {"width": 1600, "format": "avif", "url": "https://cdn.nadakki.example/t/synth/0001-1600.avif"}]}}}}}}
+        "304": {"$ref": "#/components/responses/NotModified"}
+        default: {"$ref": "#/components/responses/Error"}
+webhooks:
+  revalidation:
+    post:
+      operationId: receiveRevalidation
+      tags: ["public"]
+      summary: "Core -> motor: evento de revalidacion firmado HMAC"
+      description: "Lo implementa el MOTOR (ruta /api/revalidate de su origen); aqui solo se fija el contrato. Cuerpo = sobre EventEnvelope. Firma: X-Nadakki-Signature = v1=hex(HMAC-SHA256(secreto, X-Nadakki-Timestamp + '.' + cuerpo_crudo)). El motor rechaza |ahora - timestamp| > 300 s, compara en tiempo constante y deduplica por event_id. Detalle de reintentos en events.yaml."
+      security: []
+      parameters: [{"name": "X-Nadakki-Signature", "in": "header", "required": true, "description": "v1=<hex>; con rotacion pueden llegar dos valores v1 separados por coma.", "schema": {"type": "string"}}, {"name": "X-Nadakki-Timestamp", "in": "header", "required": true, "description": "Segundos Unix.", "schema": {"type": "integer"}}, {"name": "X-Nadakki-Event-Id", "in": "header", "required": true, "description": "Igual a event_id del sobre.", "schema": {"type": "string"}}, {"name": "X-Nadakki-Key-Id", "in": "header", "required": true, "description": "Identifica el secreto vigente (rotacion).", "schema": {"type": "string"}}]
+      requestBody: {"required": true, "content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/EventEnvelope"}, "examples": {"synth": {"value": {"event_id": "00000000-0000-4000-8000-000000000101", "event_name": "sites.render.revalidation_requested", "event_version": 1, "tenant_id": "00000000-0000-4000-8000-0000000000a1", "site_id": "00000000-0000-4000-8000-0000000000b1", "occurred_at": "2026-11-07T15:00:00Z", "idempotency_key": "reval:00000000-0000-4000-8000-0000000000b1:3:listing:synth-condo-01", "actor_id": null, "payload": {"site_id": "00000000-0000-4000-8000-0000000000b1", "kind": "listing", "slug": "synth-condo-01", "content_version": 3}}}}}}}
+      responses:
+        "204": {"description": "Aceptado; el motor revalida (tags por site_id)."}
+        "401": {"description": "Firma invalida o timestamp fuera de ventana (no se reintenta).", "content": {"application/problem+json": {"schema": {"$ref": "schema.json#/$defs/Problem"}}}}
+        "400": {"description": "Cuerpo mal formado (no se reintenta).", "content": {"application/problem+json": {"schema": {"$ref": "schema.json#/$defs/Problem"}}}}
+components:
+  securitySchemes:
+    serviceToken: {"type": "http", "scheme": "bearer", "description": "Token de servicio opaco de SOLO LECTURA (credencial emitida por Nadakki; no es un rol de usuario) del motor. Cualquier metodo distinto de GET: 403 FORBIDDEN."}
+  parameters: {"Limit": {"name": "limit", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 200, "default": 50}}, "Cursor": {"name": "cursor", "in": "query", "description": "Cursor opaco devuelto en next_cursor; invalido o caducado: 422 VALIDATION_ERROR.", "schema": {"type": "string", "maxLength": 512}}, "SiteIdPath": {"name": "site_id", "in": "path", "required": true, "schema": {"$ref": "schema.json#/$defs/Uuid"}}, "IfNoneMatch": {"name": "If-None-Match", "in": "header", "description": "ETag previo; coincide -> 304 sin cuerpo.", "schema": {"type": "string"}}}
+  headers: {"ETag": {"description": "Validador fuerte del recurso.", "schema": {"type": "string"}}, "Cache-Control": {"description": "Siempre public, s-maxage=60, stale-while-revalidate=300; los 404/410 llevan max-age=30.", "schema": {"type": "string", "example": "public, s-maxage=60, stale-while-revalidate=300"}}, "X-Content-Version": {"description": "content_version del sitio al servir.", "schema": {"type": "integer"}}}
+  responses:
+    NotModified: {"description": "Sin cambios (If-None-Match coincide).", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}}}
+    Error:
+      description: Error. 401 UNAUTHENTICATED, 403 FORBIDDEN, 404 NOT_FOUND/HOST_NOT_FOUND, 410 SITE_UNPUBLISHED, 422 VALIDATION_ERROR, 429 RATE_LIMITED (con Retry-After).
+      content: {"application/problem+json": {"schema": {"$ref": "schema.json#/$defs/Problem"}}}

@@ -1,0 +1,55 @@
+{
+  "slug": "the-ritz-carlton-residences",
+  "sample": false,
+  "authorized": true,
+  "order": 2,
+  "sourceId": "2151",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/2151/the-ritz-carlton-residences",
+  "name": "The Ritz-Carlton Residences",
+  "area": "South Beach",
+  "zone": "miami-beach",
+  "address": "1671 Collins Ave, Miami Beach, FL 33139",
+  "devType": "condo",
+  "status": "preconstruction",
+  "deliveryYear": 2028,
+  "delivery": {
+    "es": "Entrega estimada: 2028",
+    "en": "Estimated delivery: 2028"
+  },
+  "priceFrom": 9500000,
+  "beds": "1 – 5",
+  "units": 30,
+  "floors": 15,
+  "sqft": "1,200 – 4,500",
+  "developer": null,
+  "architect": null,
+  "interiorDesigner": "Studio Munge",
+  "landscape": null,
+  "description": {
+    "es": [
+      "The Ritz-Carlton Residences es un condominio en preconstrucción en South Beach, en 1671 Collins Ave, Miami Beach, FL 33139. Contempla 30 residencias en 15 pisos, de 1 – 5 habitaciones y de 1,200 – 4,500 sq ft.",
+      "Equipo: interiorismo de Studio Munge. Entrega estimada: 2028. Precios desde $9,500,000."
+    ],
+    "en": [
+      "The Ritz-Carlton Residences is a condominium in pre-construction in South Beach, at 1671 Collins Ave, Miami Beach, FL 33139. It comprises 30 residences over 15 floors, with 1 – 5 bedrooms and of 1,200 – 4,500 sq ft.",
+      "Team: interiors by Studio Munge. Estimated delivery: 2028. Prices from $9,500,000."
+    ]
+  },
+  "interior": null,
+  "amenities": null,
+  "images": [
+    "dev-the-ritz-carlton-residences-01",
+    "dev-the-ritz-carlton-residences-02",
+    "dev-the-ritz-carlton-residences-03",
+    "dev-the-ritz-carlton-residences-04",
+    "dev-the-ritz-carlton-residences-05",
+    "dev-the-ritz-carlton-residences-06"
+  ],
+  "heroImages": [
+    "dev-the-ritz-carlton-residences-01"
+  ],
+  "geo": {
+    "lat": 25.791605,
+    "lng": -80.1291628
+  }
+}
