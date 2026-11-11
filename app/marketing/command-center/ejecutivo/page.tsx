@@ -1,22 +1,18 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { analyticsDemoActivo } from "./flag";
-import { PantallaDemo } from "./PantallaDemo";
+import { fuenteDePantalla } from "./flag";
+import { PantallaReal } from "./PantallaReal";
 import type { EstadoPantalla, TemaPantalla } from "./tipos";
 
 /**
- * Executive Command Center — pantalla patron de Nadakki Analytics (Fase C). SOLO vista previa.
- *
- * Esta ruta renderiza datos DEMO y por eso esta detras de un flag que se resuelve aqui, en el servidor y en codigo
- * (ver ./flag.ts): encendida en la vista previa de Vercel (VERCEL_ENV === "preview") o en local con
- * NEXT_PUBLIC_ANALYTICS_DEMO=1; APAGADA en produccion pase lo que pase (404, sin cargar ni un dato DEMO).
- * Los datos DEMO se cargan con import() dinamico DESPUES de comprobar el flag: nunca hay un import estatico de ./demo.
- * Cuando existan T6a, B2-T1 y B2-T2 se sustituye el adaptador DEMO por el real (contrato: docs/marketing/analytics-contratos/M1_resumen_ejecutivo.md).
+ * Executive Command Center. Dos fuentes, decididas aqui en el servidor (ver ./flag.ts):
+ *  - REAL (produccion y por defecto): consulta /api/v1/marketing/insights/summary. La ruta sigue OCULTA del menu (manifiesto).
+ *  - DEMO (solo vista previa de Vercel o local con NEXT_PUBLIC_ANALYTICS_DEMO=1): datos de ejemplo con banner. En produccion la demo
+ *    no existe: se carga con import() dinamico DESPUES de comprobar el flag, nunca hay un import estatico de ./demo.
  */
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Executive Command Center · vista previa",
+  title: "Executive Command Center",
   robots: { index: false, follow: false },
 };
 
@@ -37,14 +33,19 @@ function leerTema(sp: Busqueda | undefined): TemaPantalla {
 }
 
 export default async function Page({ searchParams }: { searchParams?: Promise<Busqueda> | Busqueda }) {
-  if (!analyticsDemoActivo()) notFound();
-
-  const { DATOS_DEMO, AHORA_DEMO } = await import("./demo/datos-demo");
   const busqueda = await searchParams;
+  const f = busqueda?.fuente;
+  const fuente = fuenteDePantalla(Array.isArray(f) ? f[0] : f);
+  const tema = leerTema(busqueda);
+
+  if (fuente === "real") return <PantallaReal ahora={new Date().toISOString()} tema={tema} />;
+
+  const { PantallaDemo } = await import("./PantallaDemo");
+  const { DATOS_DEMO, AHORA_DEMO } = await import("./demo/datos-demo");
   const pedido = leerEstado(busqueda);
   const estado: EstadoPantalla = pedido === "desactualizado" ? "ok" : pedido;
   // Reloj de la demo congelado (determinista); "desactualizado" lo adelanta 4 dias para mostrar el aviso.
   const ahora = pedido === "desactualizado" ? new Date(Date.parse(AHORA_DEMO) + 4 * 86_400_000).toISOString() : AHORA_DEMO;
 
-  return <PantallaDemo datos={DATOS_DEMO} estado={estado} ahora={ahora} tema={leerTema(busqueda)} />;
+  return <PantallaDemo datos={DATOS_DEMO} estado={estado} ahora={ahora} tema={tema} />;
 }

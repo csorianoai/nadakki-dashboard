@@ -60,3 +60,11 @@ Todo control inhabilitado es un boton con `aria-disabled="true"`, alcanzable por
 - Evidencia visual (NO baseline): `OUT=/tmp/cc-harness bash app/marketing/command-center/ejecutivo/tests/build-harness.sh` y luego
   `OUT=/tmp/cc-harness PW_CHROMIUM=/opt/pw-browsers/chromium npx playwright test -c app/marketing/command-center/ejecutivo/tests/playwright.config.ts --trace off`.
   Las capturas no se suben al repo: el baseline solo lo otorga Cesar (BASELINE_APPROVED).
+
+## Pantalla real (PR-B)
+
+- La ruta sirve la pantalla REAL (`PantallaReal.tsx`) en producción y por defecto; la DEMO solo en vista previa de Vercel o con `NEXT_PUBLIC_ANALYTICS_DEMO=1` (`fuenteDePantalla` en `flag.ts`; `?fuente=real` en vista previa). La ruta sigue oculta del menú.
+- Datos: `GET /api/v1/marketing/insights/summary` (`usarResumen.ts`, `apiFetch` con Bearer, sin `X-Tenant-ID`). `adaptador-real.ts` es puro y traduce el contrato (`contrato.ts`) a `DatosCommandCenter`.
+- Moneda: la de la cuenta de Google Ads (`currency.code` si `confirmed`). Sin ella, las cifras de dinero salen como número y se avisa «Moneda no confirmada». `TenantBranding` solo aporta el locale.
+- Varias cuentas: suma por defecto con selector; si las monedas difieren o no se conocen, el selector es obligatorio y no hay total. 403 => «Sin permiso» (gasto y valor de conversión solo para tenant_admin y marketing).
+- Carga: la pantalla (kit y gráficos) se importa con `next/dynamic` (`ssr: false`) y la primera pintura es un esqueleto con las dimensiones finales; la petición de datos sale sin esperar a ese chunk.

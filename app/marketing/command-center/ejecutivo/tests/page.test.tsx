@@ -1,5 +1,5 @@
 /**
- * El flag es la regla dura "nunca datos simulados en produccion": con el flag apagado la ruta responde 404 y NO carga el modulo DEMO.
+ * El flag es la regla dura "nunca datos simulados en produccion": con el flag apagado la ruta sirve la pantalla REAL y NO carga el modulo DEMO.
  */
 import { render, screen } from "@testing-library/react";
 
@@ -8,10 +8,9 @@ jest.mock("@/lib/hooks/useTenantBranding", () => ({
   useTenantBranding: () => ({ data: (globalThis as { __BRANDING__?: unknown }).__BRANDING__ ?? null }),
 }));
 
-jest.mock("next/navigation", () => ({
-  notFound: () => {
-    throw new Error("NEXT_NOT_FOUND");
-  },
+// La pantalla real tiene su propio test (PantallaReal.test.tsx); aqui solo se comprueba que la ruta la elige.
+jest.mock("../PantallaReal", () => ({
+  PantallaReal: () => <div data-testid="pantalla-real-stub" />,
 }));
 
 const ENV0 = { ...process.env };
@@ -33,7 +32,7 @@ async function cargarPagina() {
 }
 
 describe("ruta /marketing/command-center/ejecutivo", () => {
-  it("production + NEXT_PUBLIC_ANALYTICS_DEMO=1 => 404 y ningun dato DEMO", async () => {
+  it("production + NEXT_PUBLIC_ANALYTICS_DEMO=1 => pantalla REAL y ningun dato DEMO se carga", async () => {
     fijarEntorno({ VERCEL_ENV: "production", NEXT_PUBLIC_ANALYTICS_DEMO: "1" });
     // Modulo aislado: si la pagina cargara ./demo con el flag apagado, el mock lo registraria.
     const demoCargado = jest.fn();
@@ -45,22 +44,33 @@ describe("ruta /marketing/command-center/ejecutivo", () => {
       });
       PaginaAislada = require("../page").default;
     });
-    await expect(PaginaAislada({ searchParams: Promise.resolve({}) })).rejects.toThrow("NEXT_NOT_FOUND");
+    const el = await PaginaAislada({ searchParams: Promise.resolve({ fuente: "demo" }) });
+    expect((el.type as { name?: string }).name).toBe("PantallaReal");
     expect(demoCargado).not.toHaveBeenCalled();
     jest.dontMock("../demo/datos-demo");
   });
 
-  it("sin variables (ni preview ni demo) => 404", async () => {
+  it("sin variables (ni preview ni demo) => pantalla REAL, sin banner DEMO", async () => {
     fijarEntorno({});
     const Page = await cargarPagina();
-    await expect(Page({})).rejects.toThrow("NEXT_NOT_FOUND");
+    render(await Page({}));
+    expect(screen.getByTestId("pantalla-real-stub")).toBeInTheDocument();
+    expect(screen.queryByTestId("banner-demo")).toBeNull();
   });
 
-  it("build de produccion fuera de Vercel con el flag demo => 404", async () => {
+  it("build de produccion fuera de Vercel con el flag demo => pantalla REAL", async () => {
     fijarEntorno({ NEXT_PUBLIC_ANALYTICS_DEMO: "1" });
     (process.env as Record<string, string>).NODE_ENV = "production";
     const Page = await cargarPagina();
-    await expect(Page({})).rejects.toThrow("NEXT_NOT_FOUND");
+    render(await Page({}));
+    expect(screen.getByTestId("pantalla-real-stub")).toBeInTheDocument();
+  });
+
+  it("vista previa con ?fuente=real => pantalla REAL; sin el parametro => DEMO", async () => {
+    fijarEntorno({ VERCEL_ENV: "preview" });
+    const Page = await cargarPagina();
+    render(await Page({ searchParams: Promise.resolve({ fuente: "real" }) }));
+    expect(screen.getByTestId("pantalla-real-stub")).toBeInTheDocument();
   });
 
   it("vista previa de Vercel (VERCEL_ENV=preview) => renderiza la pantalla con el banner DEMO", async () => {
@@ -89,7 +99,8 @@ describe("ruta /marketing/command-center/ejecutivo", () => {
     expect(screen.getByTestId("aviso-desactualizado")).toBeInTheDocument();
 
     fijarEntorno({ VERCEL_ENV: "production" });
-    await expect(Page({ searchParams: Promise.resolve({ estado: "error" }) })).rejects.toThrow("NEXT_NOT_FOUND");
+    const real = await Page({ searchParams: Promise.resolve({ estado: "error" }) });
+    expect((real.type as { name?: string }).name).toBe("PantallaReal");
   });
 
   it("valores de estado desconocidos se ignoran (pantalla normal)", async () => {

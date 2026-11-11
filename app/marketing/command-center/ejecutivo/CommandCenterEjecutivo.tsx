@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { AlertTriangle, FlaskConical, Moon, Sun } from "lucide-react";
 import { EstadoAnalitica, FormatoProvider, SelectorPeriodo, SerieTemporal, useFormato } from "@/components/analytics/kit";
 import { useEsMovil } from "@/components/analytics/kit/movil";
@@ -37,6 +37,14 @@ export interface CommandCenterEjecutivoProps {
   tema?: TemaPantalla;
   /** Locale y moneda del tenant (formatoDesdeTenant). Sin valor => es-US / USD. Nada de esto esta fijo en la pantalla. */
   formato?: Partial<FormatoTenant> | null;
+  /** Se avisa al cambiar el periodo (la pantalla real consulta el periodo elegido). */
+  onPeriodoChange?: (periodo: PeriodoAnalitica) => void;
+  /** Controles extra de la cabecera (p. ej. el selector de cuenta). */
+  controlesExtra?: ReactNode;
+  /** Avisos bajo la cabecera (p. ej. «moneda no confirmada»). */
+  avisosExtra?: ReactNode;
+  /** Sustituye TODO el cuerpo (seleccion de cuenta obligatoria, sin permiso, sesion caducada...). La cabecera se mantiene. */
+  reemplazo?: ReactNode;
 }
 
 const COLUMNAS: ColumnaAnalitica<FilaCampana>[] = [
@@ -57,10 +65,14 @@ export function CommandCenterEjecutivo({ formato, ...props }: CommandCenterEjecu
   );
 }
 
-function Pantalla({ datos, estado = "ok", ahora, demo = false, periodoDatos = { tipo: "30d" }, onReintentar, anchoGrafico, tema: temaInicial = "dark" }: Omit<CommandCenterEjecutivoProps, "formato">) {
+function Pantalla({ datos, estado = "ok", ahora, demo = false, periodoDatos = { tipo: "30d" }, onReintentar, anchoGrafico, tema: temaInicial = "dark", onPeriodoChange, controlesExtra, avisosExtra, reemplazo }: Omit<CommandCenterEjecutivoProps, "formato">) {
   const formato = useFormato();
   const movil = useEsMovil();
-  const [periodo, setPeriodo] = useState<PeriodoAnalitica>(periodoDatos);
+  const [periodo, setPeriodoLocal] = useState<PeriodoAnalitica>(periodoDatos);
+  const setPeriodo = (p: PeriodoAnalitica) => {
+    setPeriodoLocal(p);
+    onPeriodoChange?.(p);
+  };
   const [comparar, setComparar] = useState(true);
   const [tema, setTema] = useState<TemaPantalla>(temaInicial);
 
@@ -140,6 +152,7 @@ function Pantalla({ datos, estado = "ok", ahora, demo = false, periodoDatos = { 
               </summary>
               <div className="flex flex-col gap-3 pb-3">
                 <SelectorPeriodo valor={periodo} onChange={setPeriodo} />
+                {controlesExtra}
                 {datos?.cuentas.length ? <p className="m-0 text-[12px] kit-txt-3">{`Cuentas: ${datos.cuentas.join(" · ")}`}</p> : null}
                 <div className="flex flex-wrap gap-2">
                   {botonComparar}
@@ -174,6 +187,7 @@ function Pantalla({ datos, estado = "ok", ahora, demo = false, periodoDatos = { 
               </div>
               <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
                 <SelectorPeriodo valor={periodo} onChange={setPeriodo} />
+                {controlesExtra}
                 {botonComparar}
                 {botonTema}
               </div>
@@ -190,7 +204,11 @@ function Pantalla({ datos, estado = "ok", ahora, demo = false, periodoDatos = { 
           </div>
         ) : null}
 
-        {efectivo !== "ok" || !datos ? (
+        {avisosExtra}
+
+        {reemplazo ? (
+          <div data-testid="cuerpo-reemplazado">{reemplazo}</div>
+        ) : efectivo !== "ok" || !datos ? (
           <EstadoAnalitica estado={efectivo === "ok" ? "vacio" : efectivo} onReintentar={onReintentar} />
         ) : sinDatosPeriodo ? (
           <div data-testid="aviso-periodo" role="status" className={cn(PANEL, "p-4 text-[13px] kit-txt-2")}>
@@ -202,7 +220,7 @@ function Pantalla({ datos, estado = "ok", ahora, demo = false, periodoDatos = { 
         ) : movil ? (
           <PestanasMoviles
             pestanas={[
-              { id: "resumen", titulo: "Resumen", contenido: <Resumen datos={datos} comparar={comparar} anchoGrafico={anchoGrafico} movil /> },
+              { id: "resumen", titulo: "Resumen", contenido: <Resumen datos={datos} comparar={comparar} anchoGrafico={anchoGrafico} movil periodoEtiqueta={periodoEtiqueta} /> },
               { id: "campanas", titulo: "Campañas", contenido: <Campanas datos={datos} /> },
               { id: "calidad", titulo: "Calidad", contenido: <Calidad datos={datos} /> },
             ]}
@@ -210,7 +228,7 @@ function Pantalla({ datos, estado = "ok", ahora, demo = false, periodoDatos = { 
         ) : (
           <div className="flex min-w-0 flex-col gap-6">
             <section aria-label="Resumen" className="min-w-0">
-              <Resumen datos={datos} comparar={comparar} anchoGrafico={anchoGrafico} movil={false} />
+              <Resumen datos={datos} comparar={comparar} anchoGrafico={anchoGrafico} movil={false} periodoEtiqueta={periodoEtiqueta} />
             </section>
             <section aria-labelledby="seccion-campanas" className="min-w-0">
               <h2 id="seccion-campanas" className="mb-3 font-display text-[18px] font-semibold kit-txt">
@@ -231,7 +249,7 @@ function Pantalla({ datos, estado = "ok", ahora, demo = false, periodoDatos = { 
   );
 }
 
-function Resumen({ datos, comparar, anchoGrafico, movil }: { datos: DatosCommandCenter; comparar: boolean; anchoGrafico?: number; movil: boolean }) {
+function Resumen({ datos, comparar, anchoGrafico, movil, periodoEtiqueta }: { datos: DatosCommandCenter; comparar: boolean; anchoGrafico?: number; movil: boolean; periodoEtiqueta: string }) {
   const formato = useFormato();
   const s = datos.serie;
   const n = Math.min(datos.dias_incompletos, s.gasto.length);
@@ -292,9 +310,9 @@ function Resumen({ datos, comparar, anchoGrafico, movil }: { datos: DatosCommand
         </p>
       ) : null}
       <SerieTemporal
-        meta={{ titulo: "Inversión diaria · 30 días", descripcion: comparar ? "Línea discontinua: periodo anterior" : undefined, fuente: s.fuente, fecha_dato: s.fecha_dato }}
+        meta={{ titulo: `Inversión diaria · ${periodoEtiqueta}`, descripcion: comparar ? "Línea discontinua: periodo anterior" : undefined, fuente: s.fuente, fecha_dato: s.fecha_dato }}
         datos={{ actual: s.gasto, anterior: comparar ? s.gasto_anterior : undefined }}
-        unidad="moneda"
+        unidad={datos.inversion.unidad === "moneda" ? "moneda" : "numero"}
         moneda={datos.inversion.moneda}
         ancho={anchoGrafico}
       />

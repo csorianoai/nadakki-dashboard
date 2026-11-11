@@ -21,3 +21,14 @@ export function analyticsDemoActivo(env: EntornoFlag = process.env as EntornoFla
   if (env.VERCEL_ENV === "preview") return true;
   return env.NEXT_PUBLIC_ANALYTICS_DEMO === "1" && env.NODE_ENV !== "production";
 }
+
+/**
+ * Que pantalla sirve la ruta. La DEMO solo existe donde el flag la permite (vista previa / local); en produccion (y en cualquier
+ * build donde el flag este apagado) la ruta sirve SIEMPRE la pantalla real. En vista previa, `?fuente=real` permite revisar la real.
+ */
+export type FuentePantalla = "demo" | "real";
+
+export function fuenteDePantalla(pedida: string | null | undefined, env: EntornoFlag = process.env as EntornoFlag): FuentePantalla {
+  if (!analyticsDemoActivo(env)) return "real";
+  return pedida === "real" ? "real" : "demo";
+}
