@@ -29,10 +29,16 @@ export interface Vehicle {
   refId?: string;
   /** Numero REAL de fotos de la unidad (solo si el backend lo trae). */
   photoCount?: number;
-  /** URLs REALES de las fotos de la unidad (solo si el backend las trae). */
-  photos?: string[];
-  /** Foto principal real (primary_photo_url del buscador). */
-  primaryPhotoUrl?: string;
+  /** URL publica (cdn_url) de la foto principal, solo si el backend la devuelve. */
+  primary_photo_url?: string | null;
+  /** Galeria real de la unidad (cdn_url), solo si el backend la devuelve. */
+  photos?: VehiclePhoto[] | null;
+}
+
+export interface VehiclePhoto {
+  cdn_url: string;
+  position?: number | null;
+  alt?: string | null;
 }
 
 const DEALERS = ["AutoMundo RD", "Motores del Este", "Autos del Cibao", "Caribe Motors"] as const;
@@ -251,10 +257,41 @@ export function getVehicleById(id: number | string): Vehicle | undefined {
 }
 
 /** Fotos reales de la unidad; undefined si no se conoce (nunca se inventa). */
-export function photoCount(vehicle: Pick<Vehicle, "photoCount" | "photos">): number | undefined {
-  if (vehicle.photos && vehicle.photos.length > 0) return vehicle.photos.length;
+export function photoCount(vehicle: Pick<Vehicle, "photoCount">): number | undefined {
   const n = vehicle.photoCount;
   return typeof n === "number" && Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined;
+}
+
+function esUrlHttp(u: unknown): u is string {
+  return typeof u === "string" && /^https?:\/\//i.test(u.trim());
+}
+
+/**
+ * URLs reales de las fotos de la unidad, en orden de galeria y sin repetidos.
+ * Vacio si el backend no trae ninguna: en ese caso (y solo en ese) se pinta el degradado.
+ */
+export function vehiclePhotoUrls(
+  vehicle: Pick<Vehicle, "primary_photo_url" | "photos">,
+): string[] {
+  const fuente = Array.isArray(vehicle.photos) ? vehicle.photos : [];
+  const ordenadas = fuente
+    .map((p, i) => ({ url: p?.cdn_url, pos: typeof p?.position === "number" ? p.position : i, i }))
+    .filter((p) => esUrlHttp(p.url))
+    .sort((a, b) => a.pos - b.pos || a.i - b.i)
+    .map((p) => (p.url as string).trim());
+  const out = Array.from(new Set(ordenadas));
+  const principal = esUrlHttp(vehicle.primary_photo_url) ? vehicle.primary_photo_url.trim() : undefined;
+  if (principal && !out.includes(principal)) out.unshift(principal);
+  return out;
+}
+
+/** Foto principal real: primary_photo_url o la primera de la galeria; undefined si no hay. */
+export function primaryPhotoUrl(
+  vehicle: Pick<Vehicle, "primary_photo_url" | "photos">,
+): string | undefined {
+  return esUrlHttp(vehicle.primary_photo_url)
+    ? vehicle.primary_photo_url.trim()
+    : vehiclePhotoUrls(vehicle)[0];
 }
 
 export const BODY_TYPES = [
