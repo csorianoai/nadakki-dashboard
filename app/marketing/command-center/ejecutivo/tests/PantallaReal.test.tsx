@@ -1,10 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { resumen } from "./fixtures-real";
 
 jest.mock("next/dynamic", () => ({ __esModule: true, default: () => require("../CommandCenterEjecutivo").CommandCenterEjecutivo }));
 jest.mock("@/lib/hooks/useTenantBranding", () => ({ useTenantBranding: () => ({ data: { locale: "es-DO" } }) }));
-jest.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ tenant: { id: "t1", display_name: "Dealer Uno" } }) }));
+let mockTenant = { id: "t1", display_name: "Dealer Uno" };
+jest.mock("@/hooks/useAuth", () => ({ useAuth: () => ({ tenant: mockTenant }) }));
 // Se simula la red (apiFetch), no el hook: asi se prueba tambien la traduccion de errores HTTP.
 const pedir = jest.fn();
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: (...a: unknown[]) => pedir(...a) }));
@@ -15,16 +16,37 @@ import { PantallaReal } from "../PantallaReal";
 
 function montar() {
   const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return render(
-    <QueryClientProvider client={qc}>
-      <PantallaReal ahora="2026-11-10T12:00:00Z" />
-    </QueryClientProvider>,
-  );
+  const vista = () => <QueryClientProvider client={qc}><PantallaReal ahora="2026-11-10T12:00:00Z" /></QueryClientProvider>;
+  const resultado = render(vista());
+  return { ...resultado, actualizarTenant: () => resultado.rerender(vista()) };
 }
 
-beforeEach(() => pedir.mockReset());
+beforeEach(() => {
+  pedir.mockReset();
+  mockTenant = { id: "t1", display_name: "Dealer Uno" };
+});
 
 describe("PantallaReal", () => {
+  it("al cambiar de tenant resetea customer_id antes de pedir su resumen", async () => {
+    pedir.mockImplementation(() => ok(resumen({ accounts: [
+      { customer_id: "1", label: "Cuenta uno", currency: "USD" },
+      { customer_id: "2", label: "Cuenta dos", currency: "USD" },
+    ] })));
+    const vista = montar();
+    fireEvent.change(await screen.findByTestId("selector-cuenta"), { target: { value: "2" } });
+    await waitFor(() => expect(pedir.mock.calls.some(([url]) => url.includes("customer_id=2"))).toBe(true));
+    await waitFor(() => expect(screen.getByTestId("selector-cuenta")).toHaveValue("2"));
+    pedir.mockClear();
+    mockTenant = { id: "t2", display_name: "Dealer Dos" };
+    vista.actualizarTenant();
+    await waitFor(() => expect(pedir).toHaveBeenCalled());
+    expect(pedir.mock.calls.every(([url]) => !new URL(url, "http://localhost").searchParams.has("customer_id"))).toBe(true);
+    await waitFor(() => expect(screen.getByTestId("selector-cuenta")).toHaveValue(""));
+    // Volver al tenant anterior tampoco recupera su antigua seleccion.
+    mockTenant = { id: "t1", display_name: "Dealer Uno" };
+    vista.actualizarTenant();
+    await waitFor(() => expect(screen.getByTestId("selector-cuenta")).toHaveValue(""));
+  });
   it("datos reales: sin banner DEMO y con el tenant", async () => {
     pedir.mockImplementation(() => ok(resumen()));
     montar();

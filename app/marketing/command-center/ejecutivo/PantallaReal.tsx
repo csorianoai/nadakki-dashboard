@@ -38,7 +38,14 @@ export function PantallaReal({ ahora, tema }: { ahora: string; tema?: TemaPantal
   const tenantName = tenant?.display_name ?? null;
   const { data: branding } = useTenantBranding();
   const [periodo, setPeriodo] = useState<PeriodoAnalitica>({ tipo: "30d" });
-  const [cuenta, setCuenta] = useState<string | null>(null);
+  const tenantKey = tenant?.id ?? tenant?.slug ?? "";
+  const [seleccion, setSeleccion] = useState<{ tenantKey: string; cuenta: string | null }>({ tenantKey, cuenta: null });
+  // Ajustar durante el render evita consultar el nuevo tenant con la cuenta anterior.
+  const cuenta = seleccion.tenantKey === tenantKey ? seleccion.cuenta : null;
+  if (seleccion.tenantKey !== tenantKey) {
+    setSeleccion({ tenantKey, cuenta: null });
+  }
+  const setCuenta = (cuenta: string | null) => setSeleccion({ tenantKey, cuenta });
   const rango = useMemo(() => rangoDePeriodo(periodo, new Date(ahora)), [periodo, ahora]);
   const q = useResumenInsights(rango ? { ...rango, customerId: cuenta } : null);
 
