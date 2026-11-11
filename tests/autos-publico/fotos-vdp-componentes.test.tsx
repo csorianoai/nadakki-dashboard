@@ -29,7 +29,7 @@ describe("Gallery", () => {
     expect(container.textContent).toContain("Sin fotos todavia");
     expect(container.querySelectorAll("button[aria-label^='Foto']").length).toBe(0);
     // El texto no puede quedar dentro de un role=img (hijos presentacionales: no se anunciaria).
-    const el = Array.from(container.querySelectorAll("*")).find((n) => n.children.length === 0 && n.textContent?.includes("Sin fotos todavia"))!;
+    const el = Array.from(container.querySelectorAll("*")).filter((n) => n.textContent?.includes("Sin fotos todavia")).pop()!;
     expect(el.closest("[role='img']")).toBeNull();
     expect(container.textContent).not.toMatch(/\d+\/\d+/);
     expect(container.innerHTML.match(/18\//g)?.length ?? 0).toBe(0);
