@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Box, Camera, Video } from "lucide-react";
 import { QualityBadge } from "@/components/vehicle/QualityBadge";
 import { priceStatus } from "@/lib/finance";
-import { photoCount, type Vehicle } from "@/lib/vehicles";
+import { photoCount, vehiclePhotoUrls, type Vehicle } from "@/lib/vehicles";
 import { cn } from "@/lib/utils";
 
 const THUMBNAIL_FILTERS = [undefined, "hue-rotate(18deg)", "hue-rotate(36deg)", "hue-rotate(54deg)", "hue-rotate(72deg)"] as const;
@@ -15,22 +15,41 @@ function getVehicleGradient(vehicle: Vehicle): string {
 
 export function Gallery({ vehicle }: { vehicle: Vehicle }) {
   const [idx, setIdx] = useState(0);
-  const total = photoCount(vehicle);
+  const urls = vehiclePhotoUrls(vehicle);
+  const hayFotos = urls.length > 0;
+  const total = hayFotos ? urls.length : photoCount(vehicle);
   const status = priceStatus(vehicle.badge, vehicle.match);
-  const thumbCount = Math.min(5, total ?? 0);
+  const thumbCount = hayFotos ? urls.length : Math.min(5, total ?? 0);
+  const alt = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
 
   return (
     <div className="space-y-3">
       <div
         className="relative overflow-hidden rounded-r"
-        style={{
-          background: getVehicleGradient(vehicle),
-          aspectRatio: "16/10",
-          filter: THUMBNAIL_FILTERS[idx] ?? "hue-rotate(0deg)",
-        }}
+        style={
+          hayFotos
+            ? { aspectRatio: "16/10" }
+            : {
+                background: getVehicleGradient(vehicle),
+                aspectRatio: "16/10",
+                filter: THUMBNAIL_FILTERS[idx] ?? "hue-rotate(0deg)",
+              }
+        }
         role="img"
-        aria-label={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+        aria-label={alt}
       >
+        {hayFotos ? (
+          // <img> y no next/image: media.nadakki.com no esta en images.remotePatterns (next.config.js es de otra zona).
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            data-testid="gallery-foto"
+            src={urls[Math.min(idx, urls.length - 1)]}
+            alt={alt}
+            className="absolute inset-0 h-full w-full object-cover"
+            loading="eager"
+            decoding="async"
+          />
+        ) : null}
         <QualityBadge status={status} className="absolute left-3 top-3" />
         <div className="absolute right-3 top-3 flex gap-2">
           <button
@@ -56,7 +75,15 @@ export function Gallery({ vehicle }: { vehicle: Vehicle }) {
         ) : null}
       </div>
 
-      <div className="grid grid-cols-5 gap-2">
+      {!hayFotos && !total ? (
+        // Fuera del role="img": sus hijos son presentacionales y un lector de pantalla no los anunciaria.
+        <p className="flex items-center gap-1.5 text-sm text-nk-fg-muted" data-testid="gallery-sin-fotos">
+          <Camera className="h-4 w-4" aria-hidden />
+          Sin fotos todavia
+        </p>
+      ) : null}
+
+      <div className="grid grid-cols-5 gap-2" data-testid="gallery-miniaturas">
         {Array.from({ length: thumbCount }, (_, i) => (
           <button
             key={i}
@@ -69,13 +96,24 @@ export function Gallery({ vehicle }: { vehicle: Vehicle }) {
             aria-label={`Foto ${i + 1}`}
             aria-current={idx === i}
           >
-            <div
-              className="absolute inset-0"
-              style={{
-                background: getVehicleGradient(vehicle),
-                filter: THUMBNAIL_FILTERS[i] ?? undefined,
-              }}
-            />
+            {hayFotos ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={urls[i]}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            ) : (
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: getVehicleGradient(vehicle),
+                  filter: THUMBNAIL_FILTERS[i] ?? undefined,
+                }}
+              />
+            )}
           </button>
         ))}
       </div>

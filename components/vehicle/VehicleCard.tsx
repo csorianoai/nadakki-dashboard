@@ -9,13 +9,40 @@ import { fmtKm } from "@/lib/format";
 import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
 import { publicVehicleHref } from "@/lib/autos-portal/vehicle-href";
 import { cuota, priceStatus } from "@/lib/finance";
-import { photoCount, type Vehicle } from "@/lib/vehicles";
+import { photoCount, primaryPhotoUrl, type Vehicle } from "@/lib/vehicles";
 import { QualityBadge } from "@/components/vehicle/QualityBadge";
 import { PrecioJustoBadge } from "@/components/vehicle/PrecioJustoBadge";
 import { SaveButton } from "@/components/vehicle/SaveButton";
 import { cn } from "@/lib/utils";
 
 export type VehicleCardVariant = "grid" | "list" | "compact";
+
+/** Foto real si el backend la trae; degradado solo cuando no hay ninguna. */
+function CardImagen({ vehicle, role }: { vehicle: Vehicle; role?: boolean }) {
+  const foto = primaryPhotoUrl(vehicle);
+  const alt = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+  if (foto) {
+    return (
+      // <img> y no next/image: media.nadakki.com no esta en images.remotePatterns (next.config.js es de otra zona).
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        data-testid="card-foto"
+        src={foto}
+        alt={role ? alt : ""}
+        className="absolute inset-0 h-full w-full object-cover"
+        loading="lazy"
+        decoding="async"
+      />
+    );
+  }
+  return (
+    <div
+      className="absolute inset-0"
+      style={{ background: vehicle.grad }}
+      {...(role ? { role: "img", "aria-label": alt } : { "aria-hidden": true })}
+    />
+  );
+}
 
 function CardPhoto({
   vehicle,
@@ -34,12 +61,7 @@ function CardPhoto({
 }) {
   return (
     <div className={cn("relative overflow-hidden rounded-r-sm bg-nk-surface-2", aspectClass)}>
-      <div
-        className="absolute inset-0"
-        style={{ background: vehicle.grad }}
-        role="img"
-        aria-label={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-      />
+      <CardImagen vehicle={vehicle} role />
       <QualityBadge status={status} className="absolute left-2 top-2 md:left-3 md:top-3" />
       <div className="absolute right-2 top-2 md:right-3 md:top-3">
         <SaveButton saved={saved} onToggle={onSaveToggle ?? (() => undefined)} />
@@ -100,7 +122,7 @@ export const VehicleCard = memo(function VehicleCard({
         )}
       >
         <div className="relative aspect-[3/2] w-full">
-          <div className="absolute inset-0" style={{ background: vehicle.grad }} aria-hidden />
+          <CardImagen vehicle={vehicle} />
           <QualityBadge status={status} className="absolute left-2 top-2" />
         </div>
         <div className="space-y-1 p-3">
