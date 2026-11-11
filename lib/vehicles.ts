@@ -257,7 +257,10 @@ export function getVehicleById(id: number | string): Vehicle | undefined {
 }
 
 /** Fotos reales de la unidad; undefined si no se conoce (nunca se inventa). */
-export function photoCount(vehicle: Pick<Vehicle, "photoCount">): number | undefined {
+export function photoCount(
+  vehicle: Pick<Vehicle, "photoCount"> & { photos?: readonly unknown[] | null },
+): number | undefined {
+  if (Array.isArray(vehicle.photos) && vehicle.photos.length > 0) return vehicle.photos.length;
   const n = vehicle.photoCount;
   return typeof n === "number" && Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined;
 }
