@@ -16,10 +16,11 @@ const base: any = {
   trans: "Auto", fuel: "Nafta", featuresLine: "", grad: "linear-gradient(#111,#222)", badge: "", match: undefined,
 };
 const urls = ["https://x/1.jpg", "https://x/2.jpg", "https://x/3.jpg"];
+const fotos = urls.map((cdn_url, position) => ({ cdn_url, position }));
 
 describe("Gallery", () => {
   it("3 fotos -> '1/3' y 3 miniaturas", () => {
-    const { container } = render(<Gallery vehicle={{ ...base, photos: urls, primaryPhotoUrl: urls[0] }} />);
+    const { container } = render(<Gallery vehicle={{ ...base, photos: fotos, primary_photo_url: urls[0] }} />);
     expect(container.textContent).toContain("1/3");
     expect(container.querySelectorAll("button[aria-label^='Foto']").length).toBe(3);
   });
@@ -27,14 +28,25 @@ describe("Gallery", () => {
     const { container } = render(<Gallery vehicle={base} />);
     expect(container.textContent).toContain("Sin fotos todavia");
     expect(container.querySelectorAll("button[aria-label^='Foto']").length).toBe(0);
+    // El texto no puede quedar dentro de un role=img (hijos presentacionales: no se anunciaria).
+    const el = Array.from(container.querySelectorAll("*")).find((n) => n.children.length === 0 && n.textContent?.includes("Sin fotos todavia"))!;
+    expect(el.closest("[role='img']")).toBeNull();
     expect(container.textContent).not.toMatch(/\d+\/\d+/);
     expect(container.innerHTML.match(/18\//g)?.length ?? 0).toBe(0);
   });
 });
 
+describe("Gallery solo con foto principal", () => {
+  it("pinta la foto real y no el estado 'Sin fotos todavia'", () => {
+    const { container } = render(<Gallery vehicle={{ ...base, primary_photo_url: urls[0] }} />);
+    expect(container.querySelector(`img[src='${urls[0]}']`)).not.toBeNull();
+    expect(container.textContent).not.toContain("Sin fotos todavia");
+  });
+});
+
 describe("VehicleCard", () => {
   it.each(["grid", "list", "compact"] as const)("%s usa la foto principal", (variant) => {
-    const { container } = render(<VehicleCard vehicle={{ ...base, primaryPhotoUrl: urls[0] }} variant={variant} />);
+    const { container } = render(<VehicleCard vehicle={{ ...base, primary_photo_url: urls[0] }} variant={variant} />);
     expect(container.querySelector(`img[src='${urls[0]}']`)).not.toBeNull();
   });
   it.each(["grid", "list"] as const)("%s sin foto: degradado y sin contador inventado", (variant) => {
