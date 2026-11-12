@@ -144,7 +144,6 @@ export function ContactoForm({
   const fisica = f.kind === "fisica";
   const casado = fisica && f.marital_status === "casado";
   const e = (k: string) => errores[k] ?? (errorServidor?.field === k ? `El servidor rechazó este campo (${errorServidor.reason_code}).` : undefined);
-
   function validar(): Errores {
     const r: Errores = {};
     const vacio = (v: string) => !v.trim();
@@ -166,7 +165,6 @@ export function ContactoForm({
     }
     return Object.fromEntries(Object.entries(r).filter(([, v]) => v));
   }
-
   function enviar(ev: React.FormEvent) {
     ev.preventDefault();
     const err = validar();
@@ -190,7 +188,6 @@ export function ContactoForm({
     if (inicial) delete p.kind; // PATCH no cambia el tipo
     onSubmit(Object.fromEntries(Object.entries(p).filter(([, v]) => v !== undefined)));
   }
-
   const resumen = Object.values(errores);
   const mascara = (m: string | null) => (m ? `Guardado: ${m}. Déjelo vacío para conservarlo.` : undefined);
 
