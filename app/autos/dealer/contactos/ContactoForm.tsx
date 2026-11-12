@@ -6,7 +6,6 @@ import {
   IVA_CONDITIONS,
   KINDS,
   MARITAL_STATUSES,
-  emailValido,
   validarCuit,
   validarDni,
 } from "./contactos-validar";
@@ -98,9 +97,9 @@ function Selector(props: {
 
 const REQ = "Obligatorio.";
 const SIN_GUARDAR = [
-  ["c-tel", "Teléfonos", "telefonos"], ["c-mail", "Email", "email", "email"], ["c-calle", "Calle", "calle"],
+  ["c-tel", "Teléfonos", "telefonos"], ["c-mail", "Email", "email"], ["c-calle", "Calle", "calle"],
   ["c-loc", "Localidad", "localidad"], ["c-prov", "Provincia", "provincia"], ["c-cp", "Código postal", "cp"],
-] as const satisfies readonly (readonly [string, string, string, string?])[];
+] as const;
 
 /**
  * Alta y edicion. DNI/CUIT llegan enmascarados al editar: el campo arranca VACIO (nunca se reenvia la mascara) y solo
@@ -165,7 +164,6 @@ export function ContactoForm({
       if (f.spouse_dni) r.spouse_dni = validarDni(f.spouse_dni) ?? "";
       else if (!inicial?.spouse_dni) r.spouse_dni = "Casado/a: falta el DNI del cónyuge.";
     }
-    if (f.email && !emailValido(f.email)) r.email = "Email no válido.";
     return Object.fromEntries(Object.entries(r).filter(([, v]) => v));
   }
 
@@ -232,9 +230,7 @@ export function ContactoForm({
         <p className="text-xs text-nk-fg-muted sm:col-span-2">
           Todavía no se guardan: el servidor de contactos (F4C-3) no tiene aún endpoint para teléfonos, email ni dirección.
         </p>
-        {SIN_GUARDAR.map(([id, label, k, type]) => (
-          <Campo key={id} id={id} label={label} value={f[k]} onChange={set(k)} disabled type={type} />
-        ))}
+        {SIN_GUARDAR.map(([id, label, k]) => <Campo key={id} id={id} label={label} value={f[k]} onChange={set(k)} disabled />)}
       </fieldset>
       <div className="flex gap-2">
         <button type="submit" disabled={enviando} className="rounded-md bg-nk-fg px-4 py-2 text-sm font-medium text-nk-surface">

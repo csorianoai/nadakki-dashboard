@@ -38,5 +38,3 @@ export function validarCuit(valor: string): string | null {
   return dv === Number(s[10]) ? null : MSG;
 }
 
-export const soloDigitos = (v: string) => v.replace(/\D/g, "");
-export const emailValido = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
