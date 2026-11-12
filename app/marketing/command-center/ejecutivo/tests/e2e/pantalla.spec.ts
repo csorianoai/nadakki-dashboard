@@ -14,7 +14,9 @@ const VPS: VP[] = [
   { viewport: "320x568", width: 320, height: 568, movil: true },
 ];
 
-test.skip(!existsSync(join(OUT, "ok-escritorio-1440x900.html")), `falta el harness (${OUT}); ejecuta app/marketing/command-center/ejecutivo/tests/build-harness.sh`);
+test.beforeEach(() => {
+  test.skip(!existsSync(join(OUT, "ok-escritorio-1440x900.html")), `falta el harness (${OUT}); ejecuta app/marketing/command-center/ejecutivo/tests/build-harness.sh`);
+});
 
 async function abrir(page: Page, html: string, vp: Pick<VP, "width" | "height">) {
   const errores: string[] = [];
@@ -334,6 +336,33 @@ for (const vp of [VPS[1], VPS[2]]) {
       await expect(page.getByTestId("banner-demo")).toBeVisible();
       await sinDesborde(page, `estado ${estado} ${vp.viewport}`);
       await capturar(page, testInfo, `estado-${estado}-${vp.viewport}`);
+      expect(errores).toEqual([]);
+    });
+  }
+}
+
+for (const vp of [VPS[1], VPS[2]]) {
+  for (const etapa of ["antes", "despues"] as const) {
+    test(`evidencia sin datos ${etapa} · ${vp.viewport}: captura sin cifras DEMO`, async ({ page }, testInfo) => {
+      const errores = await abrir(page, `sin-datos-${etapa}-${vp.viewport}.html`, vp);
+      await expect(page.getByTestId("banner-demo")).toHaveCount(0);
+      if (etapa === "antes") {
+        await expect(page.getByTestId("estado-vacio-command-center")).toHaveCount(0);
+        await expect(page.getByRole("status").first()).toContainText("Sin datos en este periodo");
+        await expect(page.getByRole("group", { name: "CPA" })).toHaveCount(0);
+      } else {
+        await expect(page.getByTestId("estado-vacio-command-center")).toBeVisible();
+        await expect(page.getByRole("group", { name: "CPA" })).toBeVisible();
+        await expect(page.getByTestId("secundaria-roas")).toContainText("Sin datos");
+        await expect(page.getByTestId("semaforo")).toBeVisible();
+        await expect(page.getByTestId("kpi-valor")).toHaveCount(0);
+        if (vp.movil) await expect(page.getByRole("tablist")).toBeVisible();
+      }
+      await sinDesborde(page, `sin datos ${etapa} ${vp.viewport}`);
+      const ruta = testInfo.outputPath(`sin-datos-${etapa}-${vp.movil ? "movil" : "desktop"}.png`);
+      await page.screenshot({ path: ruta, fullPage: true, animations: "disabled" });
+      const hash = createHash("sha256").update(readFileSync(ruta)).digest("hex");
+      console.log(`CAPTURA sin-datos-${etapa}-${vp.movil ? "movil" : "desktop"} sha256:${hash}`);
       expect(errores).toEqual([]);
     });
   }

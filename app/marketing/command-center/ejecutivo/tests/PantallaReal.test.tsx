@@ -47,11 +47,35 @@ describe("PantallaReal", () => {
     vista.actualizarTenant();
     await waitFor(() => expect(screen.getByTestId("selector-cuenta")).toHaveValue(""));
   });
+  it("al cambiar de tenant descarta las metricas anteriores mientras carga y si el nuevo tenant esta vacio", async () => {
+    pedir.mockImplementation(() => ok(resumen()));
+    const vista = montar();
+    expect(await screen.findByTestId("secundaria-roas")).toHaveTextContent(/3([,.]00)?/);
+    mockTenant = { id: "t2", display_name: "Dealer Dos" };
+    pedir.mockImplementation(() => ok(resumen({
+      accounts: [{ customer_id: "9988776655", label: "998***655", currency: "DOP" }],
+      as_of: null,
+      kpis: null,
+      series: null,
+      previous_series: null,
+      campaigns: null,
+      coverage: { days_in_period: 30, days_with_data: 0, tables_present: false },
+    })));
+    vista.actualizarTenant();
+    expect(await screen.findByTestId("estado-vacio-command-center")).toBeInTheDocument();
+    expect(screen.getByTestId("secundaria-roas")).toHaveTextContent("Sin datos");
+    expect(screen.queryByText("Dealer Uno")).toBeNull();
+    expect(screen.getByText("Dealer Dos")).toBeInTheDocument();
+    expect(screen.queryByText(/Dato al 10 de noviembre de 2026/)).toBeNull();
+    expect(screen.queryAllByTestId("kpi-valor")).toHaveLength(0);
+  });
   it("datos reales: sin banner DEMO y con el tenant", async () => {
     pedir.mockImplementation(() => ok(resumen()));
     montar();
     await waitFor(() => expect(screen.getByRole("group", { name: "Inversión" })).toBeInTheDocument());
     expect(screen.queryByTestId("banner-demo")).toBeNull();
+    expect(screen.getByTestId("secundaria-roas")).not.toHaveTextContent("Sin datos");
+    expect(screen.getByTestId("secundaria-roas")).toHaveTextContent(/3([,.]00)?/);
     expect(screen.getByText("Dealer Uno")).toBeInTheDocument();
     expect(pedir.mock.calls[0][0]).toContain("from=2026-10-12&to=2026-11-10");
   });
@@ -82,11 +106,29 @@ describe("PantallaReal", () => {
     pedir.mockImplementation(() => falla(502));
     montar();
     expect(await screen.findByRole("alert", {}, { timeout: 4000 })).toBeInTheDocument(); // un reintento (retryDelay 1 s) antes de mostrar el error
+    expect(screen.queryByTestId("estado-vacio-command-center")).toBeNull();
+    expect(screen.getByText("No se pudieron cargar los datos")).toBeInTheDocument();
   });
-  it("sin tablas => estado vacio, no error", async () => {
+  it("sin tablas => conserva indicadores y graficos vacios, sin cifras inventadas ni banner DEMO", async () => {
     pedir.mockImplementation(() => ok(resumen({ kpis: null, coverage: { days_in_period: 30, days_with_data: 0, tables_present: false } })));
     montar();
-    await waitFor(() => expect(screen.queryByRole("group", { name: "Inversión" })).toBeNull());
+    expect(await screen.findByTestId("estado-vacio-command-center")).toHaveTextContent("Sin datos en este periodo");
+    for (const etiqueta of ["Inversión", "CPA", "Leads (conversiones)"]) {
+      expect(screen.getByRole("group", { name: etiqueta })).toHaveTextContent("Sin datos en este periodo");
+    }
+    expect(screen.getByTestId("secundaria-roas")).toHaveTextContent("Sin datos");
+    expect(screen.getByTestId("semaforo")).toHaveTextContent(/Pendiente de integración/);
+    expect(screen.getAllByText(/Inversión diaria/).length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { name: "Campañas" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Calidad de los datos" })).toBeInTheDocument();
+    expect(screen.getByText("Estado de conexión Google Ads")).toBeInTheDocument();
+    expect(screen.getByText("Conectada · sin datos del periodo")).toBeInTheDocument();
+    expect(screen.getByText("Última sincronización")).toBeInTheDocument();
+    expect(screen.getByText("Dato al 2026-11-10T08:00:00Z")).toBeInTheDocument();
+    expect(screen.getByText("SIMULADO: no es presupuesto real")).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Secciones de Marketing Intelligence" }).querySelectorAll("li")).toHaveLength(5);
+    expect(screen.queryAllByTestId("kpi-valor")).toHaveLength(0);
+    expect(screen.queryByTestId("banner-demo")).toBeNull();
     expect(screen.queryByTestId("aviso-permiso")).toBeNull();
   });
 });

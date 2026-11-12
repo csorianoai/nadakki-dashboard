@@ -45,6 +45,8 @@ export interface CommandCenterEjecutivoProps {
   avisosExtra?: ReactNode;
   /** Sustituye TODO el cuerpo (seleccion de cuenta obligatoria, sin permiso, sesion caducada...). La cabecera se mantiene. */
   reemplazo?: ReactNode;
+  /** API real respondio correctamente sin filas: conserva la estructura y marca cada cifra como vacia. */
+  mostrarEstructuraVacia?: boolean;
 }
 
 const COLUMNAS: ColumnaAnalitica<FilaCampana>[] = [
@@ -65,7 +67,7 @@ export function CommandCenterEjecutivo({ formato, ...props }: CommandCenterEjecu
   );
 }
 
-function Pantalla({ datos, estado = "ok", ahora, demo = false, periodoDatos = { tipo: "30d" }, onReintentar, anchoGrafico, tema: temaInicial = "dark", onPeriodoChange, controlesExtra, avisosExtra, reemplazo }: Omit<CommandCenterEjecutivoProps, "formato">) {
+function Pantalla({ datos, estado = "ok", ahora, demo = false, periodoDatos = { tipo: "30d" }, onReintentar, anchoGrafico, tema: temaInicial = "dark", onPeriodoChange, controlesExtra, avisosExtra, reemplazo, mostrarEstructuraVacia = false }: Omit<CommandCenterEjecutivoProps, "formato">) {
   const formato = useFormato();
   const movil = useEsMovil();
   const [periodo, setPeriodoLocal] = useState<PeriodoAnalitica>(periodoDatos);
@@ -206,9 +208,16 @@ function Pantalla({ datos, estado = "ok", ahora, demo = false, periodoDatos = { 
 
         {avisosExtra}
 
+        {mostrarEstructuraVacia && efectivo === "vacio" && datos ? (
+          <div data-testid="estado-vacio-command-center" role="status" className={cn(PANEL, "p-4 text-[13px] kit-txt-2")}>
+            <p className="m-0 font-semibold kit-txt">Sin datos en este periodo</p>
+            <p className="m-0 mt-1">Las tarjetas y los graficos siguen disponibles; cada cifra indica que no hay datos.</p>
+          </div>
+        ) : null}
+
         {reemplazo ? (
           <div data-testid="cuerpo-reemplazado">{reemplazo}</div>
-        ) : efectivo !== "ok" || !datos ? (
+        ) : !datos || (efectivo !== "ok" && !(mostrarEstructuraVacia && efectivo === "vacio")) ? (
           <EstadoAnalitica estado={efectivo === "ok" ? "vacio" : efectivo} onReintentar={onReintentar} />
         ) : sinDatosPeriodo ? (
           <div data-testid="aviso-periodo" role="status" className={cn(PANEL, "p-4 text-[13px] kit-txt-2")}>
@@ -288,7 +297,7 @@ function Resumen({ datos, comparar, anchoGrafico, movil, periodoEtiqueta }: { da
             </p>
           </>
         ) : null}
-        {movil && r ? <SemaforoEconomico cpa={datos.cpa} conversiones={datos.conversiones_total} supuestos={datos.supuestos} variante="barra" className="pt-1" /> : null}
+        {movil ? <SemaforoEconomico cpa={datos.cpa} conversiones={datos.conversiones_total} supuestos={datos.supuestos} variante="barra" className="pt-1" /> : null}
         {movil ? (
           /* Aviso minimo dentro de la tarjeta del CPA: ausencia de cierres CRM y supuestos (objetivo y equilibrio) SIEMPRE visibles. */
           <AvisoMinimo supuestos={datos.supuestos} cierres={r?.cierres ?? datos.supuestos.cierres_crm} rentabilidad={r?.rentabilidad ?? "sin_confirmar"} className="mt-1" />
@@ -310,12 +319,17 @@ function Resumen({ datos, comparar, anchoGrafico, movil, periodoEtiqueta }: { da
         </p>
       ) : null}
       <SerieTemporal
-        meta={{ titulo: `Inversión diaria · ${periodoEtiqueta}`, descripcion: comparar ? "Línea discontinua: periodo anterior" : undefined, fuente: s.fuente, fecha_dato: s.fecha_dato }}
+        meta={{ titulo: `Inversión diaria · ${periodoEtiqueta}`, descripcion: comparar ? "Línea discontinua: periodo anterior" : undefined, fuente: s.fuente, fecha_dato: s.fecha_dato, estado: s.gasto.length === 0 ? "vacio" : undefined }}
         datos={{ actual: s.gasto, anterior: comparar ? s.gasto_anterior : undefined }}
         unidad={datos.inversion.unidad === "moneda" ? "moneda" : "numero"}
         moneda={datos.inversion.moneda}
         ancho={anchoGrafico}
       />
+      {s.gasto.length === 0 ? (
+        <div data-testid="tendencia-conversiones-vacia" role="img" aria-label="Tendencia de conversiones: sin datos" className={cn(PANEL, "p-4 text-[13px] kit-txt-2")}>
+          Conversiones diarias · Sin datos en este periodo
+        </div>
+      ) : null}
       {s.conversiones.length > 0 && s.gasto.length > 0 ? <TiraConversiones conversiones={s.conversiones} diasIncompletos={datos.dias_incompletos} /> : null}
     </div>
   );
@@ -335,13 +349,13 @@ function Resumen({ datos, comparar, anchoGrafico, movil, periodoEtiqueta }: { da
         <>
           <FuentesResumen cifras={[datos.inversion, datos.cpa, datos.leads].map((c) => ({ etiqueta: c.etiqueta, fuente: c.fuente, fecha_dato: c.fecha_dato }))} />
           {grafico}
-          <details data-testid="detalle-secundarios" className={cn(PANEL, "px-4")}>
-            <summary className="kit-foco flex min-h-[44px] cursor-pointer items-center text-[13px] font-medium kit-txt-2">Indicadores secundarios (clics, CPC, impresiones, CTR)</summary>
+          <details data-testid="detalle-secundarios" open={s.gasto.length === 0} className={cn(PANEL, "px-4")}>
+            <summary className="kit-foco flex min-h-[44px] cursor-pointer items-center text-[13px] font-medium kit-txt-2">Indicadores secundarios (clics, CPC, impresiones, CTR, conversiones y ROAS)</summary>
             <div className="pb-4">
               <IndicadoresSecundarios cifras={datos.secundarias} />
             </div>
           </details>
-          <details data-testid="detalle-supuestos" className={cn(PANEL, "px-4")}>
+          <details data-testid="detalle-supuestos" open={s.gasto.length === 0} className={cn(PANEL, "px-4")}>
             <summary className="kit-foco flex min-h-[44px] cursor-pointer items-center text-[13px] font-medium kit-txt-2">Supuestos financieros y fuentes</summary>
             <div className="pb-4">
               <SemaforoEconomico cpa={datos.cpa} conversiones={datos.conversiones_total} supuestos={datos.supuestos} sinBarra />

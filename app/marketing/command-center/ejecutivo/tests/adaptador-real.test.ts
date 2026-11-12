@@ -1,4 +1,4 @@
-import { FUENTE_REAL, adaptarResumen, rangoDePeriodo } from "../adaptador-real";
+import { FUENTE_REAL, adaptarResumen, datosVacios, rangoDePeriodo } from "../adaptador-real";
 import { MIN_CONVERSIONES } from "../semaforo";
 import { resumen } from "./fixtures-real";
 
@@ -44,6 +44,9 @@ describe("adaptarResumen: contenido", () => {
     const ctr = datos().datos.secundarias.find((c) => c.id === "ctr");
     expect(ctr).toMatchObject({ unidad: "porcentaje", valor: 5 });
   });
+  it("ROAS conserva el ratio real de la API en veces", () => {
+    expect(datos().datos.secundarias.find((c) => c.id === "roas")).toMatchObject({ valor: 3, unidad: "numero", etiqueta: "ROAS (veces)" });
+  });
   it("CPA de campana con menos de MIN_CONVERSIONES => sin valor y sin juicio", () => {
     const f = datos().datos.campanas.find((c) => c.nombre === "Camp B")!;
     expect(2).toBeLessThan(MIN_CONVERSIONES);
@@ -74,5 +77,20 @@ describe("adaptarResumen: estados", () => {
   });
   it("sin filas => vacio sin_filas", () => {
     expect(adaptarResumen(resumen({ coverage: { days_in_period: 30, days_with_data: 0, tables_present: true }, kpis: {} }), P)).toEqual({ tipo: "vacio", motivo: "sin_filas" });
+  });
+  it("la estructura vacia no fabrica metricas y declara Budget Guardian simulado", () => {
+    const d = datosVacios(P, "Tenant QA");
+    expect([d.inversion, d.cpa, d.leads, ...d.secundarias].every((c) => c.valor === null && c.estado === "vacio")).toBe(true);
+    expect(d.serie.gasto).toEqual([]);
+    expect(d.calidad.find((x) => x.id === "conexion")?.estado).toBe("Sin datos de conexión");
+    expect(d.calidad.find((x) => x.id === "sincronizacion")?.estado).toBe("Sin datos");
+    expect(d.calidad.find((x) => x.id === "presupuesto")?.estado).toContain("SIMULADO");
+  });
+  it("mantiene visibles la cuenta conectada y el instante de sincronización recibido", () => {
+    const d = datosVacios(P, "Tenant QA", resumen({ kpis: null, coverage: { days_in_period: 30, days_with_data: 0, tables_present: false } }));
+    expect(d.cuentas).toEqual(["Google Ads 822***139"]);
+    expect(d.actualizado).toBe("2026-11-10T08:00:00Z");
+    expect(d.calidad.find((x) => x.id === "conexion")?.estado).toContain("Conectada");
+    expect(d.calidad.find((x) => x.id === "sincronizacion")?.estado).toContain("2026-11-10T08:00:00Z");
   });
 });

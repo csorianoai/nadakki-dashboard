@@ -20,6 +20,52 @@ export type ResultadoAdaptacion =
   | { tipo: "requiere_cuenta"; cuentas: CuentaInsights[] }
   | { tipo: "vacio"; motivo: "sin_tablas" | "sin_filas" };
 
+/** Datos estructurales para conservar las tarjetas cuando la API responde correctamente sin filas. No contiene cifras. */
+export function datosVacios(periodo: PeriodoAnalitica, tenant: string | null | undefined, resumen?: ResumenInsights): DatosCommandCenter {
+  const cifra = (id: string, etiqueta: string, unidad: UnidadCifra = "numero", extra: Partial<Cifra> = {}): Cifra => ({
+    id,
+    etiqueta,
+    valor: null,
+    valor_anterior: null,
+    unidad,
+    periodo,
+    fuente: null,
+    fecha_dato: null,
+    estado: "vacio",
+    ...extra,
+  });
+
+  return {
+    tenant: tenant?.trim() || "Marketing Intelligence",
+    cuentas: (resumen?.accounts ?? []).map(etiquetaCuenta),
+    actualizado: resumen?.as_of ?? "",
+    dias_incompletos: 0,
+    inversion: cifra("inversion", "Inversión", "moneda"),
+    cpa: cifra("cpa", "CPA", "moneda", { mejor_si: "baja" }),
+    leads: cifra("leads", "Leads (conversiones)"),
+    secundarias: [
+      cifra("clics", "Clics"),
+      cifra("cpc", "CPC medio", "moneda", { mejor_si: "baja" }),
+      cifra("impresiones", "Impresiones"),
+      cifra("ctr", "CTR", "porcentaje"),
+      cifra("conversiones", "Conversiones"),
+      cifra("roas", "ROAS (veces)", "numero", { mejor_si: "sube" }),
+    ],
+    serie: { gasto: [], gasto_anterior: [], conversiones: [], fuente: null, fecha_dato: null },
+    conversiones_total: null,
+    supuestos: { objetivo: null, equilibrio: null, comision: null, tasa_cierre: null, moneda: "", rango_probable: null, fuente: null, fecha_dato: null, cierres_crm: null },
+    campanas: [],
+    decisiones: { negativas_propuestas: null, riesgo: null, presupuesto_propuestas: null },
+    calidad: [
+      { id: "conexion", etiqueta: "Estado de conexión Google Ads", estado: resumen?.accounts?.length ? "Conectada · sin datos del periodo" : "Sin datos de conexión", tono: "neutro" },
+      { id: "sincronizacion", etiqueta: "Última sincronización", estado: resumen?.as_of ? `Dato al ${resumen.as_of}` : "Sin datos", tono: "neutro" },
+      { id: "cobertura", etiqueta: "Cobertura del periodo", estado: "Sin datos", tono: "neutro" },
+      { id: "crm", etiqueta: "Cierres reales (CRM)", estado: "Pendiente", tono: "neutro" },
+      { id: "presupuesto", etiqueta: "Budget Guardian", estado: "SIMULADO: no es presupuesto real", tono: "neutro" },
+    ],
+  };
+}
+
 const MS_DIA = 86_400_000;
 
 /** Rango [from, to] (YYYY-MM-DD, UTC) del periodo; null si el personalizado no es valido. `hoy` = instante de referencia. */
@@ -148,6 +194,7 @@ export function adaptarResumen(r: ResumenInsights, periodo: PeriodoAnalitica, op
         c("impressions", "impresiones", "Impresiones", "numero"),
         c("ctr", "ctr", "CTR", "porcentaje", {}, 100),
         c("conversions", "conversiones", "Conversiones", "numero"),
+        c("roas", "roas", "ROAS (veces)", "numero", { mejor_si: "sube" }),
       ],
       serie: {
         gasto: serieGasto,
