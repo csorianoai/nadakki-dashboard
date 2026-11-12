@@ -97,6 +97,10 @@ function Selector(props: {
 }
 
 const REQ = "Obligatorio.";
+const SIN_GUARDAR = [
+  ["c-tel", "Teléfonos", "telefonos"], ["c-mail", "Email", "email", "email"], ["c-calle", "Calle", "calle"],
+  ["c-loc", "Localidad", "localidad"], ["c-prov", "Provincia", "provincia"], ["c-cp", "Código postal", "cp"],
+] as const satisfies readonly (readonly [string, string, string, string?])[];
 
 /**
  * Alta y edicion. DNI/CUIT llegan enmascarados al editar: el campo arranca VACIO (nunca se reenvia la mascara) y solo
@@ -228,12 +232,9 @@ export function ContactoForm({
         <p className="text-xs text-nk-fg-muted sm:col-span-2">
           Todavía no se guardan: el servidor de contactos (F4C-3) no tiene aún endpoint para teléfonos, email ni dirección.
         </p>
-        <Campo id="c-tel" label="Teléfonos" value={f.telefonos} onChange={set("telefonos")} disabled />
-        <Campo id="c-mail" label="Email" value={f.email} onChange={set("email")} disabled type="email" />
-        <Campo id="c-calle" label="Calle" value={f.calle} onChange={set("calle")} disabled />
-        <Campo id="c-loc" label="Localidad" value={f.localidad} onChange={set("localidad")} disabled />
-        <Campo id="c-prov" label="Provincia" value={f.provincia} onChange={set("provincia")} disabled />
-        <Campo id="c-cp" label="Código postal" value={f.cp} onChange={set("cp")} disabled />
+        {SIN_GUARDAR.map(([id, label, k, type]) => (
+          <Campo key={id} id={id} label={label} value={f[k]} onChange={set(k)} disabled type={type} />
+        ))}
       </fieldset>
       <div className="flex gap-2">
         <button type="submit" disabled={enviando} className="rounded-md bg-nk-fg px-4 py-2 text-sm font-medium text-nk-surface">
