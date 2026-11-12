@@ -8,7 +8,7 @@ import { formatoDesdeTenant } from "@/lib/analytics/formato";
 import { useTenantBranding } from "@/lib/hooks/useTenantBranding";
 import { EsqueletoCommandCenter } from "./EsqueletoCommandCenter";
 import { SelectorCuenta } from "./SelectorCuenta";
-import { TEXTO_MONEDA_NO_CONFIRMADA, adaptarResumen, rangoDePeriodo } from "./adaptador-real";
+import { TEXTO_MONEDA_NO_CONFIRMADA, adaptarResumen, datosVacios, rangoDePeriodo } from "./adaptador-real";
 import type { CuentaInsights } from "./contrato";
 import type { EstadoPantalla, TemaPantalla } from "./tipos";
 import { ErrorInsights, useResumenInsights } from "./usarResumen";
@@ -88,7 +88,7 @@ export function PantallaReal({ ahora, tema }: { ahora: string; tema?: TemaPantal
     );
   }
 
-  const datos = adaptado?.tipo === "datos" ? adaptado.datos : null;
+  const datos = adaptado?.tipo === "datos" ? adaptado.datos : adaptado?.tipo === "vacio" ? datosVacios(periodo, tenantName, q.data) : null;
   // La moneda la trae cada cifra (la de la cuenta, adaptador); TenantBranding solo aporta el locale.
   const formato = formatoDesdeTenant(branding);
 
@@ -96,6 +96,7 @@ export function PantallaReal({ ahora, tema }: { ahora: string; tema?: TemaPantal
     <CommandCenterEjecutivo
       datos={datos}
       estado={estado}
+      mostrarEstructuraVacia={adaptado?.tipo === "vacio"}
       ahora={ahora}
       tema={tema}
       periodoDatos={periodo}

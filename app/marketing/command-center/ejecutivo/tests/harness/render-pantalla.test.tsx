@@ -8,6 +8,7 @@ import { mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
 import { fireEvent, render } from "@testing-library/react";
 import { CommandCenterEjecutivo } from "../../CommandCenterEjecutivo";
+import { datosVacios } from "../../adaptador-real";
 import { AHORA_DEMO, DATOS_DEMO } from "../../demo/datos-demo";
 import type { DatosCommandCenter, EstadoPantalla, TemaPantalla } from "../../tipos";
 
@@ -41,6 +42,7 @@ interface Caso {
   expandido?: boolean;
   /** Conversiones del periodo (por defecto las 13 del diseno): permite capturar los tres estados de muestra. */
   conversiones?: number;
+  vacio?: "antes" | "despues";
 }
 
 const CASOS: Caso[] = [
@@ -66,6 +68,11 @@ const CASOS: Caso[] = [
     { archivo: `estado-cargando-${vp}.html`, vp, estado: "cargando" as const },
     { archivo: `estado-desactualizado-${vp}.html`, vp, ahora: "2026-11-13T10:00:00Z" },
   ]),
+  ...(["1440x900", "390x844"] as VP[]).flatMap((vp) => [
+    { archivo: `sin-datos-antes-${vp}.html`, vp, estado: "vacio" as const, vacio: "antes" as const },
+    { archivo: `sin-datos-despues-${vp}.html`, vp, estado: "vacio" as const, vacio: "despues" as const },
+  ]),
+  ...(["390x844", "320x568"] as VP[]).map((vp) => ({ archivo: `sin-datos-despues-calidad-${vp}.html`, vp, estado: "vacio" as const, vacio: "despues" as const, inicial: "calidad" })),
 ];
 
 describe("harness de la pantalla patron (Executive Command Center)", () => {
@@ -76,9 +83,13 @@ describe("harness de la pantalla patron (Executive Command Center)", () => {
     mkdirSync(OUT as string, { recursive: true });
     for (const c of CASOS) {
       conMatchMedia(MOVIL(c.vp));
-      const datos: DatosCommandCenter = c.conversiones === undefined ? DATOS_DEMO : { ...DATOS_DEMO, conversiones_total: c.conversiones };
+      const datos: DatosCommandCenter | null = c.vacio === "antes"
+        ? null
+        : c.vacio === "despues"
+          ? datosVacios({ tipo: "30d" }, "Tenant QA")
+          : c.conversiones === undefined ? DATOS_DEMO : { ...DATOS_DEMO, conversiones_total: c.conversiones };
       const { container, unmount } = render(
-        <CommandCenterEjecutivo datos={datos} estado={c.estado} ahora={c.ahora ?? AHORA_DEMO} demo anchoGrafico={ANCHO[c.vp]} tema={c.tema} />
+        <CommandCenterEjecutivo datos={datos} estado={c.estado} ahora={c.ahora ?? AHORA_DEMO} demo={!c.vacio} mostrarEstructuraVacia={c.vacio === "despues"} anchoGrafico={ANCHO[c.vp]} tema={c.tema} />
       );
       // La seleccion de pestana inicial no es una prop de la pantalla: en movil se activa la pestana pedida simulando el clic.
       if (c.inicial && c.inicial !== "resumen") {
@@ -90,7 +101,8 @@ describe("harness de la pantalla patron (Executive Command Center)", () => {
       if (c.expandido) container.querySelectorAll("details").forEach((d) => (d.open = true));
       const html = documento(container.innerHTML, c.archivo);
       writeFileSync(join(OUT as string, c.archivo), html);
-      expect(html).toContain("DEMO");
+      if (c.vacio) expect(html).toContain("Sin datos en este periodo");
+      else expect(html).toContain("DEMO");
       expect(html).not.toMatch(/NaN|Infinity/);
       unmount();
     }

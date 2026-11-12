@@ -17,6 +17,7 @@ export function resumen(over: Partial<ResumenInsights> = {}): ResumenInsights {
       clicks: { value: 400, previous: 300, delta_pct: 33, status: "ok" },
       impressions: { value: 8000, previous: 7500, delta_pct: 6, status: "ok" },
       avg_cpc: { value: 2.5, previous: 2.6, delta_pct: -4, status: "ok" },
+      roas: { value: 3, previous: 2.5, delta_pct: 20, status: "ok" },
     },
     series: [{ date: "2026-11-09", spend: 30, clicks: 12, conversions: 1 }],
     previous_series: [{ date: "2026-10-09", spend: 25, clicks: 10, conversions: 0 }],

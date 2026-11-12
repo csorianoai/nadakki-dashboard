@@ -38,8 +38,9 @@ export function KpiDominante({ cifra, chip, tamano = "normal", borde = "neutro",
 
   if (estado !== "ok") {
     return (
-      <div className={cn(TARJETA, "p-5", className)}>
+      <div className={cn(TARJETA, "flex h-full flex-col gap-2 p-5", className)}>
         <CifraKpiCard cifra={cifra} />
+        {children}
       </div>
     );
   }
