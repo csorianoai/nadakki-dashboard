@@ -1,0 +1,68 @@
+name: CI Fase 1 dashboard
+
+# G2 (Cesar, 2026-11-01). Puerta BLOQUEANTE de la fase 1 de marketing en el dashboard: build de produccion y Playwright de
+# e2e/fase1 con el backend SIEMPRE interceptado (playwright.config.fase1.ts: backend.invalid + el navegador solo resuelve
+# 127.0.0.1). Sin continue-on-error, sin filtros de ruta y sin `if`. Hasta que e2e/fase1 tenga specs, Playwright sale con
+# error («No tests found») y la puerta queda roja a proposito: no hay falso verde.
+on:
+  pull_request:
+    branches:
+      - staging
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fase1-dashboard:
+    name: fase1-dashboard
+    runs-on: [self-hosted, ci-8g]
+    timeout-minutes: 30
+    env:
+      BACKEND_URL: http://backend.invalid
+      NEXT_PUBLIC_API_URL: http://backend.invalid
+      NEXT_PUBLIC_BACKEND_URL: http://backend.invalid
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Next.js production build
+        run: npm run build
+
+      - name: Chromium para Playwright
+        run: npx playwright install chromium
+
+      # La red de TODO lo que corre aqui (navegador, Node de Playwright y next start) queda limitada a 127.0.0.1: el guard
+      # e2e/fase1/_solo-loopback.cjs. Este canario lo comprueba en esta maquina y con el Node de este job antes de los specs.
+      - name: Canario de red (Node)
+        run: node e2e/fase1/_canario-red.cjs
+
+      - name: e2e/fase1 (Playwright, backend interceptado)
+        run: npx playwright test -c playwright.config.fase1.ts
+
+      - name: Informe
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fase1-dashboard
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: git diff --exit-code
+        run: git diff --exit-code
