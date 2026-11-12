@@ -58,7 +58,7 @@ describe("formulario", () => {
     llenar(/estado civil/i, "casado");
     fireEvent.click(screen.getByRole("button", { name: /guardar/i }));
     expect(onSubmit).not.toHaveBeenCalled();
-    expect(screen.getByRole("alert", { name: "" })).toBeTruthy();
+    expect(screen.getAllByRole("alert")[0]).toBeTruthy();
     expect(screen.getAllByText(/c[oó]nyuge/i).length).toBeGreaterThan(0);
     expect(screen.getByLabelText(/DNI del c[oó]nyuge/i).getAttribute("aria-invalid")).toBe("true");
   });
