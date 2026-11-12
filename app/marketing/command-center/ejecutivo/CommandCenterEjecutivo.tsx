@@ -337,7 +337,7 @@ function Resumen({ datos, comparar, anchoGrafico, movil, periodoEtiqueta }: { da
 
   return (
     <div className={cn("flex min-w-0 flex-col", movil ? "gap-3" : "gap-4")}>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-4">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-2 sm:grid-cols-3 sm:gap-3 lg:gap-4">
         {/* Movil: el CPA (la lectura) va primero, ancho completo; Inversion y Leads debajo, lado a lado y compactos. Los tres caben en el
             primer viewport de 320x568. Escritorio: Inversion, CPA y Leads, con el CPA al centro como en el diseno. */}
         {movil ? cpa : null}
