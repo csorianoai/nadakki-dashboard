@@ -354,7 +354,8 @@ for (const vp of [VPS[1], VPS[2]]) {
         await expect(page.getByTestId("estado-vacio-command-center")).toBeVisible();
         await expect(page.getByRole("group", { name: "CPA" })).toBeVisible();
         await expect(page.getByTestId("secundaria-roas")).toContainText("Sin datos");
-        await expect(page.getByTestId("semaforo")).toBeVisible();
+        if (vp.movil) await expect(page.getByTestId("semaforo-vacio")).toBeVisible();
+        else await expect(page.getByTestId("semaforo")).toBeVisible();
         await expect(page.getByTestId("kpi-valor")).toHaveCount(0);
         if (vp.movil) await expect(page.getByRole("tablist")).toBeVisible();
       }
@@ -363,10 +364,41 @@ for (const vp of [VPS[1], VPS[2]]) {
       await page.screenshot({ path: ruta, fullPage: true, animations: "disabled" });
       const hash = createHash("sha256").update(readFileSync(ruta)).digest("hex");
       console.log(`CAPTURA sin-datos-${etapa}-${vp.movil ? "movil" : "desktop"} sha256:${hash}`);
+      if (etapa === "despues" && vp.movil) {
+        const erroresCalidad = await abrir(page, `sin-datos-despues-calidad-${vp.viewport}.html`, vp);
+        await expect(page.getByText("Estado de conexión Google Ads")).toBeVisible();
+        await expect(page.getByText("Última sincronización")).toBeVisible();
+        await expect(page.getByText("SIMULADO: no es presupuesto real")).toBeVisible();
+        await page.screenshot({ path: testInfo.outputPath("sin-datos-despues-movil-calidad.png"), fullPage: true, animations: "disabled" });
+        expect(erroresCalidad).toEqual([]);
+      }
       expect(errores).toEqual([]);
     });
   }
 }
+
+test("Calidad a 320px: filas apiladas, sin solapamiento y captura antes/después", async ({ page }, testInfo) => {
+  const errores = await abrir(page, "sin-datos-despues-calidad-320x568.html", VPS[3]);
+  const calidad = page.getByRole("tabpanel");
+  await expect(calidad).toBeVisible();
+  await expect(page.getByText("Estado de conexión Google Ads")).toBeVisible();
+  await expect(page.getByText("Última sincronización")).toBeVisible();
+  await expect(page.getByText("SIMULADO: no es presupuesto real")).toBeVisible();
+  await page.addStyleTag({ content: '[role="tabpanel"] dl > div { flex-direction: row !important; justify-content: space-between !important; gap: 12px !important } [role="tabpanel"] dl dd { white-space: nowrap !important; flex-shrink: 0 !important }' });
+  await page.screenshot({ path: testInfo.outputPath("calidad-antes-320px.png"), fullPage: true, animations: "disabled" });
+  await page.evaluate(() => document.querySelectorAll("style").forEach((style) => { if (style.textContent?.includes("flex-direction: row !important")) style.remove(); }));
+  await page.screenshot({ path: testInfo.outputPath("calidad-despues-320px.png"), fullPage: true, animations: "disabled" });
+  const filas = calidad.locator("dl > div");
+  for (let i = 0; i < await filas.count(); i++) {
+    const [label, value] = await Promise.all([filas.nth(i).locator("dt").boundingBox(), filas.nth(i).locator("dd").boundingBox()]);
+    expect(label).not.toBeNull();
+    expect(value).not.toBeNull();
+    expect(value!.y).toBeGreaterThanOrEqual(label!.y + label!.height - 1);
+    expect(value!.x).toBeGreaterThanOrEqual(label!.x - 1);
+  }
+  await sinDesborde(page, "Calidad vacía 320px corregida");
+  expect(errores).toEqual([]);
+});
 
 test("teclado real: orden de Tab logico, anillo de foco visible en cada parada y sin trampas", async ({ page }) => {
   const errores = await abrir(page, "ok-escritorio-1440x900.html", { width: 1440, height: 900 });

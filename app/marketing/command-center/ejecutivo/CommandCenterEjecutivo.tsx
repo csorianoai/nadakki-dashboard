@@ -297,7 +297,8 @@ function Resumen({ datos, comparar, anchoGrafico, movil, periodoEtiqueta }: { da
             </p>
           </>
         ) : null}
-        {movil ? <SemaforoEconomico cpa={datos.cpa} conversiones={datos.conversiones_total} supuestos={datos.supuestos} variante="barra" className="pt-1" /> : null}
+        {movil && !r ? <p data-testid="semaforo-vacio" className="m-0 text-[12px] font-medium kit-txt-2">Semáforo de rentabilidad: pendiente de datos</p> : null}
+        {movil ? <SemaforoEconomico cpa={datos.cpa} conversiones={datos.conversiones_total} supuestos={datos.supuestos} variante="barra" className={cn(!r && "pt-0", r && "pt-1")} /> : null}
         {movil ? (
           /* Aviso minimo dentro de la tarjeta del CPA: ausencia de cierres CRM y supuestos (objetivo y equilibrio) SIEMPRE visibles. */
           <AvisoMinimo supuestos={datos.supuestos} cierres={r?.cierres ?? datos.supuestos.cierres_crm} rentabilidad={r?.rentabilidad ?? "sin_confirmar"} className="mt-1" />
@@ -417,9 +418,9 @@ function Calidad({ datos }: { datos: DatosCommandCenter }) {
     <section aria-label="Estado de la calidad de los datos" className={cn(TARJETA, "rounded-[14px] p-4")}>
       <dl className="m-0 flex flex-col gap-2 text-[13px] kit-txt">
         {datos.calidad.map((q) => (
-          <div key={q.id} className="flex min-w-0 justify-between gap-3">
+          <div key={q.id} className="flex min-w-0 flex-col gap-1 min-[400px]:flex-row min-[400px]:items-baseline min-[400px]:justify-between min-[400px]:gap-3">
             <dt className="min-w-0">{q.etiqueta}</dt>
-            <dd className={cn("m-0 shrink-0 font-semibold", TONO_CALIDAD[q.tono])}>{q.estado}</dd>
+            <dd className={cn("m-0 min-w-0 break-words font-semibold min-[400px]:shrink-0", TONO_CALIDAD[q.tono])}>{q.estado}</dd>
           </div>
         ))}
       </dl>

@@ -72,6 +72,7 @@ const CASOS: Caso[] = [
     { archivo: `sin-datos-antes-${vp}.html`, vp, estado: "vacio" as const, vacio: "antes" as const },
     { archivo: `sin-datos-despues-${vp}.html`, vp, estado: "vacio" as const, vacio: "despues" as const },
   ]),
+  ...(["390x844", "320x568"] as VP[]).map((vp) => ({ archivo: `sin-datos-despues-calidad-${vp}.html`, vp, estado: "vacio" as const, vacio: "despues" as const, inicial: "calidad" })),
 ];
 
 describe("harness de la pantalla patron (Executive Command Center)", () => {
