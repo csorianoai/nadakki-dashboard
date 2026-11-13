@@ -110,6 +110,11 @@ export function sumaPagos(lines: PaymentLine[]): number {
 
 const dateOK = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v)) && new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v;
 
+/** Fail-closed: sin moneda funcional conocida no se puede afirmar que coincida, asi que se exige tipo de cambio. */
+function needsFx(moneda: string, functionalCurrency: string | null): boolean {
+  return !functionalCurrency || !functionalCurrency.trim() || moneda !== functionalCurrency.trim().toUpperCase();
+}
+
 export function validatePurchase(form: PurchaseForm, functionalCurrency: string | null = null): PurchaseErrors {
   const errors: PurchaseErrors = {};
   const costo = centavos(form.cost);
@@ -123,14 +128,14 @@ export function validatePurchase(form: PurchaseForm, functionalCurrency: string 
 
   const moneda = form.currency.trim().toUpperCase();
   if (!/^[A-Z]{3}$/.test(moneda)) errors.currency = "Indica la moneda con su código de 3 letras, por ejemplo ARS.";
-  if ((functionalCurrency && moneda !== functionalCurrency.trim().toUpperCase()) || form.fx_rate || form.fx_source || form.fx_source_detail || form.fx_as_of) {
+  if (needsFx(moneda, functionalCurrency)) {
     if (!/^\d+(?:[.,]\d{1,6})?$/.test(form.fx_rate) || Number(form.fx_rate.replace(",", ".")) <= 0 || Number(form.fx_rate.replace(",", ".")) >= 1e12) {
       errors.fx_rate = "Indica el tipo de cambio (mayor que cero).";
     }
     if (!FX_SOURCES.some((s) => s.value === form.fx_source)) errors.fx_source = "Elige la fuente del tipo de cambio.";
     if (!dateOK(form.fx_as_of)) errors.fx_as_of = "Indica la fecha del tipo de cambio.";
   }
-  if (form.fx_source === "otra" && !form.fx_source_detail.trim()) {
+  if (needsFx(moneda, functionalCurrency) && form.fx_source === "otra" && !form.fx_source_detail.trim()) {
     errors.fx_source_detail = "Falta el detalle de la fuente del tipo de cambio.";
   }
 
@@ -153,8 +158,8 @@ export function validatePurchase(form: PurchaseForm, functionalCurrency: string 
 }
 
 /** CompraIn del backend main 1e27340e. Sin documentación: POST purchase no la acepta. */
-export function purchasePayload(form: PurchaseForm): Record<string, unknown> {
-  const errors = validatePurchase(form);
+export function purchasePayload(form: PurchaseForm, functionalCurrency: string | null): Record<string, unknown> {
+  const errors = validatePurchase(form, functionalCurrency);
   if (Object.keys(errors).length) throw new Error(Object.values(errors).join(" "));
   const methods = { cash: "efectivo", transfer: "transferencia", cheque: "cheque", other: "otro" };
   const payload: Record<string, unknown> = {
@@ -173,13 +178,32 @@ export function purchasePayload(form: PurchaseForm): Record<string, unknown> {
       return out;
     }),
   };
-  if (form.fx_rate) payload.fx = { rate: form.fx_rate.replace(",", "."), source: form.fx_source, detail: form.fx_source === "otra" ? form.fx_source_detail.trim() : undefined, as_of: `${form.fx_as_of}T00:00:00Z` };
+  if (needsFx(form.currency.trim().toUpperCase(), functionalCurrency)) payload.fx = { rate: form.fx_rate.replace(",", "."), source: form.fx_source, detail: form.fx_source === "otra" ? form.fx_source_detail.trim() : undefined, as_of: `${form.fx_as_of}T00:00:00Z` };
   return payload;
 }
 
-export async function createVehiclePurchase(context: VehicleDealerIdentity, vehicle: VehicleManualForm, form: PurchaseForm) {
+export async function createVehiclePurchase(
+  context: VehicleDealerIdentity,
+  vehicle: VehicleManualForm,
+  form: PurchaseForm,
+  functionalCurrency: string | null,
+  idempotencyKey: string,
+) {
+  const purchase = purchasePayload(form, functionalCurrency);
   const path = `/api/v1/autos/tenants/${encodeURIComponent(context.tenantId)}/dealers/${encodeURIComponent(context.dealerId)}/vehicles/purchase`;
-  const response = await apiFetch(path, { method: "POST", body: JSON.stringify({ ...vehicleCreatePayload(vehicle), purchase: purchasePayload(form), engine_number: form.engine_number.trim() || undefined }) });
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "X-Tenant-ID": context.tenantId,
+    "X-Dealer-ID": context.dealerId,
+    "Idempotency-Key": idempotencyKey,
+  };
+  if (context.organizationUnitId) headers["X-Organization-Unit-ID"] = context.organizationUnitId;
+  const response = await apiFetch(path, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ ...vehicleCreatePayload(vehicle), purchase, engine_number: form.engine_number.trim() || undefined }),
+  });
   const parsed: unknown = await response.json().catch(() => null);
   if (!response.ok) throw accessApiErrorFromHttp(response.status, parsed, path);
   return parsed;

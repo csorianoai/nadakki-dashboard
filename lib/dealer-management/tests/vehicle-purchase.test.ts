@@ -129,7 +129,7 @@ describe("moneda funcional desconocida o igual (fail-closed)", () => {
 
 describe("createVehiclePurchase", () => {
   beforeEach(() => fetchMock.mockReset());
-  const ctx = { tenantId: "t1", dealerId: "d1" };
+  const ctx = { tenantId: "t1", dealerId: "d1", organizationUnitId: null };
   const vehicle = { ...VEHICLE_FORM_EMPTY, make: "Toyota", model: "Corolla", year: "2020" };
 
   it("envia POST a /vehicles/purchase con Idempotency-Key y el cuerpo completo", async () => {
