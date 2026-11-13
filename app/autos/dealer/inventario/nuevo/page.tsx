@@ -25,35 +25,30 @@ import { VehicleManualForm } from "@/components/dealer-management/VehicleManualF
 import {
   VEHICLE_INITIAL_STATUS,
   VEHICLE_WRITE_CAPABILITY,
-  createVehicleManual,
   vehicleIdFrom,
   type VehicleManualForm as VehicleForm,
 } from "@/lib/dealer-management/vehicle-manual";
 import { DetalleTecnico } from "../DetalleTecnico";
-
-function nuevaIdempotencyKey(): string | undefined {
-  const api = typeof globalThis.crypto === "undefined" ? null : globalThis.crypto;
-  return typeof api?.randomUUID === "function" ? api.randomUUID() : undefined;
-}
+import { createVehiclePurchase, type PurchaseForm } from "@/lib/dealer-management/vehicle-purchase";
 
 export default function DealerVehicleNuevoPage() {
   const router = useRouter();
   const context = selectedDealerIdentity();
-  const access = useAccessEntitlementsBatch([VEHICLE_WRITE_CAPABILITY]);
+  const access = useAccessEntitlementsBatch([VEHICLE_WRITE_CAPABILITY, "autos.purchases.register"]);
   const decision = access.data?.results[VEHICLE_WRITE_CAPABILITY];
-  const allowed = !access.isLoading && !access.error && decision?.allowed === true;
+  const allowed = !access.isLoading && !access.error && decision?.allowed === true && access.data?.results["autos.purchases.register"]?.allowed === true;
 
   const [busy, setBusy] = useState(false);
   const [reasonCode, setReasonCode] = useState<string | null>(null);
   const [ack, setAck] = useState<string | null>(null);
 
-  async function onSubmit(form: VehicleForm) {
-    if (!context) return;
+  async function onSubmit(form: VehicleForm, purchase?: PurchaseForm) {
+    if (!context || !purchase || busy) return;
     setBusy(true);
     setReasonCode(null);
     setAck(null);
     try {
-      const body = await createVehicleManual(context, form, nuevaIdempotencyKey());
+      const body = await createVehiclePurchase(context, form, purchase);
       const id = vehicleIdFrom(body);
       if (id) {
         setAck(`Vehículo creado: ${id}`);
@@ -120,6 +115,7 @@ export default function DealerVehicleNuevoPage() {
         </div>
       ) : (
         <VehicleManualForm
+          purchase
           status={VEHICLE_INITIAL_STATUS}
           busy={busy}
           errorReasonCode={reasonCode}

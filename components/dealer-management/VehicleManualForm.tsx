@@ -21,6 +21,8 @@ import { DetalleTecnico } from "@/app/autos/dealer/inventario/DetalleTecnico";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { localeDeTenant } from "@/lib/dealer-management/formato";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
+import { VehiclePurchaseFields } from "./VehiclePurchaseFields";
+import { PURCHASE_EMPTY, validatePurchase, type PurchaseForm } from "@/lib/dealer-management/vehicle-purchase";
 import {
   MOTIVO_EN_CAMPO,
   PENDING_FIELD_NOTE,
@@ -75,7 +77,8 @@ export type VehicleManualFormProps = {
   busy?: boolean;
   errorReasonCode?: string | null;
   ack?: string | null;
-  onSubmit: (form: VehicleForm) => void;
+  purchase?: boolean;
+  onSubmit: (form: VehicleForm, purchase?: PurchaseForm) => void;
 };
 
 export function VehicleManualForm({
@@ -85,7 +88,10 @@ export function VehicleManualForm({
   errorReasonCode = null,
   ack = null,
   onSubmit,
+  purchase = false,
 }: VehicleManualFormProps) {
+  const [compra, setCompra] = useState(() => ({ ...PURCHASE_EMPTY, payment_lines: PURCHASE_EMPTY.payment_lines.map(p => ({ ...p })) }));
+  const [compraErrors, setCompraErrors] = useState<string[]>([]);
   const [form, setForm] = useState<VehicleForm>(initial ?? VEHICLE_FORM_EMPTY);
   const [errors, setErrors] = useState<VehicleFormErrors>({});
   const branding = useDealerManagementBranding();
@@ -126,8 +132,10 @@ export function VehicleManualForm({
     event.preventDefault();
     const found = validateVehicleForm(form, locale.currency);
     setErrors(found);
-    if (Object.keys(found).length > 0) return;
-    onSubmit(form);
+    const invalid = purchase ? Object.values(validatePurchase(compra, locale.currency)) : [];
+    setCompraErrors(invalid);
+    if (Object.keys(found).length > 0 || invalid.length) return;
+    onSubmit(form, purchase ? compra : undefined);
   }
 
   function renderText(field: TextField) {
@@ -162,6 +170,8 @@ export function VehicleManualForm({
 
   return (
     <form onSubmit={submit} noValidate data-testid="vehicle-manual-form" data-mode="crear" className="space-y-6">
+      {purchase && <VehiclePurchaseFields value={compra} onChange={setCompra} disabled={busy} />}
+      {compraErrors.length > 0 && <div role="alert"><ul>{compraErrors.map((e) => <li key={e}>{e}</li>)}</ul></div>}
       <section className="space-y-3 rounded-xl border border-nk-border bg-nk-surface p-4">
         <h2 className="font-manrope text-lg font-bold text-nk-fg">Identificación</h2>
         <div className="grid gap-3 md:grid-cols-2">
