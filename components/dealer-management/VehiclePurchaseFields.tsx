@@ -4,7 +4,7 @@ import { EMPTY_LINE, FX_SOURCES, type PurchaseForm } from "@/lib/dealer-manageme
 
 export function VehiclePurchaseFields({ value: p, onChange, disabled }: { value: PurchaseForm; onChange: (p: PurchaseForm) => void; disabled?: boolean }) {
   const set = (key: keyof PurchaseForm, value: string) => onChange({ ...p, [key]: value });
-  const input = (key: Exclude<keyof PurchaseForm, "payment_lines">, label: string, type = "text", maxLength?: number) => <label className="block" key={key}>{label}<input className="block w-full rounded border border-nk-border bg-nk-surface p-2 text-nk-fg" type={type} maxLength={maxLength} value={p[key]} onChange={(e) => set(key, e.target.value)} /></label>;
+  const input = (key: Exclude<keyof PurchaseForm, "payment_lines" | "docs">, label: string, type = "text", maxLength?: number) => <label className="block" key={key}>{label}<input className="block w-full rounded border border-nk-border bg-nk-surface p-2 text-nk-fg" type={type} maxLength={maxLength} value={p[key]} onChange={(e) => set(key, e.target.value)} /></label>;
   return <fieldset disabled={disabled} className="space-y-3 rounded border border-nk-border bg-nk-surface p-4 text-nk-fg">
     <legend className="text-lg font-bold">Compra</legend>
     <div className="grid gap-3 sm:grid-cols-2">

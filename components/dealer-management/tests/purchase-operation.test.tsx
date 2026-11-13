@@ -20,7 +20,7 @@ jest.mock("@/components/dealer-management/VehicleManualForm", () => ({ VehicleMa
   {errorReasonCode && <p role="alert">{errorReasonCode}</p>}{ack && <p role="status">{ack}</p>}
 </div> }));
 beforeEach(() => {
-  jest.clearAllMocks(); branding = { tenant_id: "t1", currency: "ARS" }; doubleClick = false;
+  jest.clearAllMocks(); uuid.mockReset(); branding = { tenant_id: "t1", currency: "ARS" }; doubleClick = false;
   uuid.mockReturnValueOnce("11111111-1111-4111-8111-111111111111").mockReturnValueOnce("22222222-2222-4222-8222-222222222222");
   Object.defineProperty(globalThis.crypto, "randomUUID", { configurable: true, value: uuid });
   (createVehiclePurchase as jest.Mock).mockResolvedValue({ vehicle_id: "v1" });
