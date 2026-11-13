@@ -6,7 +6,7 @@
  * La zona horaria del test la fija el script RESULT_F4C-6.sh (TZ=America/Argentina/Buenos_Aires).
  */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import DealerVehicleEconomicsPage from "@/app/autos/dealer/inventario/[vehicleId]/page";
 import { fechaSinZona } from "@/app/autos/dealer/inventario/[vehicleId]/ficha-interna";
@@ -30,7 +30,7 @@ function mockRed(opts: { costsView: boolean }) {
     const url = String(input);
     if (url.includes("/api/v1/access/entitlements/batch")) {
       const results: Record<string, unknown> = {};
-      for (const key of ["autos.inventory.list", "autos.inventory.create", "autos.inventory.photos"]) {
+      for (const key of ["autos.inventory.list", "autos.inventory.photos"]) {
         results[key] = { allowed: true, reason_code: "ALLOWED", limit: null, current_usage: null };
       }
       results[COSTS_VIEW] = {
@@ -96,7 +96,8 @@ test("con autos.costs.view se pinta costo y margen", async () => {
 test("F-23: la fecha de adquisicion 01/11 se muestra 01/11 (sin correr un dia)", async () => {
   mockRed({ costsView: false });
   montar();
-  expect(await screen.findByTestId("ficha-fecha-adquisicion")).toHaveTextContent("01/11/2026");
+  const fecha = await screen.findByTestId("ficha-fecha-adquisicion");
+  await waitFor(() => expect(fecha).toHaveTextContent("01/11/2026"));
 });
 
 test("fechaSinZona usa la fecha del texto y no la zona del navegador", () => {
