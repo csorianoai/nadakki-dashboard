@@ -132,5 +132,5 @@ test("controles sin endpoint quedan deshabilitados con 'Disponible cuando ...'",
   const edicion = await screen.findByTestId("ficha-editar-tecnicos");
   expect(edicion).toBeDisabled();
   expect(screen.getByTestId("ficha-editar-tecnicos-motivo")).toHaveTextContent(/^Disponible cuando /);
-  expect(screen.getByTestId("ficha-vendedor-motivo")).toHaveTextContent(/^Disponible cuando /);
+  expect(screen.queryByTestId("ficha-vendedor-motivo")).not.toBeInTheDocument();
 });

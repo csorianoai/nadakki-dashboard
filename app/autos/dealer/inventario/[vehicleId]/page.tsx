@@ -18,12 +18,12 @@ import { REASON_CODE_INFO } from "@/types/entitlements";
 import { FotosVehiculoPanel } from "./FotosVehiculoPanel";
 import { PHOTOS_CAPABILITY } from "./fotos";
 import { DetalleTecnico } from "../DetalleTecnico";
+import { CompraRegistrada } from "./CompraRegistrada";
 import {
   COSTS_VIEW_CAPABILITY,
   FichaCompra,
   FichaCostos,
   FichaEdicionTecnica,
-  FichaVendedor,
 } from "./ficha-interna";
 
 function asDecision(
@@ -135,7 +135,7 @@ function VehicleFicha({
       <FichaCompra vehicleId={vehicleId} />
       {/* Sin `autos.costs.view` la seccion no se pinta: ni vacia. */}
       {costsView ? <FichaCostos vehicleId={vehicleId} marginView={marginView} /> : null}
-      <FichaVendedor />
+      {costsView ? <CompraRegistrada vehicleId={vehicleId} /> : null}
       <FichaEdicionTecnica />
     </>
   );

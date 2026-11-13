@@ -59,7 +59,7 @@ export function FichaCompra({ vehicleId }: { vehicleId: string }) {
         Fecha de adquisición: {days.isPending ? "Cargando…" : (fecha ?? "Sin registrar")}
       </p>
       <NoDisponible testId="ficha-compra-motivo">
-        Líneas de pago, tipo de cambio y fuente, y checklist de documentos: Disponible cuando se publique la lectura de la adquisición.
+        Los datos registrados de compra se muestran más abajo cuando tu usuario puede consultarlos.
       </NoDisponible>
       <Link
         href={`/autos/dealer/inventario/${encodeURIComponent(vehicleId)}/registrar`}
