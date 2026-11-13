@@ -18,7 +18,6 @@ import {
   FX_SOURCES,
   PAYMENT_METHODS,
   centavos,
-  needsFx,
   sumaPagos,
   type PaymentLine,
   type PurchaseErrors,
@@ -39,6 +38,11 @@ export type VehiclePurchaseSectionProps = {
   busy?: boolean;
   sellerSelector?: (props: SellerSelectorProps) => ReactNode;
 };
+
+/** Misma regla fail-closed que `validatePurchase`: sin moneda funcional conocida se pide tipo de cambio. */
+function needsFx(moneda: string, functionalCurrency: string | null): boolean {
+  return !functionalCurrency?.trim() || moneda !== functionalCurrency.trim().toUpperCase();
+}
 
 /** Centavos -> "1.234,50" (es-AR), para decir en pantalla cuanto suman los pagos. */
 function formatoCentavos(n: number): string {
