@@ -15,6 +15,7 @@ function valida(extra: Partial<PurchaseForm> = {}): PurchaseForm {
     cost: "1000000",
     acquired_on: "2026-11-01",
     currency: "ARS",
+    country_code: "AR", acquisition_mode_code: "stock_inicial", seller_contact_id: "11111111-1111-4111-8111-111111111111",
     payment_lines: [{ method: "cash", amount: "1000000", cheque_number: "", bank: "", cobro_date: "", detail: "" }],
     ...extra,
   };
@@ -88,11 +89,12 @@ describe("validatePurchase", () => {
 describe("purchasePayload", () => {
   it("serializa importes como string decimal y omite lo vacio", () => {
     const payload = purchasePayload(valida({ engine_number: " ABC1 ", docs: { ...PURCHASE_EMPTY.docs, titulo: true } }));
-    expect(payload.cost).toBe("1000000");
+    expect(payload.amount).toBe("1000000");
     expect(payload.currency).toBe("ARS");
-    expect(payload.engine_number).toBe("ABC1");
-    expect(payload.documentation).toEqual({ titulo: true, form_08: false, cedula: false, vtv: false, cheque: false });
+    expect(payload).not.toHaveProperty("engine_number");
+    expect(payload).not.toHaveProperty("documentation");
+    expect(payload.payments).toEqual([{ method: "efectivo", amount: "1000000" }]);
     expect(payload).not.toHaveProperty("fx_rate");
-    expect(payload).not.toHaveProperty("seller_contact_id");
+    expect(payload.seller_contact_id).toBe("11111111-1111-4111-8111-111111111111");
   });
 });
