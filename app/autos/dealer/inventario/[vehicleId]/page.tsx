@@ -50,12 +50,14 @@ function VehicleFicha({
   photos,
   write,
   costsView,
+  marginView,
 }: {
   dealerId: string;
   vehicleId: string;
   photos: EntitlementDecision;
   write: EntitlementDecision;
   costsView: boolean;
+  marginView: boolean;
 }) {
   const queryClient = useQueryClient();
   const query = useQuery({
@@ -132,7 +134,7 @@ function VehicleFicha({
       )}
       <FichaCompra vehicleId={vehicleId} />
       {/* Sin `autos.costs.view` la seccion no se pinta: ni vacia. */}
-      {costsView ? <FichaCostos vehicleId={vehicleId} /> : null}
+      {costsView ? <FichaCostos vehicleId={vehicleId} marginView={marginView} /> : null}
       <FichaVendedor />
       <FichaEdicionTecnica />
     </>
@@ -154,12 +156,14 @@ export default function DealerVehicleEconomicsPage() {
     PHOTOS_CAPABILITY,
     VEHICLE_WRITE_CAPABILITY,
     COSTS_VIEW_CAPABILITY,
+    "autos.margin.view",
   ]);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const decision = asDecision(access);
   const photos = asDecision(access, PHOTOS_CAPABILITY);
   const write = asDecision(access, VEHICLE_WRITE_CAPABILITY);
   const costsView = asDecision(access, COSTS_VIEW_CAPABILITY).allowed;
+  const marginView = costsView && asDecision(access, "autos.margin.view").allowed;
   // Misma clave que la ficha: el titulo sale de la lectura que ya se hace.
   const ficha = useQuery({
     queryKey: ["dealer-vehicle", dealerId, vehicleId],
@@ -236,7 +240,7 @@ export default function DealerVehicleEconomicsPage() {
           No se pudo identificar tu concesionario. Vuelve a iniciar sesión.
         </p>
       ) : (
-        <VehicleFicha dealerId={dealerId} vehicleId={vehicleId} photos={photos} write={write} costsView={costsView} />
+        <VehicleFicha dealerId={dealerId} vehicleId={vehicleId} photos={photos} write={write} costsView={costsView} marginView={marginView} />
       )}
     </main>
   );

@@ -39,6 +39,7 @@ function mockRed(opts: { costsView: boolean }) {
         limit: null,
         current_usage: null,
       };
+      results["autos.margin.view"] = results[COSTS_VIEW];
       return json({ results });
     }
     if (url.includes("/api/v1/autos/dealers/dealer-a/vehicles/veh-1")) {

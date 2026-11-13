@@ -73,13 +73,13 @@ export function FichaCompra({ vehicleId }: { vehicleId: string }) {
 }
 
 /** Solo se monta con `autos.costs.view`. */
-export function FichaCostos({ vehicleId }: { vehicleId: string }) {
+export function FichaCostos({ vehicleId, marginView = false }: { vehicleId: string; marginView?: boolean }) {
   const tenantId = useTenant();
   const enabled = vehicleId.length > 0 && tenantId.length > 0;
   const margins = useQuery({
     queryKey: ["dealer-vehicle-margin", tenantId, vehicleId],
     queryFn: () => fetchVehicleMargins(vehicleId, tenantId),
-    enabled,
+    enabled: enabled && marginView,
     retry: false,
   });
   const days = useQuery({
@@ -88,14 +88,14 @@ export function FichaCostos({ vehicleId }: { vehicleId: string }) {
     enabled,
     retry: false,
   });
-  const error = margins.error ?? days.error;
-  const rows = margins.data ?? [];
+  const error = (marginView ? margins.error : null) ?? days.error;
+  const rows = marginView ? margins.data ?? [] : [];
   const enStock = days.data?.days_in_inventory ?? null;
 
   let cuerpo;
   if (!tenantId) {
     cuerpo = <p role="alert" className="text-sm text-nk-fg-muted">Falta el tenant para leer margen y días.</p>;
-  } else if (margins.isPending || days.isPending) {
+  } else if ((marginView && margins.isPending) || days.isPending) {
     cuerpo = <p className="animate-pulse text-sm text-nk-fg-muted" data-testid="dealer-economics-loading">Cargando economía…</p>;
   } else if (error) {
     const acceso = [margins.error, days.error].find((e) => e instanceof AccessApiError) as AccessApiError | undefined;
@@ -129,11 +129,8 @@ export function FichaCostos({ vehicleId }: { vehicleId: string }) {
   }
   return (
     <section data-testid="ficha-costos" className={caja}>
-      <h2 className="font-manrope text-lg font-bold text-nk-fg">Costes, margen y días en inventario</h2>
+      <h2 className="font-manrope text-lg font-bold text-nk-fg">{marginView ? "Costes, margen y días en inventario" : "Días en inventario"}</h2>
       {cuerpo}
-      <div data-testid="ficha-numero-motor" className="text-sm text-nk-fg-muted">
-        Número de motor: Disponible cuando se publique su lectura.
-      </div>
     </section>
   );
 }
