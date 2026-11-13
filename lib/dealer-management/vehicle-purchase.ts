@@ -111,7 +111,7 @@ export function sumaPagos(lines: PaymentLine[]): number {
 const dateOK = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v)) && new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v;
 
 /** Fail-closed: sin moneda funcional conocida no se puede afirmar que coincida, asi que se exige tipo de cambio. */
-function needsFx(moneda: string, functionalCurrency: string | null): boolean {
+export function needsFx(moneda: string, functionalCurrency: string | null): boolean {
   return !functionalCurrency || !functionalCurrency.trim() || moneda !== functionalCurrency.trim().toUpperCase();
 }
 
