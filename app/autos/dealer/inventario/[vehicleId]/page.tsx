@@ -6,10 +6,9 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
-import { DealerVehicleEconomicsPanel } from "@/components/dealer/DealerVehicleEconomicsPanel";
 import { UpgradeModal } from "@/components/dealer/UpgradeModal";
 import { fetchDealerVehicleStatus } from "@/lib/dealer/vehicle-status";
-import { resolveDealerAccessContext, selectedDealerIdentity } from "@/lib/dealer/access-context";
+import { selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { VehicleEditPanel } from "@/components/dealer-management/VehicleEditPanel";
 import { VEHICLE_STATUS_LABEL, VEHICLE_WRITE_CAPABILITY } from "@/lib/dealer-management/vehicle-manual";
 import { isSold } from "@/lib/dealer-management/vehicle-sale";
@@ -19,6 +18,13 @@ import { REASON_CODE_INFO } from "@/types/entitlements";
 import { FotosVehiculoPanel } from "./FotosVehiculoPanel";
 import { PHOTOS_CAPABILITY } from "./fotos";
 import { DetalleTecnico } from "../DetalleTecnico";
+import {
+  COSTS_VIEW_CAPABILITY,
+  FichaCompra,
+  FichaCostos,
+  FichaEdicionTecnica,
+  FichaVendedor,
+} from "./ficha-interna";
 
 function asDecision(
   query: ReturnType<typeof useAccessEntitlementsBatch>,
@@ -43,11 +49,13 @@ function VehicleFicha({
   vehicleId,
   photos,
   write,
+  costsView,
 }: {
   dealerId: string;
   vehicleId: string;
   photos: EntitlementDecision;
   write: EntitlementDecision;
+  costsView: boolean;
 }) {
   const queryClient = useQueryClient();
   const query = useQuery({
@@ -122,7 +130,11 @@ function VehicleFicha({
           Tu plan no incluye las fotos del vehículo.
         </p>
       )}
-      <DealerVehicleEconomicsPanel vehicleId={vehicleId} />
+      <FichaCompra vehicleId={vehicleId} />
+      {/* Sin `autos.costs.view` la seccion no se pinta: ni vacia. */}
+      {costsView ? <FichaCostos vehicleId={vehicleId} /> : null}
+      <FichaVendedor />
+      <FichaEdicionTecnica />
     </>
   );
 }
@@ -135,17 +147,19 @@ function tituloDeVehiculo(row: { year: number | null; make: string | null; model
 export default function DealerVehicleEconomicsPage() {
   const params = useParams();
   const vehicleId = String(params?.vehicleId ?? "").trim();
-  const resolved = resolveDealerAccessContext();
-  const dealerId = resolved.status === "ready" ? resolved.context.dealerId : "";
+  // F-21: la lectura de la ficha pide el dealer, no la unidad organizativa.
+  const dealerId = selectedDealerIdentity()?.dealerId ?? "";
   const access = useAccessEntitlementsBatch([
     DEALER_VEHICLE_CAPABILITY,
     PHOTOS_CAPABILITY,
     VEHICLE_WRITE_CAPABILITY,
+    COSTS_VIEW_CAPABILITY,
   ]);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const decision = asDecision(access);
   const photos = asDecision(access, PHOTOS_CAPABILITY);
   const write = asDecision(access, VEHICLE_WRITE_CAPABILITY);
+  const costsView = asDecision(access, COSTS_VIEW_CAPABILITY).allowed;
   // Misma clave que la ficha: el titulo sale de la lectura que ya se hace.
   const ficha = useQuery({
     queryKey: ["dealer-vehicle", dealerId, vehicleId],
@@ -160,7 +174,7 @@ export default function DealerVehicleEconomicsPage() {
         <h1 className="font-manrope text-2xl font-extrabold text-nk-fg break-words">
           {tituloDeVehiculo(ficha.data)}
         </h1>
-        <p className="mt-1 text-sm text-nk-fg-muted">Datos, fotos, margen y días en stock de esta unidad.</p>
+        <p className="mt-1 text-sm text-nk-fg-muted">Datos técnicos, compra y fotos de esta unidad.</p>
       </header>
 
       {!vehicleId ? (
@@ -222,7 +236,7 @@ export default function DealerVehicleEconomicsPage() {
           No se pudo identificar tu concesionario. Vuelve a iniciar sesión.
         </p>
       ) : (
-        <VehicleFicha dealerId={dealerId} vehicleId={vehicleId} photos={photos} write={write} />
+        <VehicleFicha dealerId={dealerId} vehicleId={vehicleId} photos={photos} write={write} costsView={costsView} />
       )}
     </main>
   );
