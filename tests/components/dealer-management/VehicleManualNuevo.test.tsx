@@ -67,6 +67,15 @@ jest.mock("@/lib/api/fetch-client", () => ({
   apiFetch: jest.fn(),
 }));
 
+/** El selector de contactos (F4C-7) se prueba en tests/dealer-contactos; aqui solo entrega un vendedor. */
+jest.mock("@/app/autos/dealer/contactos/ContactoSelector", () => ({
+  ContactoSelector: ({ onSelect }: { onSelect: (c: { id: string; display_name: string }) => void }) => (
+    <button type="button" onClick={() => onSelect({ id: "123e4567-e89b-42d3-a456-426614174000", display_name: "Ana" })}>
+      Elegir vendedor
+    </button>
+  ),
+}));
+
 import { apiFetch } from "@/lib/api/fetch-client";
 
 const fetchMock = apiFetch as jest.MockedFunction<typeof apiFetch>;
@@ -102,6 +111,17 @@ function rellenaMinimo() {
   fireEvent.change(screen.getByRole("textbox", { name: /Marca/ }), { target: { value: "Toyota" } });
   fireEvent.change(screen.getByRole("textbox", { name: /Modelo/ }), { target: { value: "Hilux" } });
   fireEvent.change(screen.getByRole("textbox", { name: /Año/ }), { target: { value: "2021" } });
+}
+
+/** El alta ahora lleva la compra (F4C-5 3/3): costo, pago por el mismo importe y vendedor. */
+function rellenaCompra() {
+  const escribe = (name: RegExp, value: string) => fireEvent.change(screen.getByLabelText(name), { target: { value } });
+  escribe(/^Costo de compra/, "1000");
+  escribe(/^Fecha de adquisición/, "2026-10-01");
+  escribe(/^País de adquisición/, "AR");
+  escribe(/^Código de adquisición/, "compra_directa");
+  escribe(/^Importe del pago 1/, "1000");
+  fireEvent.click(screen.getByRole("button", { name: "Elegir vendedor" }));
 }
 
 beforeEach(() => {
@@ -180,14 +200,16 @@ describe("envio", () => {
     fetchMock.mockResolvedValue({ ok: true, status: 201, json: async () => ({ id: "veh-9" }) } as unknown as Response);
     render(<DealerVehicleNuevoPage />);
     rellenaMinimo();
+    rellenaCompra();
     fireEvent.submit(screen.getByTestId("vehicle-manual-form"));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     const [path, init] = fetchMock.mock.calls[0];
-    expect(path).toBe("/api/v1/autos/tenants/tenant-a/dealers/dealer-a/vehicles");
+    expect(path).toBe("/api/v1/autos/tenants/tenant-a/dealers/dealer-a/vehicles/purchase");
     expect(init?.method).toBe("POST");
     const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
-    expect(body).toEqual({ make: "Toyota", model: "Hilux", year: 2021, condition: "used" });
+    expect(body).toMatchObject({ make: "Toyota", model: "Hilux", year: 2021, condition: "used" });
+    expect(body.purchase).toBeDefined();
     expect(Object.keys(body)).not.toContain("price_rd");
     expect(Object.keys(body)).not.toContain("price_usd");
     expect((init?.headers as Record<string, string>)["X-Organization-Unit-ID"]).toBe("ou-a");
@@ -204,6 +226,7 @@ describe("envio", () => {
     } as unknown as Response);
     render(<DealerVehicleNuevoPage />);
     rellenaMinimo();
+    rellenaCompra();
     fireEvent.submit(screen.getByTestId("vehicle-manual-form"));
 
     await waitFor(() =>
@@ -216,6 +239,7 @@ describe("envio", () => {
     fetchMock.mockResolvedValue({ ok: true, status: 201, json: async () => ({}) } as unknown as Response);
     render(<DealerVehicleNuevoPage />);
     rellenaMinimo();
+    rellenaCompra();
     fireEvent.submit(screen.getByTestId("vehicle-manual-form"));
 
     await waitFor(() => expect(screen.getByTestId("vehicle-manual-ack")).toBeInTheDocument());
@@ -315,11 +339,12 @@ describe("dealer sin unidad organizativa", () => {
     fetchMock.mockResolvedValue({ ok: true, status: 201, json: async () => ({ id: "veh-1" }) } as unknown as Response);
     render(<DealerVehicleNuevoPage />);
     rellenaMinimo();
+    rellenaCompra();
     fireEvent.submit(screen.getByTestId("vehicle-manual-form"));
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     const [path, init] = fetchMock.mock.calls[0];
-    expect(path).toBe("/api/v1/autos/tenants/tenant-a/dealers/dealer-a/vehicles");
+    expect(path).toBe("/api/v1/autos/tenants/tenant-a/dealers/dealer-a/vehicles/purchase");
     const headers = init?.headers as Record<string, string>;
     expect(headers).not.toHaveProperty("X-Organization-Unit-ID");
     expect(headers["X-Dealer-ID"]).toBe("dealer-a");
