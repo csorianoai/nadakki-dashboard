@@ -19,6 +19,16 @@
 
 import { DetalleTecnico } from "@/app/autos/dealer/inventario/DetalleTecnico";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  VehiclePurchaseSection,
+  type VehiclePurchaseSectionProps,
+} from "@/components/dealer-management/VehiclePurchaseSection";
+import {
+  PURCHASE_EMPTY,
+  validatePurchase,
+  type PurchaseErrors,
+  type PurchaseForm,
+} from "@/lib/dealer-management/vehicle-purchase";
 import { localeDeTenant } from "@/lib/dealer-management/formato";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
 import {
@@ -75,7 +85,11 @@ export type VehicleManualFormProps = {
   busy?: boolean;
   errorReasonCode?: string | null;
   ack?: string | null;
-  onSubmit: (form: VehicleForm) => void;
+  /** Alta con compra (F4C-5): pide costo, pagos, moneda y contacto vendedor. */
+  withPurchase?: boolean;
+  /** Selector del contacto vendedor (F4C-7). Sin el, la compra va deshabilitada. */
+  sellerSelector?: VehiclePurchaseSectionProps["sellerSelector"];
+  onSubmit: (form: VehicleForm, purchase?: PurchaseForm) => void;
 };
 
 export function VehicleManualForm({
@@ -84,6 +98,8 @@ export function VehicleManualForm({
   busy = false,
   errorReasonCode = null,
   ack = null,
+  withPurchase = false,
+  sellerSelector,
   onSubmit,
 }: VehicleManualFormProps) {
   const [form, setForm] = useState<VehicleForm>(initial ?? VEHICLE_FORM_EMPTY);
@@ -95,6 +111,8 @@ export function VehicleManualForm({
     () => vehiclePriceFields(locale.currency, form.display_price_currency.trim() || null),
     [locale.currency, form.display_price_currency],
   );
+  const [purchase, setPurchase] = useState<PurchaseForm>(PURCHASE_EMPTY);
+  const [purchaseErrors, setPurchaseErrors] = useState<PurchaseErrors>({});
   const estado = status ?? "draft";
   const motivo = errorReasonCode ? MOTIVO_EN_CAMPO[errorReasonCode] : undefined;
 
@@ -104,6 +122,16 @@ export function VehicleManualForm({
     if (!paisPropuesto) return;
     setForm((previous) => (previous.plate_country ? previous : { ...previous, plate_country: paisPropuesto }));
   }, [paisPropuesto]);
+
+  // Moneda y pais de la compra se PROPONEN con los del tenant; el dealer los cambia.
+  useEffect(() => {
+    if (!withPurchase || !branding.data) return;
+    setPurchase((previous) => ({
+      ...previous,
+      currency: previous.currency || locale.currency || "",
+      country_code: previous.country_code || paisPropuesto || "",
+    }));
+  }, [withPurchase, branding.data, locale.currency, paisPropuesto]);
 
   const PRECIO: TextField[] = [
     { name: "price_amount", label: priceFields[0].label, ayuda: priceFields[0].ayuda, inputMode: "decimal" },
@@ -126,6 +154,16 @@ export function VehicleManualForm({
     event.preventDefault();
     const found = validateVehicleForm(form, locale.currency);
     setErrors(found);
+    if (withPurchase) {
+      // Sin selector de contactos no hay compra valida: no se envia nada (fail-closed).
+      const foundPurchase = sellerSelector
+        ? validatePurchase(purchase, branding.data ? locale.currency : null)
+        : { purchase: "La compra no está disponible todavía." };
+      setPurchaseErrors(foundPurchase);
+      if (Object.keys(found).length > 0 || Object.keys(foundPurchase).length > 0) return;
+      onSubmit(form, purchase);
+      return;
+    }
     if (Object.keys(found).length > 0) return;
     onSubmit(form);
   }
@@ -221,6 +259,17 @@ export function VehicleManualForm({
         </label>
       </section>
 
+      {withPurchase ? (
+        <VehiclePurchaseSection
+          value={purchase}
+          onChange={setPurchase}
+          errors={purchaseErrors}
+          functionalCurrency={branding.data ? locale.currency : null}
+          busy={busy}
+          sellerSelector={sellerSelector}
+        />
+      ) : null}
+
       <section
         data-testid="vehicle-pending-fields"
         className="space-y-3 rounded-xl border border-dashed border-nk-border bg-nk-surface-2 p-4"
@@ -241,6 +290,12 @@ export function VehicleManualForm({
           ))}
         </div>
       </section>
+
+      {purchaseErrors.purchase ? (
+        <p role="alert" data-testid="purchase-blocked" className="text-sm font-semibold text-red-600">
+          {purchaseErrors.purchase}
+        </p>
+      ) : null}
 
       {errorReasonCode && !motivo ? (
         <div
