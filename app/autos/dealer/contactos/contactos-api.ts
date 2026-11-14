@@ -25,13 +25,16 @@ async function llamar(path: string, init: RequestInit = {}): Promise<unknown> {
 const enJson = (method: string, body: unknown): RequestInit => ({ method, body: JSON.stringify(body) });
 
 /** Menos de 7 digitos o texto: busca por nombre; 7-8 digitos: DNI; 11: CUIT/CUIL. */
-export async function buscarContactos(texto: string, limit = 50): Promise<Contacto[]> {
+export async function buscarContactos(texto: string, limit = 50, incluirBajas = false): Promise<Contacto[]> {
   const q = texto.trim();
   const digitos = q.replace(/[.\-\s]/g, "");
   const esDoc = /^\d+$/.test(digitos) && /^(\d{7,8}|\d{11})$/.test(digitos);
   const body = esDoc
-    ? await llamar(`${BASE}/search`, enJson("POST", digitos.length === 11 ? { cuit: digitos } : { dni: digitos }))
-    : await llamar(`${BASE}?${new URLSearchParams({ ...(q ? { q } : {}), limit: String(limit) })}`);
+    ? await llamar(
+        `${BASE}/search`,
+        enJson("POST", { ...(digitos.length === 11 ? { cuit: digitos } : { dni: digitos }), ...(incluirBajas ? { include_inactive: true } : {}) }),
+      )
+    : await llamar(`${BASE}?${new URLSearchParams({ ...(q ? { q } : {}), limit: String(limit), ...(incluirBajas ? { include_inactive: "true" } : {}) })}`);
   const items = (body as { items?: unknown } | null)?.items;
   return Array.isArray(items) ? (items as Contacto[]) : [];
 }
@@ -39,6 +42,9 @@ export async function buscarContactos(texto: string, limit = 50): Promise<Contac
 export const crearContacto = (p: ContactoPayload) => llamar(BASE, enJson("POST", p)) as Promise<Contacto>;
 
 const ruta = (id: string) => `${BASE}/${encodeURIComponent(id)}`;
+
+/** Lectura individual: es la que entrega DNI/CUIT en claro al rol autorizado (el listado siempre va enmascarado). */
+export const obtenerContacto = (id: string) => llamar(ruta(id)) as Promise<Contacto>;
 
 export const actualizarContacto = (id: string, p: ContactoPayload) =>
   llamar(ruta(id), enJson("PATCH", p)) as Promise<Contacto>;
