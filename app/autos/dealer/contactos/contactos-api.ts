@@ -4,7 +4,7 @@
  */
 import { AccessApiError, accessApiErrorFromHttp } from "@/lib/access/client";
 import { apiFetch } from "@/lib/api/fetch-client";
-import type { Contacto, ContactoPayload } from "./contactos-tipos";
+import type { Contacto, ContactoPayload, Punto, PuntoEscrito } from "./contactos-tipos";
 
 const BASE = "/api/v1/autos/contacts";
 
@@ -52,6 +52,19 @@ export const actualizarContacto = (id: string, p: ContactoPayload) =>
 export const darDeBaja = (id: string, motivo: string) => actualizarContacto(id, { deactivation_reason: motivo });
 
 export const reactivar = (id: string) => actualizarContacto(id, { reactivate: true });
+
+const puntos = (id: string) => `${ruta(id)}/points`;
+
+/** Puntos vigentes del contacto; telefono y email llegan enmascarados salvo rol autorizado. */
+export async function listarPuntos(id: string): Promise<Punto[]> {
+  const items = ((await llamar(puntos(id))) as { items?: unknown } | null)?.items;
+  return Array.isArray(items) ? (items as Punto[]) : [];
+}
+
+/** Alta (POST) o, si trae `id`, cambio (PATCH) de un punto. Sin DELETE: la UI no quita puntos. */
+export function guardarPunto(contactId: string, { id, type, ...resto }: PuntoEscrito): Promise<Punto> {
+  return (id ? llamar(`${puntos(contactId)}/${encodeURIComponent(id)}`, enJson("PATCH", resto)) : llamar(puntos(contactId), enJson("POST", { type, ...resto }))) as Promise<Punto>;
+}
 
 const POR_MOTIVO: Record<string, string> = {
   CAPABILITY_DENIED: "No tienes permiso para esta operación con contactos.",

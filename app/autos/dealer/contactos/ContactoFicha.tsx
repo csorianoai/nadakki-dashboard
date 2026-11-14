@@ -1,10 +1,12 @@
 "use client";
 
-import type { Contacto } from "./contactos-tipos";
+import type { Contacto, Punto } from "./contactos-tipos";
 import { IVA_CONDITIONS, KINDS, MARITAL_STATUSES } from "./contactos-validar";
 
 const etiqueta = (lista: readonly { value: string; label: string }[], v: string | null) =>
   lista.find((x) => x.value === v)?.label ?? v ?? "—";
+
+const ROTULO: Record<string, string> = { phone: "Teléfono", mobile: "Celular", email: "Email", address: "Dirección" };
 
 function Dato({ nombre, valor }: { nombre: string; valor: string | null | undefined }) {
   return (
@@ -18,11 +20,14 @@ function Dato({ nombre, valor }: { nombre: string; valor: string | null | undefi
 /** DNI y CUIT se pintan EXACTAMENTE como llegan: el backend los enmascara salvo gerente/contador. */
 export function ContactoFicha({
   contacto: c,
+  puntos,
   onEditar,
   onBaja,
   onReactivar,
 }: {
   contacto: Contacto;
+  /** Puntos de GET /points tal como llegan; null = aun sin cargar. */
+  puntos?: Punto[] | null;
   onEditar?: () => void;
   onBaja?: () => void;
   onReactivar?: () => void;
@@ -48,6 +53,13 @@ export function ContactoFicha({
           </>
         )}
       </dl>
+      {puntos && puntos.length > 0 && (
+        <dl aria-label="Contacto y dirección" className="mt-3 grid grid-cols-1 gap-3 border-t border-nk-border pt-3 sm:grid-cols-2">
+          {puntos.map((x) => (
+            <Dato key={x.id} nombre={ROTULO[x.type] ?? x.type} valor={x.type === "address" ? [x.street, x.locality, x.province, x.postal_code].filter(Boolean).join(", ") : x.value} />
+          ))}
+        </dl>
+      )}
       <div className="mt-4 flex gap-2">
         {onEditar && (
           <button type="button" onClick={onEditar} className="rounded-md border border-nk-border px-3 py-1.5 text-sm text-nk-fg">
