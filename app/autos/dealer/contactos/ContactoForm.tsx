@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Contacto, ContactoPayload } from "./contactos-tipos";
 import {
   IVA_CONDITIONS,
@@ -140,10 +140,17 @@ export function ContactoForm({
     cp: "",
   });
   const [errores, setErrores] = useState<Errores>({});
-  const set = (k: keyof typeof f) => (v: string) => setF((p) => ({ ...p, [k]: v }));
+  const [editados, setEditados] = useState<string[]>([]);
+  useEffect(() => setEditados([]), [errorServidor]);
+  // Corregir un campo borra su error (el de pantalla y el del servidor): no queda un aviso viejo sobre un valor nuevo.
+  const set = (k: keyof typeof f) => (v: string) => {
+    setF((p) => ({ ...p, [k]: v }));
+    setErrores((p) => (k in p ? Object.fromEntries(Object.entries(p).filter(([c]) => c !== k)) : p));
+    setEditados((p) => [...p, k]);
+  };
   const fisica = f.kind === "fisica";
   const casado = fisica && f.marital_status === "casado";
-  const e = (k: string) => errores[k] ?? (errorServidor?.field === k ? `El servidor rechazó este campo (${errorServidor.reason_code}).` : undefined);
+  const e = (k: string) => errores[k] ?? (errorServidor?.field === k && !editados.includes(k) ? `El servidor rechazó este campo (${errorServidor.reason_code}).` : undefined);
   function validar(): Errores {
     const r: Errores = {};
     const vacio = (v: string) => !v.trim();

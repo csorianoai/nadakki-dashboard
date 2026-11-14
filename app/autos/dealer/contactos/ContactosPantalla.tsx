@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ContactoFicha } from "./ContactoFicha";
 import { ContactoForm } from "./ContactoForm";
-import { actualizarContacto, buscarContactos, crearContacto, darDeBaja, errorContacto, reactivar, type ErrorContacto } from "./contactos-api";
+import { actualizarContacto, buscarContactos, crearContacto, darDeBaja, errorContacto, obtenerContacto, reactivar, type ErrorContacto } from "./contactos-api";
 import type { Contacto, ContactoPayload } from "./contactos-tipos";
 
 type Modo = "ficha" | "nuevo" | "editar" | "baja";
@@ -15,6 +15,8 @@ export function ContactosPantalla() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<ErrorContacto | null>(null);
   const [sel, setSel] = useState<Contacto | null>(null);
+  const [verBajas, setVerBajas] = useState(false);
+  const abierto = useRef<string | null>(null);
   const [modo, setModo] = useState<Modo>("ficha");
   const [enviando, setEnviando] = useState(false);
   const [motivo, setMotivo] = useState("");
@@ -24,22 +26,39 @@ export function ContactosPantalla() {
     setCargando(true);
     setError(null);
     try {
-      setItems(await buscarContactos(""));
+      setItems(await buscarContactos("", 50, verBajas));
     } catch (e) {
       setItems(null);
       setError(errorContacto(e));
     } finally {
       setCargando(false);
     }
-  }, []);
+  }, [verBajas]);
   useEffect(() => void cargar(), [cargar]);
 
-  async function ejecutar(accion: () => Promise<Contacto>, siguiente: Modo = "ficha") {
+  /**
+   * La ficha SIEMPRE sale de GET: lo que el rol puede ver, sin reutilizar la respuesta de un alta o un PATCH (esa pudo
+   * traer el valor escrito o en claro) ni la fila del listado (siempre enmascarada).
+   */
+  async function abrirFicha(id: string, previo?: Contacto) {
+    abierto.current = id;
+    if (previo) setSel(previo);
+    try {
+      const c = await obtenerContacto(id);
+      if (abierto.current === id) setSel(c);
+    } catch (e) {
+      if (abierto.current === id) setError(errorContacto(e));
+    }
+  }
+
+  /** `accion` devuelve el id del contacto afectado; tras ella se recarga la ficha desde el servidor. */
+  async function ejecutar(accion: () => Promise<string>, siguiente: Modo = "ficha") {
     setEnviando(true);
     setError(null);
     try {
-      setSel(await accion());
+      const id = await accion();
       setModo(siguiente);
+      await abrirFicha(id);
       void cargar();
     } catch (e) {
       setError(errorContacto(e));
@@ -52,11 +71,17 @@ export function ContactosPantalla() {
     if (!sel) return;
     if (!motivo.trim()) return setErrMotivo("El motivo de la baja es obligatorio.");
     setErrMotivo(null);
-    void ejecutar(() => darDeBaja(sel.id, motivo.trim())).then(() => setMotivo(""));
+    void ejecutar(async () => (await darDeBaja(sel.id, motivo.trim()), sel.id)).then(() => setMotivo(""));
   }
 
-  const guardar = (p: ContactoPayload) => ejecutar(() => (modo === "editar" && sel ? actualizarContacto(sel.id, p) : crearContacto(p)));
-  const abrir = (c: Contacto | null, m: Modo) => (setSel(c), setModo(m), setError(null));
+  const guardar = (p: ContactoPayload) => ejecutar(async () => (modo === "editar" && sel ? (await actualizarContacto(sel.id, p), sel.id) : (await crearContacto(p)).id));
+  const abrir = (c: Contacto | null, m: Modo) => {
+    setSel(c);
+    setModo(m);
+    setError(null);
+    if (c) void abrirFicha(c.id, c);
+    else abierto.current = null;
+  };
 
   return (
     <main className="mx-auto grid max-w-5xl gap-6 p-4 md:grid-cols-[18rem_1fr]">
@@ -65,6 +90,10 @@ export function ContactosPantalla() {
           <h1 className="text-lg font-semibold text-nk-fg">Contactos</h1>
           <button type="button" onClick={() => abrir(null, "nuevo")} className={BTN}>Nuevo contacto</button>
         </div>
+        <label className="mt-3 flex items-center gap-2 text-sm text-nk-fg">
+          <input type="checkbox" checked={verBajas} onChange={(e) => setVerBajas(e.target.checked)} />
+          Ver dados de baja
+        </label>
         {cargando && <p role="status" className="mt-3 text-sm text-nk-fg-muted">Cargando contactos…</p>}
         {!cargando && items?.length === 0 && <p className="mt-3 text-sm text-nk-fg-muted">No hay contactos todavía.</p>}
         {items && items.length > 0 && (
@@ -73,6 +102,7 @@ export function ContactosPantalla() {
               <li key={c.id}>
                 <button type="button" onClick={() => abrir(c, "ficha")} aria-current={sel?.id === c.id || undefined} className="w-full px-3 py-2 text-left text-sm text-nk-fg">
                   {c.display_name}
+                  {c.deactivated_at && <span className="ml-2 rounded border border-nk-border px-1 text-xs font-medium">Dado de baja</span>}
                 </button>
               </li>
             ))}
@@ -91,7 +121,7 @@ export function ContactosPantalla() {
         )}
         {sel && (modo === "ficha" || modo === "baja") && (
           <>
-            <ContactoFicha contacto={sel} onEditar={() => setModo("editar")} onBaja={() => setModo("baja")} onReactivar={() => void ejecutar(() => reactivar(sel.id))} />
+            <ContactoFicha contacto={sel} onEditar={() => setModo("editar")} onBaja={() => setModo("baja")} onReactivar={() => void ejecutar(async () => (await reactivar(sel.id), sel.id))} />
             {modo === "baja" && (
               <div className="mt-3 space-y-2">
                 <label htmlFor="motivo-baja" className="text-sm font-medium text-nk-fg">Motivo de la baja</label>
