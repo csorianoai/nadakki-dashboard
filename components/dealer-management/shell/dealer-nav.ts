@@ -18,6 +18,7 @@ import {
   BarChart3,
   BookOpen,
   Bell,
+  BookUser,
   Building2,
   Cable,
   Calculator,
@@ -65,6 +66,7 @@ export const DEALER_NAV_GROUPS: DealerNavGroup[] = [
     items: [
       { href: "/autos/dealer", label: "Inicio", icon: LayoutDashboard, capability: null },
       { href: "/autos/dealer/inventario", label: "Inventario", icon: Car, capability: "autos.inventory.list" },
+      { href: "/autos/dealer/contactos", label: "Contactos", icon: BookUser, capability: "autos.inventory.list" },
       { href: "/autos/dealer/publicar-rapido", label: "Publicar", icon: PackagePlus, capability: "autos.inventory.create" },
       { href: "/autos/dealer/leads", label: "Leads", icon: Users, capability: "autos.leads.crm" },
       // El onboarding de Mapaal vive en el Centro Operativo (decision de Cesar).
