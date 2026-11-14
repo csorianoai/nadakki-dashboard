@@ -22,14 +22,38 @@ import { AccessApiError } from "@/lib/access/client";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { resolveDealerAccessContext, selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { VehicleManualForm } from "@/components/dealer-management/VehicleManualForm";
+import { ContactoSelector } from "@/app/autos/dealer/contactos/ContactoSelector";
+import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
+import { localeDeTenant } from "@/lib/dealer-management/formato";
+import { createVehiclePurchase, type PurchaseForm } from "@/lib/dealer-management/vehicle-purchase";
 import {
   VEHICLE_INITIAL_STATUS,
   VEHICLE_WRITE_CAPABILITY,
-  createVehicleManual,
   vehicleIdFrom,
   type VehicleManualForm as VehicleForm,
 } from "@/lib/dealer-management/vehicle-manual";
 import { DetalleTecnico } from "../DetalleTecnico";
+
+/** Selector del contacto vendedor (F4C-7): solo elige uno existente, nunca crea contactos. */
+function VendedorSelector({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  const [nombre, setNombre] = useState<string | null>(null);
+  return (
+    <div className="space-y-2">
+      {value ? (
+        <p data-testid="vendedor-elegido" className="text-sm text-nk-fg">
+          Vendedor elegido: {nombre ?? value}
+        </p>
+      ) : null}
+      <ContactoSelector
+        rol="vendedor"
+        onSelect={(c) => {
+          setNombre(c.display_name);
+          onChange(c.id);
+        }}
+      />
+    </div>
+  );
+}
 
 function nuevaIdempotencyKey(): string | undefined {
   const api = typeof globalThis.crypto === "undefined" ? null : globalThis.crypto;
@@ -43,17 +67,26 @@ export default function DealerVehicleNuevoPage() {
   const decision = access.data?.results[VEHICLE_WRITE_CAPABILITY];
   const allowed = !access.isLoading && !access.error && decision?.allowed === true;
 
+  const branding = useDealerManagementBranding();
+  const monedaFuncional = branding.data ? localeDeTenant(branding.data).currency : null;
+
   const [busy, setBusy] = useState(false);
   const [reasonCode, setReasonCode] = useState<string | null>(null);
   const [ack, setAck] = useState<string | null>(null);
 
-  async function onSubmit(form: VehicleForm) {
+  async function onSubmit(form: VehicleForm, purchase?: PurchaseForm) {
     if (!context) return;
+    // La compra es obligatoria en el alta: sin ella y sin llave de idempotencia no se envia nada (fail-closed).
+    const key = nuevaIdempotencyKey();
+    if (!purchase || !key) {
+      setReasonCode("DEFAULT_DENY");
+      return;
+    }
     setBusy(true);
     setReasonCode(null);
     setAck(null);
     try {
-      const body = await createVehicleManual(context, form, nuevaIdempotencyKey());
+      const body = await createVehiclePurchase(context, form, purchase, monedaFuncional, key);
       const id = vehicleIdFrom(body);
       if (id) {
         setAck(`Vehículo creado: ${id}`);
@@ -124,6 +157,8 @@ export default function DealerVehicleNuevoPage() {
           busy={busy}
           errorReasonCode={reasonCode}
           ack={ack}
+          withPurchase
+          sellerSelector={(props) => <VendedorSelector value={props.value} onChange={props.onChange} />}
           onSubmit={onSubmit}
         />
       )}
