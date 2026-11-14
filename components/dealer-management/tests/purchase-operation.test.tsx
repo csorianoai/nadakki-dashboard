@@ -4,6 +4,7 @@ import { createVehiclePurchase } from "@/lib/dealer-management/vehicle-purchase"
 import { accessApiErrorFromHttp } from "@/lib/access/client";
 import { VEHICLE_FORM_EMPTY } from "@/lib/dealer-management/vehicle-manual";
 import { PURCHASE_EMPTY } from "@/lib/dealer-management/vehicle-purchase";
+import { buildBffUpstreamHeaders } from "@/lib/api/bff-proxy-headers";
 const vehicle = { ...VEHICLE_FORM_EMPTY, make: "Toyota", model: "Hilux", year: "2021" };
 const purchase = { ...PURCHASE_EMPTY, cost: "100", currency: "ARS" };
 let branding: { tenant_id: string; currency: string } | null;
@@ -63,4 +64,10 @@ test.each([422, 403, 409, 500])("respuesta %s visible, sin reintento automático
   fireEvent.click(status >= 500 ? screen.getByRole("button", { name: "Reintentar la misma compra" }) : screen.getByText("Enviar compra"));
   await waitFor(() => expect(createVehiclePurchase).toHaveBeenCalledTimes(2));
   expect((createVehiclePurchase as jest.Mock).mock.calls[1][4]).toBe((createVehiclePurchase as jest.Mock).mock.calls[0][4]);
+});
+test("BFF conserva Idempotency-Key en las cabeceras enviadas upstream", () => {
+  const headers = new Headers({ "Idempotency-Key": "11111111-1111-4111-8111-111111111111", Authorization: "Bearer synthetic-test" });
+  const upstream = buildBffUpstreamHeaders({ headers } as Parameters<typeof buildBffUpstreamHeaders>[0], "POST", "t1");
+  expect(upstream["Idempotency-Key"]).toBe("11111111-1111-4111-8111-111111111111");
+  expect(upstream.Authorization).toBe("Bearer synthetic-test");
 });
