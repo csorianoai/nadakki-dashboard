@@ -119,10 +119,10 @@ describe("compra en el alta", () => {
     expect(compra).toMatchObject({ cost: "1000", seller_contact_id: UUID, engine_number: "ABC123", currency: "ARS" });
   });
 
-  it("el checklist de documentacion es informativo y no se envia como pago", () => {
+  it("sin API de recepción el checklist queda deshabilitado y no bloquea la compra", () => {
     montar();
     for (const doc of [/Título/, /Formulario 08/, /Cédula/, /VTV/, /Cheque \(documentación\)/]) {
-      expect(screen.getByRole("checkbox", { name: doc })).toBeEnabled();
+      expect(screen.getByRole("checkbox", { name: doc })).toBeDisabled();
     }
   });
 

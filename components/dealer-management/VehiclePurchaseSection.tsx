@@ -221,9 +221,9 @@ export function VehiclePurchaseSection({
         {err("seller_contact_id")}
       </div>
 
-      <fieldset className="space-y-2" disabled={busy}>
+      <fieldset className="space-y-2" disabled>
         <legend className="text-sm font-bold text-nk-fg">Documentación recibida (informativo)</legend>
-        <p className="text-xs text-nk-fg-muted">Es solo un recordatorio: no se envía ni bloquea la compra.</p>
+        <p className="text-xs text-nk-fg-muted">Disponible cuando exista un endpoint para guardar la recepción de documentos. Es informativo y no bloquea la compra.</p>
         <div className="flex flex-wrap gap-4">
           {DOC_ITEMS.map((d) => (
             <label key={d.key} className="flex min-h-11 items-center gap-2 text-sm text-nk-fg">
