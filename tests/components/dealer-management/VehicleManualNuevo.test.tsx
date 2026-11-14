@@ -32,7 +32,7 @@ jest.mock("next/navigation", () => ({
   usePathname: () => "/autos/dealer/inventario/nuevo",
 }));
 
-let branding: { locale?: string | null; currency?: string | null } | undefined;
+let branding: { tenant_id: string; locale?: string | null; currency?: string | null } | undefined;
 jest.mock("@/lib/dealer-management/useDealerManagementBranding", () => ({
   useDealerManagementBranding: () => ({ data: branding, isPending: false, isLoading: false }),
 }));
@@ -66,6 +66,10 @@ jest.mock("@/lib/dealer/dealer-context-api", () => ({
 jest.mock("@/lib/api/fetch-client", () => ({
   apiFetch: jest.fn(),
 }));
+jest.mock("@/app/autos/dealer/contactos/ContactoSelector", () => ({
+  ContactoSelector: ({ onSelect }: { onSelect: (c: { id: string; display_name: string }) => void }) =>
+    <button type="button" onClick={() => onSelect({ id: "11111111-1111-4111-8111-111111111111", display_name: "Vendedor sintético" })}>Seleccionar vendedor</button>,
+}));
 
 import { apiFetch } from "@/lib/api/fetch-client";
 
@@ -87,6 +91,7 @@ function batch(state: Partial<{ isLoading: boolean; error: unknown; allowed: boo
       ? undefined
       : {
           results: {
+            "autos.purchases.register": { allowed: state.allowed ?? false, reason_code: state.allowed ? "ALLOWED" : "DEFAULT_DENY" },
             [VEHICLE_WRITE_CAPABILITY]: {
               allowed: state.allowed ?? false,
               reason_code: state.reason ?? (state.allowed ? "ALLOWED" : "DEFAULT_DENY"),
@@ -102,13 +107,19 @@ function rellenaMinimo() {
   fireEvent.change(screen.getByRole("textbox", { name: /Marca/ }), { target: { value: "Toyota" } });
   fireEvent.change(screen.getByRole("textbox", { name: /Modelo/ }), { target: { value: "Hilux" } });
   fireEvent.change(screen.getByRole("textbox", { name: /Año/ }), { target: { value: "2021" } });
+  fireEvent.change(screen.getByLabelText(/Costo de compra/), { target: { value: "100" } });
+  fireEvent.change(screen.getByLabelText(/Fecha de adquisición/), { target: { value: "2026-11-01" } });
+  fireEvent.change(screen.getByLabelText(/Código de adquisición/), { target: { value: "stock_inicial" } });
+  fireEvent.change(screen.getByLabelText(/Importe del pago 1/), { target: { value: "100" } });
+  fireEvent.click(screen.getByRole("button", { name: "Seleccionar vendedor" }));
 }
 
 beforeEach(() => {
   push.mockReset();
   fetchMock.mockReset();
   batchMock.mockReset();
-  branding = { locale: "es-AR", currency: "ARS" };
+  branding = { tenant_id: "tenant-a", locale: "es-AR", currency: "ARS" };
+  Object.defineProperty(globalThis.crypto, "randomUUID", { configurable: true, value: () => "11111111-1111-4111-8111-111111111111" });
   resolution = READY;
   // Mismo dealer que READY: es el binding que el shell deja tras sincronizar.
   identidad = { tenantId: "tenant-a", dealerId: "dealer-a", organizationUnitId: "ou-a" };
@@ -144,9 +155,9 @@ describe("cierre antes del formulario", () => {
     expect(screen.getByTestId("nuevo-bloqueado")).toHaveAttribute("data-allowed", "false");
   });
 
-  it("pide al batch exactamente la clave de escritura del catalogo", () => {
+  it("pide al batch escritura y permiso de compras", () => {
     render(<DealerVehicleNuevoPage />);
-    expect(batchMock).toHaveBeenCalledWith([VEHICLE_WRITE_CAPABILITY]);
+    expect(batchMock).toHaveBeenCalledWith([VEHICLE_WRITE_CAPABILITY, "autos.purchases.register"]);
   });
 });
 
@@ -184,10 +195,14 @@ describe("envio", () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     const [path, init] = fetchMock.mock.calls[0];
-    expect(path).toBe("/api/v1/autos/tenants/tenant-a/dealers/dealer-a/vehicles");
+    expect(path).toBe("/api/v1/autos/tenants/tenant-a/dealers/dealer-a/vehicles/purchase");
     expect(init?.method).toBe("POST");
     const body = JSON.parse(String(init?.body)) as Record<string, unknown>;
-    expect(body).toEqual({ make: "Toyota", model: "Hilux", year: 2021, condition: "used" });
+    expect(body).toEqual({ make: "Toyota", model: "Hilux", year: 2021, condition: "used", purchase: {
+      amount: "100", currency: "ARS", acquired_at: "2026-11-01", country_code: "AR", acquisition_mode_code: "stock_inicial",
+      seller_contact_id: "11111111-1111-4111-8111-111111111111", payments: [{ method: "efectivo", amount: "100" }],
+    } });
+    expect((init?.headers as Record<string, string>)["Idempotency-Key"]).toBe("11111111-1111-4111-8111-111111111111");
     expect(Object.keys(body)).not.toContain("price_rd");
     expect(Object.keys(body)).not.toContain("price_usd");
     expect((init?.headers as Record<string, string>)["X-Organization-Unit-ID"]).toBe("ou-a");
@@ -319,7 +334,7 @@ describe("dealer sin unidad organizativa", () => {
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     const [path, init] = fetchMock.mock.calls[0];
-    expect(path).toBe("/api/v1/autos/tenants/tenant-a/dealers/dealer-a/vehicles");
+    expect(path).toBe("/api/v1/autos/tenants/tenant-a/dealers/dealer-a/vehicles/purchase");
     const headers = init?.headers as Record<string, string>;
     expect(headers).not.toHaveProperty("X-Organization-Unit-ID");
     expect(headers["X-Dealer-ID"]).toBe("dealer-a");
