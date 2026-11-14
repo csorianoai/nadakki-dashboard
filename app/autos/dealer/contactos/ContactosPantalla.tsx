@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ContactoFicha } from "./ContactoFicha";
 import { ContactoForm } from "./ContactoForm";
-import { actualizarContacto, buscarContactos, crearContacto, darDeBaja, errorContacto, obtenerContacto, reactivar, type ErrorContacto } from "./contactos-api";
-import type { Contacto, ContactoPayload } from "./contactos-tipos";
+import { actualizarContacto, buscarContactos, crearContacto, darDeBaja, errorContacto, guardarPunto, listarPuntos, obtenerContacto, reactivar, type ErrorContacto } from "./contactos-api";
+import type { Contacto, ContactoPayload, Punto, PuntoEscrito } from "./contactos-tipos";
 
 type Modo = "ficha" | "nuevo" | "editar" | "baja";
 const BTN = "rounded-md border border-nk-border px-3 py-1.5 text-sm text-nk-fg";
@@ -15,6 +15,8 @@ export function ContactosPantalla() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<ErrorContacto | null>(null);
   const [sel, setSel] = useState<Contacto | null>(null);
+  const [aviso, setAviso] = useState<string | null>(null); // avisos de puntos: la recarga del listado no los borra
+  const [puntos, setPuntos] = useState<Punto[] | null>(null);
   const [verBajas, setVerBajas] = useState(false);
   const abierto = useRef<string | null>(null);
   const [modo, setModo] = useState<Modo>("ficha");
@@ -43,9 +45,16 @@ export function ContactosPantalla() {
   async function abrirFicha(id: string, previo?: Contacto) {
     abierto.current = id;
     if (previo) setSel(previo);
+    setPuntos(null);
+    // Los puntos se piden aparte: si fallan, la ficha igual abre y avisa (no se inventan datos).
+    const pts = listarPuntos(id).catch(() => undefined);
     try {
       const c = await obtenerContacto(id);
-      if (abierto.current === id) setSel(c);
+      const p = await pts;
+      if (abierto.current !== id) return;
+      setSel(c);
+      setPuntos(p ?? []);
+      if (!p) setAviso("No se pudieron cargar teléfonos, email y dirección.");
     } catch (e) {
       if (abierto.current === id) setError(errorContacto(e));
     }
@@ -55,6 +64,7 @@ export function ContactosPantalla() {
   async function ejecutar(accion: () => Promise<string>, siguiente: Modo = "ficha") {
     setEnviando(true);
     setError(null);
+    setAviso(null);
     try {
       const id = await accion();
       setModo(siguiente);
@@ -74,11 +84,22 @@ export function ContactosPantalla() {
     void ejecutar(async () => (await darDeBaja(sel.id, motivo.trim()), sel.id)).then(() => setMotivo(""));
   }
 
-  const guardar = (p: ContactoPayload) => ejecutar(async () => (modo === "editar" && sel ? (await actualizarContacto(sel.id, p), sel.id) : (await crearContacto(p)).id));
+  /** Alta parcial: si el contacto se guardo y un punto falla, se abre la ficha con el aviso; el alta no se reenvia. */
+  const guardar = (p: ContactoPayload, pts: PuntoEscrito[] = []) =>
+    ejecutar(async () => {
+      const id = modo === "editar" && sel ? (await actualizarContacto(sel.id, p), sel.id) : (await crearContacto(p)).id;
+      try {
+        for (const pt of pts) await guardarPunto(id, pt);
+      } catch (e) {
+        setAviso(`El contacto se guardó, pero faltan datos de contacto: ${errorContacto(e).message} Edítelo para reintentar.`);
+      }
+      return id;
+    });
   const abrir = (c: Contacto | null, m: Modo) => {
     setSel(c);
     setModo(m);
     setError(null);
+    setAviso(null);
     if (c) void abrirFicha(c.id, c);
     else abierto.current = null;
   };
@@ -116,12 +137,13 @@ export function ContactosPantalla() {
             {modo === "ficha" && !sel && <button type="button" onClick={() => void cargar()} className="underline">Reintentar</button>}
           </div>
         )}
+        {aviso && <div role="alert" className="mb-3 rounded-md border border-red-700 p-3 text-sm font-medium text-red-700">{aviso}</div>}
         {(modo === "nuevo" || modo === "editar") && (
-          <ContactoForm inicial={modo === "editar" ? sel ?? undefined : undefined} onSubmit={guardar} onCancel={() => setModo("ficha")} enviando={enviando} errorServidor={error} />
+          <ContactoForm key={sel?.id ?? "nuevo"} inicial={modo === "editar" ? sel ?? undefined : undefined} puntos={modo === "editar" ? puntos ?? [] : []} onSubmit={guardar} onCancel={() => setModo("ficha")} enviando={enviando} errorServidor={error} />
         )}
         {sel && (modo === "ficha" || modo === "baja") && (
           <>
-            <ContactoFicha contacto={sel} onEditar={() => setModo("editar")} onBaja={() => setModo("baja")} onReactivar={() => void ejecutar(async () => (await reactivar(sel.id), sel.id))} />
+            <ContactoFicha contacto={sel} puntos={puntos} onEditar={() => setModo("editar")} onBaja={() => setModo("baja")} onReactivar={() => void ejecutar(async () => (await reactivar(sel.id), sel.id))} />
             {modo === "baja" && (
               <div className="mt-3 space-y-2">
                 <label htmlFor="motivo-baja" className="text-sm font-medium text-nk-fg">Motivo de la baja</label>

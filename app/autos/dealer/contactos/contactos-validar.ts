@@ -38,3 +38,14 @@ export function validarCuit(valor: string): string | null {
   return dv === Number(s[10]) ? null : MSG;
 }
 
+
+/** Solo forma (espejo de contactos_puntos.normalizar_valor): sin inventar prefijos ni reglas por pais. */
+export function validarTelefono(valor: string): string | null {
+  const d = valor.replace(/[\s().-]/g, "");
+  return /^\+?\d{6,15}$/.test(d) ? null : "Teléfono no válido: 6 a 15 dígitos, con + opcional.";
+}
+
+export function validarEmail(valor: string): string | null {
+  const s = valor.trim();
+  return s.length <= 254 && /^[^@\s]{1,64}@[^@\s.]+(\.[^@\s.]+)+$/.test(s) ? null : "Email no válido: use el formato nombre@dominio.com.";
+}
