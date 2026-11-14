@@ -1,13 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { Contacto, ContactoPayload } from "./contactos-tipos";
+import type { Contacto, ContactoPayload, Punto, PuntoEscrito } from "./contactos-tipos";
 import {
   IVA_CONDITIONS,
   KINDS,
   MARITAL_STATUSES,
   validarCuit,
   validarDni,
+  validarEmail,
+  validarTelefono,
 } from "./contactos-validar";
 
 type Errores = Record<string, string>;
@@ -96,25 +98,28 @@ function Selector(props: {
 }
 
 const REQ = "Obligatorio.";
-const SIN_GUARDAR = [
-  ["c-tel", "Teléfonos", "telefonos"], ["c-mail", "Email", "email"], ["c-calle", "Calle", "calle"],
-  ["c-loc", "Localidad", "localidad"], ["c-prov", "Provincia", "provincia"], ["c-cp", "Código postal", "cp"],
+const DIRECCION = [
+  ["calle", "c-calle", "Calle", "street"], ["localidad", "c-loc", "Localidad", "locality"],
+  ["provincia", "c-prov", "Provincia", "province"], ["cp", "c-cp", "Código postal", "postal_code"],
 ] as const;
+const VALORES = [["telefono", "c-tel", "Teléfono", "phone", validarTelefono], ["celular", "c-cel", "Celular", "mobile", validarTelefono], ["email", "c-mail", "Email", "email", validarEmail]] as const;
 
 /**
  * Alta y edicion. DNI/CUIT llegan enmascarados al editar: el campo arranca VACIO (nunca se reenvia la mascara) y solo
- * viaja lo que se escribe. Telefonos, email y direccion: el backend de F4C-3 aun no los guarda, se muestran
- * deshabilitados y NO se envian.
+ * viaja lo que se escribe. Telefono, celular, email y direccion son puntos de contacto (F4D-2): tambien llegan
+ * enmascarados, arrancan vacios y solo viaja lo escrito; con un punto ya guardado el envio lleva su `id` (PATCH).
  */
 export function ContactoForm({
   inicial,
+  puntos = [],
   onSubmit,
   onCancel,
   enviando,
   errorServidor,
 }: {
   inicial?: Contacto;
-  onSubmit: (payload: ContactoPayload) => void;
+  puntos?: Punto[];
+  onSubmit: (payload: ContactoPayload, puntos: PuntoEscrito[]) => void;
   onCancel?: () => void;
   enviando?: boolean;
   errorServidor?: { reason_code: string | null; field: string | null } | null;
@@ -132,7 +137,8 @@ export function ContactoForm({
     spouse_first_name: inicial?.spouse_first_name ?? "",
     spouse_last_name: inicial?.spouse_last_name ?? "",
     spouse_dni: "",
-    telefonos: "",
+    telefono: "",
+    celular: "",
     email: "",
     calle: "",
     localidad: "",
@@ -170,7 +176,30 @@ export function ContactoForm({
       if (f.spouse_dni) r.spouse_dni = validarDni(f.spouse_dni) ?? "";
       else if (!inicial?.spouse_dni) r.spouse_dni = "Casado/a: falta el DNI del cónyuge.";
     }
+    for (const [k, , , , valida] of VALORES) if (f[k].trim()) r[k] = valida(f[k]) ?? "";
+    const dir = DIRECCION.filter(([k]) => f[k].trim());
+    if (dir.length && !existente("address")) {
+      for (const [k] of DIRECCION) if (!f[k].trim()) r[k] = "Dirección incompleta: calle, localidad, provincia y código postal.";
+    }
     return Object.fromEntries(Object.entries(r).filter(([, v]) => v));
+  }
+  const existente = (tipo: string) => puntos.find((x) => x.type === tipo && x.is_primary) ?? puntos.find((x) => x.type === tipo);
+  const guardado = (tipo: string) => {
+    const x = existente(tipo);
+    if (!x) return undefined;
+    const m = tipo === "address" ? [x.street, x.locality, x.province, x.postal_code].filter(Boolean).join(", ") : x.value;
+    return m ? `Guardado: ${m}. Déjelo vacío para conservarlo.` : undefined;
+  };
+  function puntosEscritos(): PuntoEscrito[] {
+    const out: PuntoEscrito[] = [];
+    for (const [k, , , tipo] of VALORES) {
+      if (f[k].trim()) out.push({ type: tipo, value: f[k].trim(), ...(existente(tipo) ? { id: existente(tipo)?.id } : {}) });
+    }
+    const dir = DIRECCION.filter(([k]) => f[k].trim());
+    if (dir.length) {
+      out.push({ type: "address", ...Object.fromEntries(dir.map(([k, , , c]) => [c, f[k].trim()])), ...(existente("address") ? { id: existente("address")?.id } : {}) });
+    }
+    return out;
   }
   function enviar(ev: React.FormEvent) {
     ev.preventDefault();
@@ -193,7 +222,7 @@ export function ContactoForm({
       if (f.spouse_dni.trim()) p.spouse_dni = f.spouse_dni.trim().replace(/\./g, "");
     }
     if (inicial) delete p.kind; // PATCH no cambia el tipo
-    onSubmit(Object.fromEntries(Object.entries(p).filter(([, v]) => v !== undefined)));
+    onSubmit(Object.fromEntries(Object.entries(p).filter(([, v]) => v !== undefined)), puntosEscritos());
   }
   const resumen = Object.values(errores);
   const mascara = (m: string | null) => (m ? `Guardado: ${m}. Déjelo vacío para conservarlo.` : undefined);
@@ -229,12 +258,14 @@ export function ContactoForm({
           <Campo id="c-sp-dni" label="DNI del cónyuge" value={f.spouse_dni} onChange={set("spouse_dni")} error={e("spouse_dni")} ayuda={mascara(inicial?.spouse_dni ?? null)} obligatorio />
         </fieldset>
       )}
-      <fieldset disabled className="grid grid-cols-1 gap-3 rounded-md border border-nk-border p-3 sm:grid-cols-2">
+      <fieldset className="grid grid-cols-1 gap-3 rounded-md border border-nk-border p-3 sm:grid-cols-2">
         <legend className="px-1 text-sm font-medium text-nk-fg">Contacto y dirección</legend>
-        <p className="text-xs text-nk-fg-muted sm:col-span-2">
-          Todavía no se guardan: el servidor de contactos (F4C-3) no tiene aún endpoint para teléfonos, email ni dirección.
-        </p>
-        {SIN_GUARDAR.map(([id, label, k]) => <Campo key={id} id={id} label={label} value={f[k]} onChange={set(k)} disabled />)}
+        {VALORES.map(([k, id, label, tipo]) => (
+          <Campo key={id} id={id} label={label} value={f[k]} onChange={set(k)} error={e(k)} ayuda={guardado(tipo)} type={tipo === "email" ? "email" : "tel"} />
+        ))}
+        {DIRECCION.map(([k, id, label], i) => (
+          <Campo key={id} id={id} label={label} value={f[k]} onChange={set(k)} error={e(k)} ayuda={i === 0 ? guardado("address") : undefined} />
+        ))}
       </fieldset>
       <div className="flex gap-2">
         <button type="submit" disabled={enviando} className="rounded-md bg-nk-fg px-4 py-2 text-sm font-medium text-nk-surface">
