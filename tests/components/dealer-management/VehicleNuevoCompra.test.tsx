@@ -19,8 +19,10 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push, replace: jest.fn() }),
   usePathname: () => "/autos/dealer/inventario/nuevo",
 }));
+// Objeto estable: el efecto del formulario depende de `branding.data` y uno nuevo por render lo haria ciclar.
+const mockBranding = { data: { locale: "es-AR", currency: "ARS" }, isPending: false, isLoading: false };
 jest.mock("@/lib/dealer-management/useDealerManagementBranding", () => ({
-  useDealerManagementBranding: () => ({ data: { locale: "es-AR", currency: "ARS" }, isPending: false, isLoading: false }),
+  useDealerManagementBranding: () => mockBranding,
 }));
 jest.mock("@/lib/access/hooks", () => ({
   useAccessEntitlementsBatch: () => ({
