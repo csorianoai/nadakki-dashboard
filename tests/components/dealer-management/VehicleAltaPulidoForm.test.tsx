@@ -15,8 +15,9 @@ let modos: Modos;
 jest.mock("@/lib/dealer-management/acquisition-modes", () => ({
   useAcquisitionModes: () => modos,
 }));
+const mockBranding = { data: { locale: "es-AR", currency: "ARS" }, isPending: false, isLoading: false };
 jest.mock("@/lib/dealer-management/useDealerManagementBranding", () => ({
-  useDealerManagementBranding: () => ({ data: { locale: "es-AR", currency: "ARS" }, isPending: false, isLoading: false }),
+  useDealerManagementBranding: () => mockBranding,
 }));
 
 const OK: Modos = {
