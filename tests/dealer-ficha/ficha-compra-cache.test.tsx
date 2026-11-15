@@ -36,7 +36,7 @@ beforeEach(() => {
     }
     if (url.includes("/vehicles/veh-1/purchase")) {
       if (colgarCompra) return new Promise(() => {});
-      return res({ vehicle_id: "veh-1", cost: colgarCompra ? "999.00" : "111.00", currency: "USD", acquisition: { mode: "compra_directa" }, payments: [] });
+      return res({ vehicle_id: "veh-1", cost: { currency: "USD", amount: "111.00", paid_total: "0.00" }, acquisition: { mode: "compra_directa" }, payments: [] });
     }
     if (url.includes("/api/v1/autos/dealers/dealer-a/vehicles/veh-1")) return res({ id: "veh-1", dealer_id: "dealer-a", make: "Toyota", model: "Hilux", year: 2021, status: "disponible" });
     if (url.includes("/margin")) return res([]);

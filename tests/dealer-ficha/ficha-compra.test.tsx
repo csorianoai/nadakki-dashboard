@@ -19,8 +19,7 @@ jest.mock("@/lib/auth/token-refresh", () => ({
 
 const COMPRA = {
   vehicle_id: "veh-1",
-  cost: "18500000.00",
-  currency: "USD",
+  cost: { currency: "USD", amount: "18500000.00", paid_total: "18500000.00" },
   acquisition: {
     mode: "compra_directa",
     acquired_on: "2026-11-01",
@@ -29,8 +28,8 @@ const COMPRA = {
     fx: { rate: "1200.500000", source: "acordado", detail: "Con el vendedor", as_of: "2026-11-01T00:00:00Z" },
   },
   payments: [
-    { method: "efectivo", amount: "10000000.00" },
-    { method: "cheque", amount: "8500000.00", check_number: "00012345", check_bank: "Banco Nación", check_cash_date: "2026-12-15" },
+    { id: "p1", method: "efectivo", amount: "10000000.00", currency: "USD", voided: false },
+    { id: "p2", method: "cheque", amount: "8500000.00", currency: "USD", voided: false, check_number: "00012345", check_bank: "Banco Nación", check_cash_date: "2026-12-15" },
   ],
 };
 
@@ -87,7 +86,7 @@ test("con la compra se pintan costo, moneda, 2 lineas de pago, cheque, tipo de c
   expect(lineas[1]).toHaveTextContent("00012345");
   expect(lineas[1]).toHaveTextContent("Banco Nación");
   expect(lineas[1]).toHaveTextContent("15/12/2026");
-  expect(screen.getByTestId("compra-pagos-estado")).toHaveTextContent(/2 de 2|pagos/i);
+  expect(screen.getByTestId("compra-pagos-estado")).toHaveTextContent(/pagado 18\.500\.000 de 18\.500\.000/);
   expect(screen.getByTestId("compra-fx")).toHaveTextContent("1200,5");
   expect(screen.getByTestId("compra-fx")).toHaveTextContent(/Acordado/);
   expect(screen.getByTestId("compra-fx")).toHaveTextContent("Con el vendedor");
@@ -152,4 +151,30 @@ test("mientras carga se muestra el estado de carga", async () => {
   mockRed();
   montar();
   expect(await screen.findByTestId("compra-cargando")).toBeInTheDocument();
+});
+
+test("sin compra: 200 con acquisition=null y cost=null -> 'Sin compra registrada' y sin cifras", async () => {
+  mockRed({ purchase: { status: 200, body: { vehicle_id: "veh-1", acquisition: null, cost: null, payments: [] } } });
+  montar();
+  expect(await screen.findByTestId("compra-sin-registro")).toHaveTextContent("Sin compra registrada");
+  expect(screen.queryByTestId("compra-costo")).not.toBeInTheDocument();
+});
+
+test("un pago anulado se marca y no cuenta como pagado (se usa cost.paid_total del backend)", async () => {
+  const body = {
+    ...COMPRA,
+    cost: { currency: "USD", amount: "18500000.00", paid_total: "10000000.00" },
+    payments: [
+      { id: "p1", method: "efectivo", amount: "10000000.00", currency: "USD", voided: false },
+      { id: "p2", method: "transferencia", amount: "8500000.00", currency: "USD", voided: true },
+    ],
+  };
+  mockRed({ purchase: { status: 200, body } });
+  montar();
+  await screen.findByTestId("compra-costo");
+  const lineas = screen.getAllByTestId("compra-pago");
+  expect(lineas).toHaveLength(2);
+  expect(lineas[1]).toHaveTextContent(/anulado/i);
+  expect(lineas[0]).not.toHaveTextContent(/anulado/i);
+  expect(screen.getByTestId("compra-pagos-estado")).toHaveTextContent(/cubierto 10\.000\.000 de 18\.500\.000/);
 });
