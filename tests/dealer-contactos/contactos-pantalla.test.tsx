@@ -78,18 +78,30 @@ describe("ContactosPantalla", () => {
   });
 
   it("la baja exige motivo y envia PATCH", async () => {
-    apiFetchMock.mockResolvedValueOnce(ok({ items: [C] }));
+    // La ficha se carga con GET (contacto + puntos) y se recarga tras el PATCH: el mock responde por metodo y ruta.
+    let baja = false;
+    apiFetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+      const u = String(url).split("?")[0];
+      if (init?.method === "PATCH") {
+        baja = true;
+        return ok({ ...C, deactivated_at: "2026-11-13", deactivation_reason: "duplicado" });
+      }
+      if (u.endsWith("/points")) return ok({ items: [] });
+      if (u.endsWith("/c-1")) return ok(baja ? { ...C, deactivated_at: "2026-11-13", deactivation_reason: "duplicado" } : C);
+      return ok({ items: [C] });
+    });
     render(<ContactosPantalla />);
     fireEvent.click(await screen.findByRole("button", { name: /Perez, Juan/ }));
     fireEvent.click(await screen.findByRole("button", { name: /dar de baja/i }));
+    const antes = apiFetchMock.mock.calls.length;
     fireEvent.click(screen.getByRole("button", { name: /confirmar baja/i }));
     expect(screen.getAllByRole("alert").length).toBeGreaterThan(0);
-    expect(apiFetchMock).toHaveBeenCalledTimes(1);
-    apiFetchMock.mockResolvedValueOnce(ok({ ...C, deactivated_at: "2026-11-13", deactivation_reason: "duplicado" }));
+    expect(apiFetchMock).toHaveBeenCalledTimes(antes);
     fireEvent.change(screen.getByLabelText(/motivo de la baja/i), { target: { value: "duplicado" } });
     fireEvent.click(screen.getByRole("button", { name: /confirmar baja/i }));
     await waitFor(() => expect(screen.getByText(/dado de baja: duplicado/i)).toBeTruthy());
-    expect(JSON.parse(apiFetchMock.mock.calls[1][1].body)).toEqual({ deactivation_reason: "duplicado" });
+    const patch = apiFetchMock.mock.calls.find(([, i]) => i?.method === "PATCH");
+    expect(JSON.parse(patch[1].body)).toEqual({ deactivation_reason: "duplicado" });
   });
 });
 
