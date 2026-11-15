@@ -3,15 +3,21 @@
 /** Analisis de Costos: por vehiculo, por tipo y por mes (lector F1). Moneda: la funcional del tenant. */
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { COST_TYPES, COSTS_CAPABILITY_KEYS } from "@/lib/dealer-management/vehicle-costs";
 import { agrupar, fetchCostos, hrefVehiculo } from "../analisis";
 import { AnalisisMarco } from "../AnalisisMarco";
 import { BarrasAnalisis } from "../BarrasAnalisis";
+import { SIN_FILTROS, etiquetaUnidad, fetchInventario } from "../inventario/inventario";
 
 const etiquetaTipo = (t: string) => COST_TYPES.find((c) => c.value === t)?.label ?? t;
 
 export default function AnalisisCostosPage() {
   const [tipo, setTipo] = useState<string | null>(null);
+  // Nombres legibles de las unidades (F4E-1): la barra por vehiculo nunca se etiqueta con el UUID.
+  const unidades = useQuery({ queryKey: ["finanzas-inventario-nombres"], queryFn: () => fetchInventario(SIN_FILTROS), retry: false });
+  const nombres = new Map((unidades.data?.filas ?? []).map((u) => [u.vehicle_id, etiquetaUnidad(u)]));
+  const nombreUnidad = (id: string) => nombres.get(id) ?? "Unidad";
   return (
     <AnalisisMarco
       titulo="Análisis de costos"
@@ -46,6 +52,7 @@ export default function AnalisisCostosPage() {
               titulo={tipo ? `Por vehículo — ${etiquetaTipo(tipo)}` : "Por vehículo"}
               datos={agrupar(vista, (f) => f.vehicle_id)}
               formato={formato}
+              etiqueta={nombreUnidad}
               href={hrefVehiculo}
               testidFila="costos-vehiculo"
               horizontal
