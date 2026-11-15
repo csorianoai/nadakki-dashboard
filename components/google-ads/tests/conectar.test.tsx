@@ -12,6 +12,8 @@ jest.mock("@/lib/auth/token-storage", () => ({
   tokenStorage: { getAccessToken: () => "TOKEN-DE-PRUEBA" },
 }));
 
+process.env.NEXT_PUBLIC_BACKEND_URL = "https://backend.prueba";
+
 import ConectarGoogleAds from "@/components/google-ads/ConectarGoogleAds";
 
 const resp = (status: number, body: unknown) => ({
@@ -49,7 +51,8 @@ describe("estado de la conexion", () => {
     if (boton === "Reconectar") expect(screen.getByRole("button", { name: "Reconectar" })).toBeTruthy();
     else expect(screen.queryByRole("button", { name: "Reconectar" })).toBeNull();
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(fetchMock.mock.calls[0][0]).toBe("/auth/google/status/tenant-sesion");
+    expect(fetchMock.mock.calls[0][0]).toBe("https://backend.prueba/auth/google/status/tenant-sesion");
+    expect(fetchMock.mock.calls[0][1].credentials).toBe("omit");
     expect(fetchMock.mock.calls[0][1].headers.get("Authorization")).toBe("Bearer TOKEN-DE-PRUEBA");
   });
 
@@ -71,7 +74,7 @@ describe("clic en conectar", () => {
     await waitFor(() => expect(assign).toHaveBeenCalledWith("https://accounts.google.com/o/oauth2/x"));
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const [url, init] = fetchMock.mock.calls[1];
-    expect(url).toBe("/auth/google/connect/tenant-sesion");
+    expect(url).toBe("https://backend.prueba/auth/google/connect/tenant-sesion");
     expect(init.headers.get("Authorization")).toBe("Bearer TOKEN-DE-PRUEBA");
   });
 
@@ -98,5 +101,21 @@ describe("clic en conectar", () => {
     expect(JSON.stringify({ ...localStorage })).not.toContain("TOKEN-DE-PRUEBA");
     expect(JSON.stringify({ ...sessionStorage })).not.toContain("TOKEN-DE-PRUEBA");
     logs.forEach((l) => l.mockRestore());
+  });
+});
+
+describe("las llamadas van al backend, no al dashboard", () => {
+  // Medido con Baylara (15-nov-2026): con ruta relativa el dashboard contestaba HTML y el panel decía
+  // «No pudimos comprobar la conexión ahora» con Google conectado. next.config.js no reescribe /auth/google/*.
+  it("ninguna llamada es relativa y next.config.js sigue sin rewrite de /auth/google", async () => {
+    fetchMock
+      .mockResolvedValueOnce(resp(200, { connection_status: "not_connected" }))
+      .mockResolvedValueOnce(resp(200, { authorization_url: "https://accounts.google.com/o/oauth2/x" }));
+    render(<ConectarGoogleAds navegar={assign} />);
+    fireEvent.click(await screen.findByRole("button", { name: "Conectar Google Ads" }));
+    await waitFor(() => expect(assign).toHaveBeenCalled());
+    for (const [url] of fetchMock.mock.calls) expect(String(url)).toMatch(/^https:\/\/backend\.prueba\/auth\/google\//);
+    const cfg = require("fs").readFileSync(require("path").join(process.cwd(), "next.config.js"), "utf8");
+    expect(cfg).not.toMatch(/source:\s*"\/auth\//);
   });
 });
