@@ -4,7 +4,7 @@
  */
 import { AccessApiError, accessApiErrorFromHttp } from "@/lib/access/client";
 import { apiFetch } from "@/lib/api/fetch-client";
-import type { Contacto, ContactoPayload } from "./contactos-tipos";
+import type { Contacto, ContactoPayload, Punto, PuntoEscrito } from "./contactos-tipos";
 
 const BASE = "/api/v1/autos/contacts";
 
@@ -25,13 +25,16 @@ async function llamar(path: string, init: RequestInit = {}): Promise<unknown> {
 const enJson = (method: string, body: unknown): RequestInit => ({ method, body: JSON.stringify(body) });
 
 /** Menos de 7 digitos o texto: busca por nombre; 7-8 digitos: DNI; 11: CUIT/CUIL. */
-export async function buscarContactos(texto: string, limit = 50): Promise<Contacto[]> {
+export async function buscarContactos(texto: string, limit = 50, incluirBajas = false): Promise<Contacto[]> {
   const q = texto.trim();
   const digitos = q.replace(/[.\-\s]/g, "");
   const esDoc = /^\d+$/.test(digitos) && /^(\d{7,8}|\d{11})$/.test(digitos);
   const body = esDoc
-    ? await llamar(`${BASE}/search`, enJson("POST", digitos.length === 11 ? { cuit: digitos } : { dni: digitos }))
-    : await llamar(`${BASE}?${new URLSearchParams({ ...(q ? { q } : {}), limit: String(limit) })}`);
+    ? await llamar(
+        `${BASE}/search`,
+        enJson("POST", { ...(digitos.length === 11 ? { cuit: digitos } : { dni: digitos }), ...(incluirBajas ? { include_inactive: true } : {}) }),
+      )
+    : await llamar(`${BASE}?${new URLSearchParams({ ...(q ? { q } : {}), limit: String(limit), ...(incluirBajas ? { include_inactive: "true" } : {}) })}`);
   const items = (body as { items?: unknown } | null)?.items;
   return Array.isArray(items) ? (items as Contacto[]) : [];
 }
@@ -40,12 +43,28 @@ export const crearContacto = (p: ContactoPayload) => llamar(BASE, enJson("POST",
 
 const ruta = (id: string) => `${BASE}/${encodeURIComponent(id)}`;
 
+/** Lectura individual: es la que entrega DNI/CUIT en claro al rol autorizado (el listado siempre va enmascarado). */
+export const obtenerContacto = (id: string) => llamar(ruta(id)) as Promise<Contacto>;
+
 export const actualizarContacto = (id: string, p: ContactoPayload) =>
   llamar(ruta(id), enJson("PATCH", p)) as Promise<Contacto>;
 
 export const darDeBaja = (id: string, motivo: string) => actualizarContacto(id, { deactivation_reason: motivo });
 
 export const reactivar = (id: string) => actualizarContacto(id, { reactivate: true });
+
+const puntos = (id: string) => `${ruta(id)}/points`;
+
+/** Puntos vigentes del contacto; telefono y email llegan enmascarados salvo rol autorizado. */
+export async function listarPuntos(id: string): Promise<Punto[]> {
+  const items = ((await llamar(puntos(id))) as { items?: unknown } | null)?.items;
+  return Array.isArray(items) ? (items as Punto[]) : [];
+}
+
+/** Alta (POST) o, si trae `id`, cambio (PATCH) de un punto. Sin DELETE: la UI no quita puntos. */
+export function guardarPunto(contactId: string, { id, type, ...resto }: PuntoEscrito): Promise<Punto> {
+  return (id ? llamar(`${puntos(contactId)}/${encodeURIComponent(id)}`, enJson("PATCH", resto)) : llamar(puntos(contactId), enJson("POST", { type, ...resto }))) as Promise<Punto>;
+}
 
 const POR_MOTIVO: Record<string, string> = {
   CAPABILITY_DENIED: "No tienes permiso para esta operación con contactos.",

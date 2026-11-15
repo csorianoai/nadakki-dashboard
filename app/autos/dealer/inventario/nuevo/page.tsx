@@ -15,7 +15,7 @@
  * error tampoco (fail-closed). El 403 del backend sigue siendo la autoridad.
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AccessApiError } from "@/lib/access/client";
@@ -73,20 +73,34 @@ export default function DealerVehicleNuevoPage() {
   const [busy, setBusy] = useState(false);
   const [reasonCode, setReasonCode] = useState<string | null>(null);
   const [ack, setAck] = useState<string | null>(null);
+  // Una clave por intento de alta: se reutiliza mientras el contenido sea el mismo y se descarta tras un 201.
+  const intento = useRef<{ contenido: string; key: string } | null>(null);
+  const enCurso = useRef(false);
 
   async function onSubmit(form: VehicleForm, purchase?: PurchaseForm) {
-    if (!context) return;
-    // La compra es obligatoria en el alta: sin ella y sin llave de idempotencia no se envia nada (fail-closed).
-    const key = nuevaIdempotencyKey();
-    if (!purchase || !key) {
+    if (!context || enCurso.current) return;
+    // La compra es obligatoria en el alta: sin ella no se envia nada (fail-closed).
+    if (!purchase) {
       setReasonCode("DEFAULT_DENY");
       return;
     }
+    const contenido = JSON.stringify([form, purchase]);
+    if (intento.current?.contenido !== contenido) {
+      const nueva = nuevaIdempotencyKey();
+      intento.current = nueva ? { contenido, key: nueva } : null;
+    }
+    const key = intento.current?.key;
+    if (!key) {
+      setReasonCode("DEFAULT_DENY");
+      return;
+    }
+    enCurso.current = true;
     setBusy(true);
     setReasonCode(null);
     setAck(null);
     try {
       const body = await createVehiclePurchase(context, form, purchase, monedaFuncional, key);
+      intento.current = null;
       const id = vehicleIdFrom(body);
       if (id) {
         setAck(`Vehículo creado: ${id}`);
@@ -101,6 +115,7 @@ export default function DealerVehicleNuevoPage() {
         setReasonCode("DEFAULT_DENY");
       }
     } finally {
+      enCurso.current = false;
       setBusy(false);
     }
   }

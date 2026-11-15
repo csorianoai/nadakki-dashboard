@@ -131,5 +131,6 @@ test("controles sin endpoint quedan deshabilitados con 'Disponible cuando ...'",
   const edicion = await screen.findByTestId("ficha-editar-tecnicos");
   expect(edicion).toBeDisabled();
   expect(screen.getByTestId("ficha-editar-tecnicos-motivo")).toHaveTextContent(/^Disponible cuando /);
-  expect(screen.getByTestId("ficha-vendedor-motivo")).toHaveTextContent(/^Disponible cuando /);
+  // PARTE 2/2: el vendedor ya no es un aviso; sin autos.costs.view la seccion no existe.
+  expect(screen.queryByTestId("ficha-vendedor")).not.toBeInTheDocument();
 });
