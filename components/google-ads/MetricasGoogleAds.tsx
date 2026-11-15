@@ -6,6 +6,7 @@ import { useTenant } from "@/contexts/TenantContext";
 import { tokenStorage } from "@/lib/auth/token-storage";
 import { decodeJWT } from "@/lib/auth/jwt-decode";
 import { formatNumber } from "@/lib/nauta/format";
+import { formatMoneda, formatPorcentaje, LOCALE_POR_DEFECTO } from "@/lib/dcc/formato";
 import ConectarGoogleAds from "@/components/google-ads/ConectarGoogleAds";
 
 /** Rangos que acepta el backend (services/marketing_google_ads_metrics.py:9 DATE_RANGES). */
@@ -40,19 +41,19 @@ const MSG_LECTURA = "No pudimos leer las métricas de Google Ads ahora. Inténta
 const conGuiones = (id: string) => `${id.slice(0, 3)}-${id.slice(3, 6)}-${id.slice(6)}`;
 const esNum = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
 
-/** CTR en % calculado con las cifras recibidas; sin impresiones no hay CTR. */
+/** CTR calculado con las cifras recibidas; sin impresiones no hay CTR. */
 function ctr(clics: number, impresiones: number): string {
   if (!(impresiones > 0)) return "—";
-  return `${new Intl.NumberFormat("es-DO", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format((clics / impresiones) * 100)} %`;
+  return formatPorcentaje(clics / impresiones, LOCALE_POR_DEFECTO) ?? "—";
 }
 
+/** Importe en la moneda de la cuenta; sin moneda (o inválida) no se muestra un importe ambiguo. */
 function dinero(micros: number, moneda: string | null): string {
-  const monto = micros / 1_000_000;
-  if (!moneda) return formatNumber(monto);
+  const codigo = moneda?.trim().toUpperCase() || null;
   try {
-    return new Intl.NumberFormat("es-DO", { style: "currency", currency: moneda }).format(monto);
+    return formatMoneda(micros / 1_000_000, { locale: LOCALE_POR_DEFECTO.locale, currency: codigo }) ?? "—";
   } catch {
-    return `${formatNumber(monto)} ${moneda}`;
+    return "—";
   }
 }
 

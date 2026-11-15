@@ -74,8 +74,8 @@ describe("metricas de Google Ads", () => {
     expect(alfa[0]).toBe("Alfa");
     expect(alfa[1]).toBe("1,000");
     expect(alfa[2]).toBe("50");
-    expect(alfa[3]).toBe("5.00 %");
-    expect(alfa[4]).toMatch(/US\$\s?12\.50|\$\s?12\.50/);
+    expect(alfa[3]).toMatch(/^5\s?%$/);
+    expect(alfa[4]).toMatch(/12,50/);
     expect(alfa[5]).toBe("2");
     // Gamma sin impresiones: CTR no se inventa
     expect(within(filas[3]).getAllByRole("cell")[3].textContent).toBe("—");
@@ -83,8 +83,8 @@ describe("metricas de Google Ads", () => {
     const tot = within(filas[4]).getAllByRole("cell").map((c) => c.textContent);
     expect(tot[1]).toBe("3,000");
     expect(tot[2]).toBe("80");
-    expect(tot[3]).toBe("2.67 %");
-    expect(tot[4]).toMatch(/19\.75/);
+    expect(tot[3]).toMatch(/^2,7\s?%$/);
+    expect(tot[4]).toMatch(/19,75/);
     expect(tot[5]).toBe("3.5");
     expect(llamadas("/metrics")).toHaveLength(1);
     const url = String(llamadas("/metrics")[0][0]);
@@ -97,10 +97,19 @@ describe("metricas de Google Ads", () => {
     rutear(accounts([cuenta({})]), metricas([camp("1", "Alfa", 1000, 50, 12_500_000, 2)]));
     const { container } = render(<MetricasGoogleAds />);
     await screen.findByRole("table");
-    const permitidas = new Set(["1,000", "50", "5.00", "12.50", "2", "123-456-7890", "7", "14", "30"]);
+    const permitidas = new Set(["1,000", "50", "5", "12,50", "2", "123-456-7890", "7", "14", "30"]);
     const hojas = Array.from(container.querySelectorAll("*")).filter((e) => e.children.length === 0);
     const numeros = hojas.flatMap((e) => (e.textContent ?? "").match(/\d[\d,.-]*/g) ?? []);
     for (const n of numeros) expect([n, permitidas.has(n.replace(/\.$/, ""))]).toEqual([n, true]);
+  });
+
+  it("cuenta sin currency_code: el costo no se muestra como importe sin moneda", async () => {
+    rutear(accounts([cuenta({ currency_code: null })]), metricas([camp("1", "Alfa", 1000, 50, 12_500_000, 2)]));
+    render(<MetricasGoogleAds />);
+    const tabla = await screen.findByRole("table");
+    const alfa = within(within(tabla).getAllByRole("row")[1]).getAllByRole("cell").map((c) => c.textContent);
+    expect(alfa[4]).toBe("—");
+    expect(tabla.textContent).not.toMatch(/12[.,]50/);
   });
 
   it("cambiar de rango vuelve a pedir con el rango elegido", async () => {
