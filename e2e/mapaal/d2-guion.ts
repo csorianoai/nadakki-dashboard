@@ -39,6 +39,7 @@ export const RUTA_BATCH = "**/api/v1/access/entitlements/batch**";
  */
 export const MODULOS = [
   "/autos/dealer/inventario",
+  "/autos/dealer/contactos",
   "/autos/dealer/publicar-rapido",
   "/autos/dealer/leads",
   "/autos/dealer/finanzas",
