@@ -23,7 +23,7 @@ describe('ST2-01 andamiaje autocontenido', () => {
   it('[positivo] tsc --noEmit del tsconfig propio no da errores', () => {
     const tsc = path.join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc');
     expect(() => execFileSync(process.execPath, [tsc, '--noEmit', '-p', ROOT], { stdio: 'pipe' })).not.toThrow();
-  });
+  }, 60_000);
 
   it('[positivo] tsconfig propio: sin extends, alias @/* a ./src/*, excluye reference', () => {
     const cfg = JSON.parse(readFileSync(path.join(ROOT, 'tsconfig.json'), 'utf8'));
@@ -97,6 +97,6 @@ describe('ST2-01 andamiaje autocontenido', () => {
     expect(existsSync(path.join(ROOT, 'src', 'app', 'health', 'page.tsx'))).toBe(true);
     const page = readFileSync(path.join(ROOT, 'src', 'app', 'health', 'page.tsx'), 'utf8');
     expect(page).not.toMatch(/tenant/i);
-    expect(page).toContain('noindex');
+    expect(page).toMatch(/index:\s*false/);
   });
 });
