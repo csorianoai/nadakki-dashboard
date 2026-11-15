@@ -57,12 +57,16 @@ describe('ST2-01 andamiaje autocontenido', () => {
     }
   });
 
-  it('[negativo] el alias @/ que escapa con ../ de src hacia fuera de la carpeta falla', () => {
-    const dir = fixture('@/../../../lib/api');
+  it('[negativo] el alias @/ que escapa con ../ de src hacia un fichero EXISTENTE fuera falla', () => {
+    const name = 'st2-probe-' + Date.now();
+    const outside = path.join(tmpdir(), name + '.ts');
+    writeFileSync(outside, 'export default 1;\n');
+    const dir = fixture('@/../../' + name);
     try {
       expect(scanCoupling(dir).length).toBe(1);
     } finally {
       rmSync(dir, { recursive: true, force: true });
+      rmSync(outside, { force: true });
     }
   });
 
