@@ -9,9 +9,17 @@ import { agrupar, fetchCostos, hrefVehiculo } from "../analisis";
 import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
 import { AnalisisMarco, type Formato } from "../AnalisisMarco";
 import { BarrasAnalisis } from "../BarrasAnalisis";
+import { decodeJWT } from "@/lib/auth/jwt-decode";
+import { tokenStorage } from "@/lib/auth/token-storage";
 import { SIN_FILTROS, etiquetaUnidad, fetchInventario } from "../inventario/inventario";
 
 const etiquetaTipo = (t: string) => COST_TYPES.find((c) => c.value === t)?.label ?? t;
+
+/** Clave de cache de datos con permisos por rol: tenant + usuario (sin identidad, un marcador que no coincide con nadie). */
+function useUsuarioCache(): string {
+  const p = decodeJWT(tokenStorage.getAccessToken() ?? "") as { sub?: string; user_id?: string } | null;
+  return p?.sub ?? p?.user_id ?? "sin-identidad";
+}
 
 /**
  * Nombres legibles de las unidades (F4E-1): la barra por vehiculo nunca se etiqueta con el UUID.
@@ -21,10 +29,14 @@ const etiquetaTipo = (t: string) => COST_TYPES.find((c) => c.value === t)?.label
 function BarrasPorVehiculo({ titulo, datos, formato }: { titulo: string; datos: ReturnType<typeof agrupar>; formato: Formato }) {
   const resolved = resolveDealerAccessContext();
   const tenantId = resolved.status === "ready" ? resolved.context.tenantId : "none";
+  const userId = useUsuarioCache();
   const unidades = useQuery({
-    queryKey: ["finanzas-inventario-nombres", tenantId],
+    queryKey: ["finanzas-inventario-nombres", tenantId, userId],
     queryFn: () => fetchInventario(SIN_FILTROS),
     enabled: resolved.status === "ready",
+    // Respuesta filtrada por rol: no se retiene ni se reutiliza al desmontar.
+    staleTime: 0,
+    gcTime: 0,
     retry: false,
   });
   const nombres = new Map((unidades.data?.filas ?? []).map((u) => [u.vehicle_id, etiquetaUnidad(u)]));
