@@ -57,6 +57,28 @@ describe('ST2-01 andamiaje autocontenido', () => {
     }
   });
 
+  it('[negativo] el alias @/ que escapa con ../ de src hacia fuera de la carpeta falla', () => {
+    const dir = fixture('@/../../../lib/api');
+    try {
+      expect(scanCoupling(dir).length).toBe(1);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('[negativo] vi.mock e import() con plantilla hacia fuera de la carpeta fallan', () => {
+    const dir = fixture('node:path');
+    writeFileSync(
+      path.join(dir, 'src', 'b.ts'),
+      "vi.mock('../../../lib/x');\nconst m = import(`../../../lib/y`);\nexport default m;\n",
+    );
+    try {
+      expect(scanCoupling(dir).length).toBe(2);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   it('[negativo] package.json con el nombre del panel falla', () => {
     const dir = fixture('node:path');
     writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name: 'nadakki-dashboard' }));
