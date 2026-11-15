@@ -170,10 +170,7 @@ function deCentavos(c: bigint): string {
 const METODOS: Record<string, string> = { efectivo: "Efectivo", transferencia: "Transferencia", cheque: "Cheque", otro: "Otro" };
 const FUENTES_FX: Record<string, string> = { oficial_bna: "Oficial BNA", mep: "MEP", blue: "Blue", acordado: "Acordado", otra: "Otra" };
 
-/**
- * Compra real (F4D-4). Solo se monta con `autos.costs.view`; con 403 del backend
- * no se pinta nada (ni vacia ni con aviso). Sin compra (vehiculo anterior a F4C): estado propio.
- */
+/** Compra real (F4D-4). Con 403 no se pinta nada; sin compra, estado propio. */
 export function FichaCompraDetalle({ vehicleId }: { vehicleId: string }) {
   const [tenantId, userId] = useIdentidadCache();
   const q = useQuery({
@@ -219,7 +216,7 @@ export function FichaCompraDetalle({ vehicleId }: { vehicleId: string }) {
   }
   const costo = centavosDe(c.cost);
   const vigentes = c.payments.filter((p) => !p.voided);
-  // Total pagado: el del backend; si no llega, suma de las lineas vigentes (nunca las anuladas).
+  // Pagado: el del backend; si falta, suma de lineas vigentes.
   const pagado =
     (c.paid_total ? centavosDe(c.paid_total) : null) ??
     vigentes.reduce<bigint | null>((acc, p) => {

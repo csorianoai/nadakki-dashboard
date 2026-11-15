@@ -1,10 +1,4 @@
-/**
- * Lectura de la compra de un vehiculo (F4D-4): GET /api/v1/autos/vehicles/{id}/purchase y
- * (el contacto del vendedor llega en la PARTE 2/2). El tenant sale SOLO del token (sin X-Tenant-ID).
- *
- * Nada se inventa: lo que la respuesta no trae queda en null y la pantalla no lo pinta.
- * `engine_number` solo existe si el backend lo entrega (autos.engine_number.view).
- */
+/** F4D-4: GET /api/v1/autos/vehicles/{id}/purchase; tenant solo del token (sin X-Tenant-ID). Lo que no llega queda en null. */
 import { accessApiErrorFromHttp } from "@/lib/access/client";
 import { apiFetch } from "@/lib/api/fetch-client";
 
@@ -35,15 +29,13 @@ export type CompraLeida = {
   engine_number: string | null;
 };
 
-/** `null` = el vehiculo no tiene compra registrada (anterior a F4C). */
+/** `null` = sin compra registrada (anterior a F4C). */
 export type CompraResultado = CompraLeida | null;
 
 type Rec = Record<string, unknown>;
 const rec = (v: unknown): Rec | null => (v && typeof v === "object" && !Array.isArray(v) ? (v as Rec) : null);
-const txt = (v: unknown): string | null => {
-  if (typeof v === "number" && Number.isFinite(v)) return String(v);
-  return typeof v === "string" && v.trim() ? v.trim() : null;
-};
+const txt = (v: unknown): string | null =>
+  typeof v === "number" && Number.isFinite(v) ? String(v) : typeof v === "string" && v.trim() ? v.trim() : null;
 
 export const vehiclePurchaseUrl = (vehicleId: string) => `/api/v1/autos/vehicles/${encodeURIComponent(vehicleId)}/purchase`;
 
@@ -51,7 +43,7 @@ export function parseCompra(body: unknown): CompraResultado {
   const r = rec(body);
   if (!r) return null;
   const acq = rec(r.acquisition) ?? {};
-  // Forma de leer(): cost = {currency, amount, paid_total} o null (sin compra: acquisition=null y cost=null).
+  // leer(): cost = {currency, amount, paid_total} o null (sin compra).
   const costRec = rec(r.cost);
   const cost = costRec ? txt(costRec.amount) : txt(r.cost);
   if (cost === null) return null;
@@ -88,20 +80,12 @@ export function parseCompra(body: unknown): CompraResultado {
   };
 }
 
-async function get(path: string): Promise<{ status: number; body: unknown }> {
-  const response = await apiFetch(path, { method: "GET", headers: { Accept: "application/json" } });
-  let body: unknown = null;
-  try {
-    body = await response.json();
-  } catch {
-    body = null;
-  }
-  if (!response.ok && response.status !== 404) throw accessApiErrorFromHttp(response.status, body, path);
-  return { status: response.status, body };
-}
-
 /** 403 y otros errores se lanzan como AccessApiError; 404 = sin compra registrada. */
 export async function fetchCompra(vehicleId: string): Promise<CompraResultado> {
-  const { status, body } = await get(vehiclePurchaseUrl(vehicleId));
-  return status === 404 ? null : parseCompra(body);
+  const path = vehiclePurchaseUrl(vehicleId);
+  const response = await apiFetch(path, { method: "GET", headers: { Accept: "application/json" } });
+  if (response.status === 404) return null;
+  const body: unknown = await response.json().catch(() => null);
+  if (!response.ok) throw accessApiErrorFromHttp(response.status, body, path);
+  return parseCompra(body);
 }
