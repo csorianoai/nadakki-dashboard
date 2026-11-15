@@ -63,6 +63,9 @@ jest.mock("@/lib/dealer/dealer-context-api", () => ({
   fetchMyDealerContext: jest.fn(async () => []),
 }));
 
+jest.mock("@/lib/dealer-management/acquisition-modes", () => ({
+  useAcquisitionModes: () => ({ status: "ok", items: [{ code: "compra_directa", label: "Compra directa" }], retry: () => {} }),
+}));
 jest.mock("@/lib/api/fetch-client", () => ({
   apiFetch: jest.fn(),
 }));

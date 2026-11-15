@@ -42,6 +42,9 @@ jest.mock("@/app/autos/dealer/contactos/ContactoSelector", () => ({
     </button>
   ),
 }));
+jest.mock("@/lib/dealer-management/acquisition-modes", () => ({
+  useAcquisitionModes: () => ({ status: "ok", items: [{ code: "compra_directa", label: "Compra directa" }], retry: () => {} }),
+}));
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: jest.fn() }));
 
 import { apiFetch } from "@/lib/api/fetch-client";
