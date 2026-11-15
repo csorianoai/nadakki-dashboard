@@ -15,6 +15,7 @@ export type PagoCompra = {
   check_bank: string | null;
   check_cash_date: string | null;
   detail: string | null;
+  voided: boolean;
 };
 
 export type CambioCompra = { rate: string; source: string | null; detail: string | null; as_of: string | null };
@@ -22,6 +23,8 @@ export type CambioCompra = { rate: string; source: string | null; detail: string
 export type CompraLeida = {
   cost: string;
   currency: string | null;
+  /** Total pagado segun el backend (excluye pagos anulados). */
+  paid_total: string | null;
   mode: string | null;
   acquired_on: string | null;
   country_code: string | null;
@@ -48,7 +51,9 @@ export function parseCompra(body: unknown): CompraResultado {
   const r = rec(body);
   if (!r) return null;
   const acq = rec(r.acquisition) ?? {};
-  const cost = txt(r.cost) ?? txt(r.amount) ?? txt(r.total_cost);
+  // Forma de leer(): cost = {currency, amount, paid_total} o null (sin compra: acquisition=null y cost=null).
+  const costRec = rec(r.cost);
+  const cost = costRec ? txt(costRec.amount) : txt(r.cost);
   if (cost === null) return null;
   const fxRec = rec(acq.fx) ?? rec(r.fx);
   const rate = fxRec ? txt(fxRec.rate) : null;
@@ -64,12 +69,14 @@ export function parseCompra(body: unknown): CompraResultado {
         check_bank: txt(x.check_bank),
         check_cash_date: txt(x.check_cash_date),
         detail: txt(x.detail),
+        voided: x.voided === true,
       };
     })
     .filter((p): p is PagoCompra => p !== null);
   return {
     cost,
-    currency: txt(r.currency),
+    currency: (costRec ? txt(costRec.currency) : null) ?? txt(r.currency),
+    paid_total: costRec ? txt(costRec.paid_total) : null,
     mode: txt(acq.mode) ?? txt(acq.acquisition_mode_code),
     acquired_on: txt(acq.acquired_on),
     country_code: txt(acq.country_code),

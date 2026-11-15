@@ -218,10 +218,14 @@ export function FichaCompraDetalle({ vehicleId }: { vehicleId: string }) {
     );
   }
   const costo = centavosDe(c.cost);
-  const pagado = c.payments.reduce<bigint | null>((acc, p) => {
-    const x = centavosDe(p.amount);
-    return acc === null || x === null ? null : acc + x;
-  }, BigInt(0));
+  const vigentes = c.payments.filter((p) => !p.voided);
+  // Total pagado: el del backend; si no llega, suma de las lineas vigentes (nunca las anuladas).
+  const pagado =
+    (c.paid_total ? centavosDe(c.paid_total) : null) ??
+    vigentes.reduce<bigint | null>((acc, p) => {
+      const x = centavosDe(p.amount);
+      return acc === null || x === null ? null : acc + x;
+    }, BigInt(0));
   const mon = c.currency ? ` ${c.currency}` : "";
   const fecha = fechaSinZona(c.acquired_on);
   const fxAl = fechaSinZona(c.fx?.as_of);
@@ -238,19 +242,20 @@ export function FichaCompraDetalle({ vehicleId }: { vehicleId: string }) {
         {c.supplier_reference ? ` · Ref. ${c.supplier_reference}` : ""}
       </p>
       <p data-testid="compra-pagos-estado" className="text-sm text-nk-fg">
-        Pagos: {c.payments.length} línea{c.payments.length === 1 ? "" : "s"}
+        Pagos: {vigentes.length} línea{vigentes.length === 1 ? "" : "s"}
         {pagado !== null && costo !== null
           ? ` · ${pagado === costo ? "pagado" : "cubierto"} ${formateaImporte(deCentavos(pagado))} de ${formateaImporte(c.cost)}${mon}`
           : ""}
       </p>
       <ul className="space-y-1">
         {c.payments.map((p, i) => (
-          <li key={i} data-testid="compra-pago" className="text-sm text-nk-fg break-words">
+          <li key={i} data-testid="compra-pago" className={`text-sm break-words ${p.voided ? "text-nk-fg-muted line-through" : "text-nk-fg"}`}>
             {METODOS[p.method] ?? p.method}: {formateaImporte(p.amount)}{mon}
             {p.method === "cheque"
               ? ` · N.º ${p.check_number ?? "—"} · ${p.check_bank ?? "—"} · cobro ${fechaSinZona(p.check_cash_date) ?? "—"}`
               : ""}
             {p.detail ? ` · ${p.detail}` : ""}
+            {p.voided ? " · anulado" : ""}
           </li>
         ))}
       </ul>
