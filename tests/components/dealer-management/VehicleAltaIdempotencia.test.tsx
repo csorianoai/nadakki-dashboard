@@ -143,7 +143,7 @@ describe("alta: clave de idempotencia y errores", () => {
     render(<DealerVehicleNuevoPage />);
     rellena();
     envia();
-    await waitFor(() => expect(screen.getByText(/Ya existe un vehículo con ese VIN/)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByText(/Ya existe un vehículo con ese VIN/).length).toBeGreaterThan(0));
     expect(screen.getByLabelText(/^VIN/)).toHaveAttribute("aria-invalid", "true");
   });
 
