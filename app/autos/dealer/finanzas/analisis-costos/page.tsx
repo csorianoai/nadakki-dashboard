@@ -9,17 +9,10 @@ import { agrupar, fetchCostos, hrefVehiculo } from "../analisis";
 import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
 import { AnalisisMarco, type Formato } from "../AnalisisMarco";
 import { BarrasAnalisis } from "../BarrasAnalisis";
-import { decodeJWT } from "@/lib/auth/jwt-decode";
-import { tokenStorage } from "@/lib/auth/token-storage";
+import { useUsuarioCache } from "../usuarioCache";
 import { SIN_FILTROS, etiquetaUnidad, fetchInventario } from "../inventario/inventario";
 
 const etiquetaTipo = (t: string) => COST_TYPES.find((c) => c.value === t)?.label ?? t;
-
-/** Clave de cache de datos con permisos por rol: tenant + usuario (sin identidad, un marcador que no coincide con nadie). */
-function useUsuarioCache(): string {
-  const p = decodeJWT(tokenStorage.getAccessToken() ?? "") as { sub?: string; user_id?: string } | null;
-  return p?.sub ?? p?.user_id ?? "sin-identidad";
-}
 
 /**
  * Nombres legibles de las unidades (F4E-1): la barra por vehiculo nunca se etiqueta con el UUID.
