@@ -24,6 +24,7 @@ import {
   FichaCostos,
   FichaEdicionTecnica,
   FichaVendedor,
+  FichaCompraDetalle,
 } from "./ficha-interna";
 
 function asDecision(
@@ -132,6 +133,7 @@ function VehicleFicha({
       )}
       <FichaCompra vehicleId={vehicleId} />
       {/* Sin `autos.costs.view` la seccion no se pinta: ni vacia. */}
+      {costsView ? <FichaCompraDetalle vehicleId={vehicleId} /> : null}
       {costsView ? <FichaCostos vehicleId={vehicleId} /> : null}
       <FichaVendedor />
       <FichaEdicionTecnica />
