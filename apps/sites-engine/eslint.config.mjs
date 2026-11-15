@@ -13,7 +13,7 @@ export default tseslint.config(
         {
           patterns: [
             { group: ['../../../*', '../../../../*'], message: 'Autocontenido: no se sale de apps/sites-engine.' },
-            { group: ['@/lib/*', '@/components/*', '@/app/*'], message: 'El alias @/ es solo de ./src; nada del panel.' },
+            { group: ['@/../*', '@/lib/*', '@/components/*', '@/app/*'], message: 'El alias @/ es solo de ./src; nada del panel.' },
           ],
         },
       ],

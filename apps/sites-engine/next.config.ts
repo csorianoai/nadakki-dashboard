@@ -1,7 +1,7 @@
 import type { NextConfig } from 'next';
 
 // Cabeceras tomadas de baylara-web next.config.mjs:7-15. Este motor no fija cookies con dominio compartido.
-const isProd = (process.env.VERCEL_ENV ?? process.env.NODE_ENV) === 'production';
+const isProd = process.env.VERCEL_ENV === 'production' || (!process.env.VERCEL_ENV && process.env.NODE_ENV === 'production');
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,

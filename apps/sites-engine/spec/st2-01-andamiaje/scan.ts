@@ -8,7 +8,9 @@ const PANEL_NAME = 'nadakki-dashboard';
 const IMPORT_RES = [
   /^\s*(?:import|export)\s[^'"]*?from\s*['"]([^'"]+)['"]/gm,
   /^\s*import\s*['"]([^'"]+)['"]/gm,
-  /\bimport\(\s*['"]([^'"]+)['"]\s*\)/g,
+  // sin comillas antes en la linea: no cuenta texto dentro de literales (fixtures)
+  /^[^'"`\n]*\bimport\(\s*['"`]([^'"`]+)['"`]\s*\)/gm,
+  /^[^'"`\n]*\bvi\.(?:mock|doMock|importActual|importMock)\(\s*['"`]([^'"`]+)['"`]/gm,
   /\brequire\(\s*['"]([^'"]+)['"]\s*\)/g,
 ];
 
@@ -53,7 +55,9 @@ export function scanCoupling(root: string): string[] {
           const target = path.resolve(path.dirname(file), spec);
           if (!inside(root, target)) problems.push(`${where} sale de la carpeta`);
         } else if (spec.startsWith('@/')) {
-          if (!exists(path.join(root, 'src', spec.slice(2)))) problems.push(`${where} alias @/ no existe en src (del panel?)`);
+          const target = path.resolve(root, 'src', spec.slice(2));
+          if (!inside(path.join(root, 'src'), target)) problems.push(`${where} alias @/ sale de src`);
+          else if (!exists(target)) problems.push(`${where} alias @/ no existe en src (del panel?)`);
         } else if (spec.startsWith('node:') || builtins.has(spec)) {
           continue;
         } else {
