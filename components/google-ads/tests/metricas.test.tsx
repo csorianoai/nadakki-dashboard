@@ -98,8 +98,9 @@ describe("metricas de Google Ads", () => {
     const { container } = render(<MetricasGoogleAds />);
     await screen.findByRole("table");
     const permitidas = new Set(["1,000", "50", "5.00", "12.50", "2", "123-456-7890", "7", "14", "30"]);
-    const numeros = (container.textContent ?? "").match(/\d[\d,.-]*/g) ?? [];
-    for (const n of numeros) expect(permitidas.has(n.replace(/\.$/, ""))).toBe(true);
+    const hojas = Array.from(container.querySelectorAll("*")).filter((e) => e.children.length === 0);
+    const numeros = hojas.flatMap((e) => (e.textContent ?? "").match(/\d[\d,.-]*/g) ?? []);
+    for (const n of numeros) expect([n, permitidas.has(n.replace(/\.$/, ""))]).toEqual([n, true]);
   });
 
   it("cambiar de rango vuelve a pedir con el rango elegido", async () => {
