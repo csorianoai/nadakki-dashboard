@@ -12,6 +12,7 @@
  */
 
 import type { ReactNode } from "react";
+import type { AcquisitionModesState } from "@/lib/dealer-management/acquisition-modes";
 import {
   DOC_ITEMS,
   EMPTY_LINE,
@@ -25,12 +26,16 @@ import {
 } from "@/lib/dealer-management/vehicle-purchase";
 
 const FIELD =
-  "mt-1 min-h-11 w-full max-w-full rounded-r-sm border border-nk-border bg-nk-surface px-3 text-sm text-nk-fg disabled:cursor-not-allowed disabled:opacity-60";
+  "mt-1 min-h-11 w-full min-w-0 max-w-full rounded-r-sm border border-nk-border bg-nk-surface px-3 text-sm text-nk-fg disabled:cursor-not-allowed disabled:opacity-60";
 const LABEL = "block text-sm font-semibold text-nk-fg";
 
 export type SellerSelectorProps = { value: string; onChange: (id: string) => void; error?: string };
 
+export type AcquisitionModesProp = AcquisitionModesState & { retry: () => void };
+
 export type VehiclePurchaseSectionProps = {
+  /** Modos de adquisicion del tenant (F4D-3). Sin ellos no hay desplegable. */
+  acquisitionModes?: AcquisitionModesProp;
   value: PurchaseForm;
   onChange: (next: PurchaseForm) => void;
   errors: PurchaseErrors;
@@ -56,6 +61,7 @@ export function VehiclePurchaseSection({
   functionalCurrency,
   busy = false,
   sellerSelector,
+  acquisitionModes = { status: "loading", retry: () => {} },
 }: VehiclePurchaseSectionProps) {
   const unavailable = !sellerSelector;
   const off = busy || unavailable;
@@ -71,7 +77,7 @@ export function VehiclePurchaseSection({
   function text(name: keyof PurchaseForm, label: string, opts: { type?: string; maxLength?: number; ayuda?: string; inputMode?: "decimal" } = {}) {
     const error = errors[name];
     return (
-      <label className="block">
+      <label className="block min-w-0">
         <span className={LABEL}>{label}</span>
         <input
           name={`purchase_${name}`}
@@ -90,6 +96,45 @@ export function VehiclePurchaseSection({
     );
   }
 
+  function modoAdquisicion() {
+    if (acquisitionModes.status === "error") {
+      return (
+        <div role="alert" data-testid="acquisition-modes-error" className="block min-w-0 text-sm text-nk-fg">
+          <span className={LABEL}>Código de adquisición *</span>
+          <p className="mt-1">No pudimos leer los modos de adquisición de tu concesionario.</p>
+          <button type="button" onClick={acquisitionModes.retry} className="mt-1 min-h-11 rounded-full border border-nk-border px-4 text-sm font-semibold">
+            Reintentar
+          </button>
+          {err("acquisition_mode_code")}
+        </div>
+      );
+    }
+    const items = acquisitionModes.status === "ok" ? acquisitionModes.items : [];
+    const error = errors.acquisition_mode_code;
+    return (
+      <label className="block min-w-0">
+        <span className={LABEL}>Código de adquisición *</span>
+        <select
+          name="purchase_acquisition_mode_code"
+          value={value.acquisition_mode_code}
+          onChange={(e) => set("acquisition_mode_code", e.target.value)}
+          disabled={off || acquisitionModes.status === "loading"}
+          aria-invalid={error ? true : undefined}
+          className={FIELD}
+        >
+          <option value="">{acquisitionModes.status === "loading" ? "Cargando modos…" : "Elige un modo de adquisición"}</option>
+          {items.map((m) => (
+            <option key={m.code} value={m.code}>{m.label}</option>
+          ))}
+        </select>
+        {acquisitionModes.status === "ok" && items.length === 0 ? (
+          <span className="mt-1 block text-xs text-nk-fg-muted">Tu concesionario no tiene modos de adquisición configurados.</span>
+        ) : null}
+        {err("acquisition_mode_code")}
+      </label>
+    );
+  }
+
   function err(key: string) {
     return errors[key] ? <span role="alert" className="mt-1 block text-xs font-semibold text-red-600">{errors[key]}</span> : null;
   }
@@ -103,20 +148,20 @@ export function VehiclePurchaseSection({
           puede registrar desde aquí.
         </p>
       ) : null}
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {text("cost", "Costo de compra *", { inputMode: "decimal", ayuda: "Sin IVA recuperable. Ejemplo: 18500000,50." })}
         {text("acquired_on", "Fecha de adquisición *", { type: "date" })}
         {text("currency", "Moneda de la compra *", { maxLength: 3, ayuda: "Código de 3 letras." })}
         {text("country_code", "País de adquisición *", { maxLength: 2, ayuda: "Código de 2 letras." })}
-        {text("acquisition_mode_code", "Código de adquisición *", { maxLength: 40, ayuda: "El vigente en tu concesionario." })}
+        {modoAdquisicion()}
         {text("engine_number", "Número de motor (privado)", { maxLength: 40, ayuda: "Solo lo ves tú; no se publica." })}
       </div>
 
       {fx ? (
-        <div className="grid gap-3 md:grid-cols-2" data-testid="purchase-fx">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2" data-testid="purchase-fx">
           {text("fx_rate", "Tipo de cambio *", { inputMode: "decimal" })}
           {text("fx_as_of", "Fecha del tipo de cambio *", { type: "date" })}
-          <label className="block">
+          <label className="block min-w-0">
             <span className={LABEL}>Fuente del tipo de cambio *</span>
             <select
               name="purchase_fx_source"
@@ -136,11 +181,11 @@ export function VehiclePurchaseSection({
         </div>
       ) : null}
 
-      <fieldset className="space-y-3" disabled={off}>
+      <fieldset className="min-w-0 space-y-3" disabled={off}>
         <legend className="text-sm font-bold text-nk-fg">Pagos</legend>
         {value.payment_lines.map((line, i) => (
-          <div key={i} className="grid gap-3 rounded-r-sm border border-nk-border p-3 md:grid-cols-2">
-            <label className="block">
+          <div key={i} className="grid grid-cols-1 gap-3 rounded-r-sm border border-nk-border p-3 md:grid-cols-2">
+            <label className="block min-w-0">
               <span className={LABEL}>Medio de pago {i + 1}</span>
               <select
                 value={line.method}
@@ -153,24 +198,24 @@ export function VehiclePurchaseSection({
               </select>
               {err(`payment_${i}_method`)}
             </label>
-            <label className="block">
+            <label className="block min-w-0">
               <span className={LABEL}>Importe del pago {i + 1}</span>
               <input value={line.amount} inputMode="decimal" onChange={(e) => setLine(i, { amount: e.target.value })} className={FIELD} />
               {err(`payment_${i}_amount`)}
             </label>
             {line.method === "cheque" ? (
               <>
-                <label className="block">
+                <label className="block min-w-0">
                   <span className={LABEL}>Número del cheque {i + 1}</span>
                   <input value={line.cheque_number} onChange={(e) => setLine(i, { cheque_number: e.target.value })} className={FIELD} />
                   {err(`payment_${i}_cheque_number`)}
                 </label>
-                <label className="block">
+                <label className="block min-w-0">
                   <span className={LABEL}>Banco del cheque {i + 1}</span>
                   <input value={line.bank} onChange={(e) => setLine(i, { bank: e.target.value })} className={FIELD} />
                   {err(`payment_${i}_bank`)}
                 </label>
-                <label className="block">
+                <label className="block min-w-0">
                   <span className={LABEL}>Fecha de cobro {i + 1}</span>
                   <input type="date" value={line.cobro_date} onChange={(e) => setLine(i, { cobro_date: e.target.value })} className={FIELD} />
                   {err(`payment_${i}_cobro_date`)}
@@ -178,7 +223,7 @@ export function VehiclePurchaseSection({
               </>
             ) : null}
             {line.method === "other" ? (
-              <label className="block">
+              <label className="block min-w-0">
                 <span className={LABEL}>Detalle del pago {i + 1}</span>
                 <input value={line.detail} onChange={(e) => setLine(i, { detail: e.target.value })} className={FIELD} />
                 {err(`payment_${i}_detail`)}
@@ -221,7 +266,7 @@ export function VehiclePurchaseSection({
         {err("seller_contact_id")}
       </div>
 
-      <fieldset className="space-y-2" disabled={busy}>
+      <fieldset className="min-w-0 space-y-2" disabled={busy}>
         <legend className="text-sm font-bold text-nk-fg">Documentación recibida (informativo)</legend>
         <p className="text-xs text-nk-fg-muted">Es solo un recordatorio: no se envía ni bloquea la compra.</p>
         <div className="flex flex-wrap gap-4">
