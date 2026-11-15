@@ -135,7 +135,7 @@ function VehicleFicha({
       {/* Sin `autos.costs.view` la seccion no se pinta: ni vacia. */}
       {costsView ? <FichaCompraDetalle vehicleId={vehicleId} /> : null}
       {costsView ? <FichaCostos vehicleId={vehicleId} /> : null}
-      <FichaVendedor />
+      {costsView ? <FichaVendedor vehicleId={vehicleId} /> : null}
       <FichaEdicionTecnica />
     </>
   );
