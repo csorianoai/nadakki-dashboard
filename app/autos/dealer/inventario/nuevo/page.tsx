@@ -15,7 +15,7 @@
  * error tampoco (fail-closed). El 403 del backend sigue siendo la autoridad.
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AccessApiError } from "@/lib/access/client";
@@ -70,6 +70,12 @@ export default function DealerVehicleNuevoPage() {
   const branding = useDealerManagementBranding();
   const monedaFuncional = branding.data ? localeDeTenant(branding.data).currency : null;
 
+  // Una clave por intento de alta: se reutiliza en cada reintento del MISMO contenido,
+  // se renueva si el contenido cambia (otra compra) y se descarta tras un 201.
+  const intento = useRef<{ key: string | undefined; huella: string | null }>({ key: undefined, huella: null });
+  if (intento.current.key === undefined) intento.current.key = nuevaIdempotencyKey();
+  const enCurso = useRef(false);
+
   const [busy, setBusy] = useState(false);
   const [reasonCode, setReasonCode] = useState<string | null>(null);
   const [ack, setAck] = useState<string | null>(null);
@@ -77,16 +83,24 @@ export default function DealerVehicleNuevoPage() {
   async function onSubmit(form: VehicleForm, purchase?: PurchaseForm) {
     if (!context) return;
     // La compra es obligatoria en el alta: sin ella y sin llave de idempotencia no se envia nada (fail-closed).
-    const key = nuevaIdempotencyKey();
+    if (enCurso.current) return;
+    const huella = JSON.stringify({ form, purchase });
+    if (intento.current.huella !== null && intento.current.huella !== huella) {
+      intento.current = { key: nuevaIdempotencyKey(), huella: null };
+    }
+    const key = intento.current.key;
     if (!purchase || !key) {
       setReasonCode("DEFAULT_DENY");
       return;
     }
+    intento.current.huella = huella;
+    enCurso.current = true;
     setBusy(true);
     setReasonCode(null);
     setAck(null);
     try {
       const body = await createVehiclePurchase(context, form, purchase, monedaFuncional, key);
+      intento.current = { key: nuevaIdempotencyKey(), huella: null };
       const id = vehicleIdFrom(body);
       if (id) {
         setAck(`Vehículo creado: ${id}`);
@@ -97,16 +111,19 @@ export default function DealerVehicleNuevoPage() {
     } catch (error) {
       if (error instanceof AccessApiError) {
         setReasonCode(error.reason_code ?? `HTTP_${error.status}`);
+        // Clave ya usada con otro contenido: reenviar con ella volveria a fallar.
+        if (error.reason_code === "IDEMPOTENCY_KEY_REUSED") intento.current = { key: nuevaIdempotencyKey(), huella: null };
       } else {
         setReasonCode("DEFAULT_DENY");
       }
     } finally {
+      enCurso.current = false;
       setBusy(false);
     }
   }
 
   return (
-    <main className="max-w-full space-y-5 overflow-x-hidden">
+    <main className="max-w-full space-y-5 overflow-x-clip">
       <header>
         <h1 className="font-manrope text-2xl font-extrabold text-nk-fg">Nuevo vehículo</h1>
         <p className="mt-1 text-sm text-nk-fg-muted">
