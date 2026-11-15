@@ -10,6 +10,9 @@ import { VehicleManualForm } from "@/components/dealer-management/VehicleManualF
 import { VEHICLE_INITIAL_STATUS } from "@/lib/dealer-management/vehicle-manual";
 
 let branding: { locale?: string | null; currency?: string | null } | undefined;
+jest.mock("@/lib/dealer-management/acquisition-modes", () => ({
+  useAcquisitionModes: () => ({ status: "ok", items: [{ code: "compra_directa", label: "Compra directa" }], retry: () => {} }),
+}));
 jest.mock("@/lib/dealer-management/useDealerManagementBranding", () => ({
   useDealerManagementBranding: () => ({ data: branding, isPending: false, isLoading: false }),
 }));
