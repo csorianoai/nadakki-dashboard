@@ -72,7 +72,7 @@ describe("metricas de Google Ads", () => {
     expect(filas).toHaveLength(1 + 3 + 1); // cabecera + 3 + totales
     const alfa = within(filas[1]).getAllByRole("cell").map((c) => c.textContent);
     expect(alfa[0]).toBe("Alfa");
-    expect(alfa[1]).toBe("1,000");
+    expect(alfa[1]).toBe("1000");
     expect(alfa[2]).toBe("50");
     expect(alfa[3]).toMatch(/^5\s?%$/);
     expect(alfa[4]).toMatch(/12,50/);
@@ -81,11 +81,13 @@ describe("metricas de Google Ads", () => {
     expect(within(filas[3]).getAllByRole("cell")[3].textContent).toBe("—");
     // Totales: 3000 impresiones, 80 clics, CTR 80/3000 = 2.67 %, costo 19.75, conversiones 3.5
     const tot = within(filas[4]).getAllByRole("cell").map((c) => c.textContent);
-    expect(tot[1]).toBe("3,000");
+    expect(tot[1]).toBe("3000");
     expect(tot[2]).toBe("80");
     expect(tot[3]).toMatch(/^2,7\s?%$/);
     expect(tot[4]).toMatch(/19,75/);
-    expect(tot[5]).toBe("3.5");
+    expect(tot[5]).toBe("3,5");
+    // Un solo locale: ninguna celda usa "." ni "," como miles junto a "," como decimal
+    for (const c of [...alfa, ...tot].slice(1)) expect(c).not.toMatch(/\d,\d{3}(?!\d)|\d\.\d{1,2}(?!\d)/);
     expect(llamadas("/metrics")).toHaveLength(1);
     const url = String(llamadas("/metrics")[0][0]);
     expect(url).toContain("/api/v1/tenants/tenant-sesion/google-ads/metrics");
@@ -97,7 +99,7 @@ describe("metricas de Google Ads", () => {
     rutear(accounts([cuenta({})]), metricas([camp("1", "Alfa", 1000, 50, 12_500_000, 2)]));
     const { container } = render(<MetricasGoogleAds />);
     await screen.findByRole("table");
-    const permitidas = new Set(["1,000", "50", "5", "12,50", "2", "123-456-7890", "7", "14", "30"]);
+    const permitidas = new Set(["1000", "50", "5", "12,50", "2", "123-456-7890", "7", "14", "30"]);
     const hojas = Array.from(container.querySelectorAll("*")).filter((e) => e.children.length === 0);
     const numeros = hojas.flatMap((e) => (e.textContent ?? "").match(/\d[\d,.-]*/g) ?? []);
     for (const n of numeros) expect([n, permitidas.has(n.replace(/\.$/, ""))]).toEqual([n, true]);

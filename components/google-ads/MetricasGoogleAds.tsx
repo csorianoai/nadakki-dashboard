@@ -5,8 +5,7 @@ import { apiFetch } from "@/lib/api/fetch-client";
 import { useTenant } from "@/contexts/TenantContext";
 import { tokenStorage } from "@/lib/auth/token-storage";
 import { decodeJWT } from "@/lib/auth/jwt-decode";
-import { formatNumber } from "@/lib/nauta/format";
-import { formatMoneda, formatPorcentaje, LOCALE_POR_DEFECTO } from "@/lib/dcc/formato";
+import { formatEntero, formatMoneda, formatPorcentaje, LOCALE_POR_DEFECTO } from "@/lib/dcc/formato";
 import ConectarGoogleAds from "@/components/google-ads/ConectarGoogleAds";
 
 /** Rangos que acepta el backend (services/marketing_google_ads_metrics.py:9 DATE_RANGES). */
@@ -41,9 +40,15 @@ const MSG_LECTURA = "No pudimos leer las métricas de Google Ads ahora. Inténta
 const conGuiones = (id: string) => `${id.slice(0, 3)}-${id.slice(3, 6)}-${id.slice(6)}`;
 const esNum = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
 
+/** Mismo locale que el costo y el CTR: una sola convención de miles/decimales en la tabla. */
+const entero = (n: number) => formatEntero(n, LOCALE_POR_DEFECTO) ?? "—";
+const decimal = (n: number) =>
+  new Intl.NumberFormat(LOCALE_POR_DEFECTO.locale, { maximumFractionDigits: 2 }).format(n);
+
 /** CTR calculado con las cifras recibidas; sin impresiones no hay CTR. */
 function ctr(clics: number, impresiones: number): string {
   if (!(impresiones > 0)) return "—";
+  // Aquí el front SÍ divide (la tarjeta exige CTR calculado con lo recibido); se reutiliza solo el formato.
   return formatPorcentaje(clics / impresiones, LOCALE_POR_DEFECTO) ?? "—";
 }
 
@@ -256,22 +261,22 @@ export default function MetricasGoogleAds() {
               {datos.filas.map((f) => (
                 <tr key={f.id} className="border-b">
                   <td className="py-2 pr-4">{f.name ?? "Sin nombre"}</td>
-                  <td className="py-2 pr-4">{formatNumber(f.impressions)}</td>
-                  <td className="py-2 pr-4">{formatNumber(f.clicks)}</td>
+                  <td className="py-2 pr-4">{entero(f.impressions)}</td>
+                  <td className="py-2 pr-4">{entero(f.clicks)}</td>
                   <td className="py-2 pr-4">{ctr(f.clicks, f.impressions)}</td>
                   <td className="py-2 pr-4">{dinero(f.cost_micros, moneda)}</td>
-                  <td className="py-2">{formatNumber(f.conversions)}</td>
+                  <td className="py-2">{decimal(f.conversions)}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr className="font-semibold">
                 <td className="py-2 pr-4">Total</td>
-                <td className="py-2 pr-4">{formatNumber(tot.impressions)}</td>
-                <td className="py-2 pr-4">{formatNumber(tot.clicks)}</td>
+                <td className="py-2 pr-4">{entero(tot.impressions)}</td>
+                <td className="py-2 pr-4">{entero(tot.clicks)}</td>
                 <td className="py-2 pr-4">{ctr(tot.clicks, tot.impressions)}</td>
                 <td className="py-2 pr-4">{dinero(tot.cost_micros, moneda)}</td>
-                <td className="py-2">{formatNumber(tot.conversions)}</td>
+                <td className="py-2">{decimal(tot.conversions)}</td>
               </tr>
             </tfoot>
           </table>
