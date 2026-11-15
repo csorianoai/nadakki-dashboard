@@ -1,5 +1,5 @@
 /** @jest-environment node */
-/** F4D-7: Contactos en el menú del concesionario (grupo Operación, misma regla que Inventario). */
+/** F4D-7: Contactos en el menú del concesionario (grupo Operación, capability del backend de contactos). */
 import { DEALER_NAV_GROUPS, visibleDealerNavGroups } from "@/components/dealer-management/shell/dealer-nav";
 import { MANIFIESTO_PAGINAS } from "@/lib/paginas/manifiesto";
 
@@ -14,20 +14,18 @@ describe("F4D-7 Contactos en el menú del dealer", () => {
     expect(op.items[i - 1]!.href).toBe("/autos/dealer/inventario");
   });
 
-  it("usa la misma capability que Inventario (no se inventa ninguna)", () => {
-    const todos = DEALER_NAV_GROUPS.flatMap((g) => g.items);
-    const c = todos.find((x) => x.href === HREF)!;
-    const inv = todos.find((x) => x.href === "/autos/dealer/inventario")!;
-    expect(c.capability).toBe("autos.inventory.list");
-    expect(c.capability).toBe(inv.capability);
-    expect(c.alsoRequires).toEqual(inv.alsoRequires);
+  it("pide la capability que exige el backend para /api/v1/autos/contacts (autos.leads.crm), no la de Inventario", () => {
+    const c = DEALER_NAV_GROUPS.flatMap((g) => g.items).find((x) => x.href === HREF)!;
+    expect(c.capability).toBe("autos.leads.crm");
+    expect(c.alsoRequires).toBeUndefined();
   });
 
-  it("un usuario sin autos.inventory.list no la ve; con ella sí", () => {
+  it("un plan con inventario y sin CRM no la ve (recibiría 403 en la pantalla); con autos.leads.crm sí", () => {
     const hrefs = (allows: (k: string | null) => boolean) =>
       visibleDealerNavGroups(allows).flatMap((g) => g.items.map((i) => i.href));
     expect(hrefs((k) => k === null)).not.toContain(HREF);
-    expect(hrefs((k) => k === null || k === "autos.inventory.list")).toContain(HREF);
+    expect(hrefs((k) => k === null || k === "autos.inventory.list")).not.toContain(HREF);
+    expect(hrefs((k) => k === null || k === "autos.leads.crm")).toContain(HREF);
   });
 
   it("el manifiesto la tiene clasificada y accesible", () => {
