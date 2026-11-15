@@ -92,6 +92,16 @@ export const PURCHASE_EMPTY: PurchaseForm = {
   fx_as_of: "",
 };
 
+/** Mensajes propios de los reason_code del alta con compra; lo desconocido usa el generico. */
+export const MENSAJE_ALTA: Record<string, string> = {
+  VIN_DUPLICATE: "Ya existe un vehículo con ese VIN. Revisa el VIN o busca el vehículo en el inventario.",
+  SELLER_CONTACT_NOT_FOUND: "El contacto vendedor no existe o ya no está disponible. Elige otro contacto vendedor.",
+  PAYMENT_SUM_MISMATCH: "La suma de los pagos no coincide con el costo de la compra. Corrígela e intenta de nuevo.",
+  CAPABILITY_DENIED: "Tu usuario no tiene permiso para registrar compras de vehículos. Pide a quien administra tu cuenta que revise tus permisos.",
+  DEALER_NOT_ASSIGNED: "Tu usuario no está asignado a este concesionario. Pide que te asignen para poder cargar vehículos.",
+  IDEMPOTENCY_KEY_REUSED: "Esta carga ya se envió antes con otros datos. Revisa el inventario por si el vehículo ya se creó; si no, vuelve a enviarla.",
+};
+
 export type PurchaseErrors = Record<string, string>;
 
 /** "1.234,50" -> 123450 centavos; null si no es un importe. */
@@ -122,7 +132,7 @@ export function validatePurchase(form: PurchaseForm, functionalCurrency: string 
   else if (costo === null) errors.cost = "Ingresa un costo mayor que cero, por ejemplo 18500000,50.";
   if (!dateOK(form.acquired_on)) errors.acquired_on = "Indica una fecha de adquisición válida.";
   if (!/^[A-Za-z]{2}$/.test(form.country_code)) errors.country_code = "Indica el país de adquisición (2 letras).";
-  if (!form.acquisition_mode_code.trim() || form.acquisition_mode_code.length > 40) errors.acquisition_mode_code = "Indica el código de adquisición vigente en tu concesionario.";
+  if (!form.acquisition_mode_code.trim() || form.acquisition_mode_code.length > 40) errors.acquisition_mode_code = "Elige el modo de adquisición.";
   if (!/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(form.seller_contact_id)) errors.seller_contact_id = "Selecciona el contacto vendedor.";
   if (form.engine_number.length > 40) errors.engine_number = "El número de motor admite hasta 40 caracteres.";
 
