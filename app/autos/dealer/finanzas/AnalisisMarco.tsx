@@ -14,7 +14,6 @@ import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
 import { formateaMoneda, localeDeTenant, type LocaleTenant } from "@/lib/dealer-management/formato";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
-import { useUsuarioCache } from "./usuarioCache";
 import { PERIODOS, rangoDePeriodo, type Periodo, type Rango } from "./analisis";
 
 export type Formato = (valor: number) => string;
@@ -39,18 +38,14 @@ export function AnalisisMarco<T extends { moneda: string; total: number }>({
   const locale = localeDeTenant(branding.data);
   const [periodo, setPeriodo] = useState<Periodo>("todo");
   const rango = rangoDePeriodo(periodo);
-  const userId = useUsuarioCache();
 
   const cargando = access.isLoading || access.isPending;
   const permitido = !cargando && !access.error && claves.every((k) => access.data?.results[k]?.allowed === true);
 
   const consulta = useQuery({
-    queryKey: ["finanzas-analisis", titulo, context?.tenantId ?? "none", userId, rango.desde ?? "", rango.hasta ?? ""],
+    queryKey: ["finanzas-analisis", titulo, context?.tenantId ?? "none", rango.desde ?? "", rango.hasta ?? ""],
     queryFn: () => cargar(rango),
     enabled: Boolean(context && permitido),
-    // Cifras filtradas por rol: no se retienen al desmontar.
-    staleTime: 0,
-    gcTime: 0,
     retry: false,
   });
 
