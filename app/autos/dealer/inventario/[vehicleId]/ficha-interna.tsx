@@ -18,6 +18,7 @@ import { formateaFecha } from "@/lib/dealer-management/formato";
 import { fetchVehicleDays, fetchVehicleMargins } from "@/lib/dealer/vehicle-economics";
 import { fetchCompra } from "./vehicle-purchase-read";
 import { DetalleTecnico } from "../DetalleTecnico";
+import { obtenerContacto } from "../../contactos/contactos-api";
 
 /** No esta en el catalogo 097 (`capabilities.ts` la rechazaria): se pide tal cual y el default es negar. */
 export const COSTS_VIEW_CAPABILITY = "autos.costs.view";
@@ -290,13 +291,57 @@ export function FichaEdicionTecnica() {
   );
 }
 
-export function FichaVendedor() {
+/** Vendedor de la compra como contacto. Solo se monta con `autos.costs.view`; con 403 en la compra no pinta nada. */
+export function FichaVendedor({ vehicleId }: { vehicleId: string }) {
+  const [tenantId, userId] = useIdentidadCache();
+  // Misma clave y opciones que FichaCompraDetalle: una sola peticion de compra.
+  const compra = useQuery({
+    queryKey: ["dealer-vehicle-purchase", tenantId, userId, vehicleId],
+    queryFn: () => fetchCompra(vehicleId),
+    ...SIN_REUTILIZAR,
+    enabled: vehicleId.length > 0,
+    retry: false,
+  });
+  const sellerId = compra.data?.seller_contact_id ?? null;
+  const contacto = useQuery({
+    queryKey: ["dealer-contact", tenantId, userId, sellerId],
+    queryFn: () => obtenerContacto(sellerId ?? ""),
+    ...SIN_REUTILIZAR,
+    enabled: sellerId !== null,
+    retry: false,
+  });
+  if (!compra.data) return null;
+  let cuerpo;
+  if (sellerId === null) {
+    cuerpo = <p data-testid="vendedor-sin-registro" className="text-sm text-nk-fg-muted">Sin vendedor registrado.</p>;
+  } else if (contacto.isError) {
+    cuerpo = (
+      <div role="alert" data-testid="vendedor-error" className="space-y-2">
+        <p className="text-sm text-nk-fg">No se pudo leer el vendedor.</p>
+        <button type="button" onClick={() => void contacto.refetch()} className="min-h-11 rounded-full border border-nk-border px-4 text-sm font-semibold text-nk-fg">
+          Reintentar
+        </button>
+      </div>
+    );
+  } else if (!contacto.data) {
+    cuerpo = <p data-testid="vendedor-cargando" className="animate-pulse text-sm text-nk-fg-muted">Cargando vendedor…</p>;
+  } else {
+    const c = contacto.data;
+    cuerpo = (
+      <div className="space-y-1 text-sm text-nk-fg break-words">
+        <p data-testid="vendedor-nombre">{c.display_name}</p>
+        {c.dni ? <p>DNI: {c.dni}</p> : null}
+        {c.cuit ? <p>CUIT: {c.cuit}</p> : null}
+        <Link href="/autos/dealer/contactos" data-testid="vendedor-enlace" className="inline-flex min-h-11 items-center text-sm font-semibold underline">
+          Ver en Contactos
+        </Link>
+      </div>
+    );
+  }
   return (
     <section data-testid="ficha-vendedor" className={caja}>
       <h2 className="font-manrope text-lg font-bold text-nk-fg">Vendedor</h2>
-      <NoDisponible testId="ficha-vendedor-motivo">
-        Disponible cuando se publique el contacto del vendedor (el DNI se mostrará enmascarado salvo rol autorizado).
-      </NoDisponible>
+      {cuerpo}
     </section>
   );
 }
