@@ -5,7 +5,7 @@ import { motion } from "@/lib/motion-stub";
 import {
   Share2,
   Facebook,
-  Youtube,
+  BarChart3,
   Linkedin,
   Twitter,
   Loader2,
