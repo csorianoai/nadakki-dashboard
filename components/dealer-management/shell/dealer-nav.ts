@@ -84,6 +84,7 @@ export const DEALER_NAV_GROUPS: DealerNavGroup[] = [
     label: "Finanzas",
     items: [
       { href: "/autos/dealer/finanzas", label: "Finanzas por vehículo", icon: Wallet, capability: "accounting.ledger.entries", alsoRequires: ["autos.inventory.list"] },
+      { href: "/autos/dealer/finanzas/inventario", label: "Finanzas del inventario", icon: BarChart3, capability: "accounting.ledger.entries", alsoRequires: ["autos.inventory.list"] },
       { href: "/contable", label: "Contabilidad", icon: ReceiptText, capability: "accounting.ledger.entries" },
       { href: "/contable/plan-cuentas", label: "Plan de cuentas", icon: ListTree, capability: "accounting.ledger.entries" },
       { href: "/contable/libro-mayor", label: "Libro mayor", icon: BookOpen, capability: "accounting.ledger.entries" },
