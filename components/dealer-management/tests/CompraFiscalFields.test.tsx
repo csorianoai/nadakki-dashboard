@@ -66,11 +66,11 @@ describe("compra fiscal: validacion y payload", () => {
   it("empresa con factura envia letra, punto, numero, neto, IVA y alicuota", () => {
     const p = purchasePayload(valida({
       seller_tax_status: "responsable_inscripto", voucher_kind: "factura", invoice_letter: "A", invoice_pos: "12",
-      invoice_number: "345", net_amount: "1000,00", vat_amount: "210,00", vat_rate: "21",
+      invoice_number: "345", net_amount: "826446,28", vat_amount: "173553,72", vat_rate: "21",
     }), "ARS");
     expect(p.fiscal).toEqual({
       seller_tax_status: "responsable_inscripto", voucher_kind: "factura", invoice_letter: "A", invoice_pos: "12",
-      invoice_number: "345", net_amount: "1000.00", vat_amount: "210.00", vat_rate: "21",
+      invoice_number: "345", net_amount: "826446.28", vat_amount: "173553.72", vat_rate: "21",
     });
   });
 
