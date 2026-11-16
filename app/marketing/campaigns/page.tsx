@@ -53,7 +53,7 @@ export default function CampaignsPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/marketing/campaigns/new"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500/90 hover:bg-orange-500 text-sm font-medium text-white"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-700 hover:bg-orange-800 text-sm font-medium text-white"
           >
             Nueva campaña de correo y mensajes
           </Link>
@@ -87,7 +87,7 @@ export default function CampaignsPage() {
           </p>
           <Link
             href="/marketing/campaigns/new"
-            className="inline-block mt-6 px-4 py-2 rounded-lg bg-orange-500/90 hover:bg-orange-500 text-sm font-medium text-white"
+            className="inline-block mt-6 px-4 py-2 rounded-lg bg-orange-700 hover:bg-orange-800 text-sm font-medium text-white"
           >
             Crear campaña de correo y mensajes
           </Link>
