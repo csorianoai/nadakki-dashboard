@@ -13,6 +13,7 @@
 
 import type { ReactNode } from "react";
 import type { AcquisitionModesState } from "@/lib/dealer-management/acquisition-modes";
+import { CompraFiscalFields } from "@/components/dealer-management/CompraFiscalFields";
 import {
   DOC_ITEMS,
   EMPTY_LINE,
@@ -203,7 +204,7 @@ export function VehiclePurchaseSection({
               <input value={line.amount} inputMode="decimal" onChange={(e) => setLine(i, { amount: e.target.value })} className={FIELD} />
               {err(`payment_${i}_amount`)}
             </label>
-            {line.method === "cheque" ? (
+            {line.method === "cheque" || line.method === "cheque_diferido" ? (
               <>
                 <label className="block min-w-0">
                   <span className={LABEL}>Número del cheque {i + 1}</span>
@@ -255,6 +256,8 @@ export function VehiclePurchaseSection({
         </p>
         {err("payment_sum")}
       </fieldset>
+
+      <CompraFiscalFields value={value} onChange={onChange} errors={errors} disabled={off} />
 
       <div>
         <span className={LABEL}>Contacto vendedor *</span>
