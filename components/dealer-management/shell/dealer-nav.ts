@@ -18,6 +18,7 @@ import {
   BarChart3,
   BookOpen,
   Bell,
+  BookUser,
   Building2,
   Cable,
   Calculator,
@@ -65,6 +66,9 @@ export const DEALER_NAV_GROUPS: DealerNavGroup[] = [
     items: [
       { href: "/autos/dealer", label: "Inicio", icon: LayoutDashboard, capability: null },
       { href: "/autos/dealer/inventario", label: "Inventario", icon: Car, capability: "autos.inventory.list" },
+      // Los 9 endpoints de /api/v1/autos/contacts* exigen autos.leads.crm (backend services/access/route_registry.py):
+      // el menú pide la misma, o un plan con inventario y sin CRM vería la entrada y recibiría 403.
+      { href: "/autos/dealer/contactos", label: "Contactos", icon: BookUser, capability: "autos.leads.crm" },
       { href: "/autos/dealer/publicar-rapido", label: "Publicar", icon: PackagePlus, capability: "autos.inventory.create" },
       { href: "/autos/dealer/leads", label: "Leads", icon: Users, capability: "autos.leads.crm" },
       // El onboarding de Mapaal vive en el Centro Operativo (decision de Cesar).
@@ -80,6 +84,7 @@ export const DEALER_NAV_GROUPS: DealerNavGroup[] = [
     label: "Finanzas",
     items: [
       { href: "/autos/dealer/finanzas", label: "Finanzas por vehículo", icon: Wallet, capability: "accounting.ledger.entries", alsoRequires: ["autos.inventory.list"] },
+      { href: "/autos/dealer/finanzas/inventario", label: "Finanzas del inventario", icon: BarChart3, capability: "accounting.ledger.entries", alsoRequires: ["autos.inventory.list"] },
       { href: "/contable", label: "Contabilidad", icon: ReceiptText, capability: "accounting.ledger.entries" },
       { href: "/contable/plan-cuentas", label: "Plan de cuentas", icon: ListTree, capability: "accounting.ledger.entries" },
       { href: "/contable/libro-mayor", label: "Libro mayor", icon: BookOpen, capability: "accounting.ledger.entries" },
