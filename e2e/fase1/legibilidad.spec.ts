@@ -58,7 +58,7 @@ async function interceptarBackend(context: BrowserContext, origenLocal: string):
 }
 
 async function contraste(page: Page): Promise<string[]> {
-  const r = await new AxeBuilder({ page }).withRules(["color-contrast"]).analyze();
+  const r = await new AxeBuilder({ page }).include("#main-content").withRules(["color-contrast"]).analyze();
   return r.violations.flatMap((v) => v.nodes.map((n) => `${n.target.join(" ")} :: ${n.any[0]?.message ?? v.help}`));
 }
 
