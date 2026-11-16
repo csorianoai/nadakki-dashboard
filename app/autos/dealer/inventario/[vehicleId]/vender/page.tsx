@@ -17,6 +17,10 @@ import {
   type SaleForm,
   type SaleFormErrors,
 } from "@/lib/dealer-management/vehicle-sale";
+import {
+  VENTA_FISCAL_EMPTY, BASE_IVA_TEXTO, mensajeVenta, validateVentaFiscal, type VentaFiscalForm,
+} from "@/lib/dealer-management/venta-fiscal";
+import { VentaFiscalFields } from "./VentaFiscalFields";
 
 const FIELD = "mt-1 min-h-11 w-full max-w-full rounded-r-sm border border-nk-border bg-nk-surface px-3 text-sm text-nk-fg";
 
@@ -28,23 +32,28 @@ export default function DealerVehicleSalePage() {
   const branding = useDealerManagementBranding();
   const locale = localeDeTenant(branding.data);
   const [form, setForm] = useState<SaleForm>(SALE_FORM_EMPTY);
-  const [errors, setErrors] = useState<SaleFormErrors>({});
+  const [fiscal, setFiscal] = useState<VentaFiscalForm>(VENTA_FISCAL_EMPTY);
+  const [errors, setErrors] = useState<SaleFormErrors & Record<string, string>>({});
   const allowed = !access.error && access.data?.results?.[DEALER_REGISTER_CAPABILITY]?.allowed === true;
 
   const venta = useMutation({
-    mutationFn: (payload: SaleForm) => registerSale(vehicleId, tenantId, payload, locale.currency as string),
-    onSuccess: () => setForm(SALE_FORM_EMPTY),
+    mutationFn: (payload: SaleForm) => registerSale(vehicleId, tenantId, payload, locale.currency as string, fiscal),
+    onSuccess: () => {
+      setForm(SALE_FORM_EMPTY);
+      setFiscal(VENTA_FISCAL_EMPTY);
+    },
   });
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     venta.reset();
-    const found = validateSaleForm(form, locale.currency);
+    const found: Record<string, string> = { ...validateSaleForm(form, locale.currency), ...validateVentaFiscal(fiscal) };
     setErrors(found);
     if (Object.keys(found).length > 0) return;
     venta.mutate(form);
   }
 
+  const baseDevuelta = (venta.data as { fiscal?: { vat_base?: string } } | undefined)?.fiscal?.vat_base ?? null;
   const reason =
     venta.error instanceof AccessApiError ? (venta.error.reason_code ?? `HTTP_${venta.error.status}`) : "ERROR";
 
@@ -89,10 +98,16 @@ export default function DealerVehicleSalePage() {
             />
             {errors.sold_at ? <span role="alert" className="text-xs">{errors.sold_at}</span> : null}
           </label>
+          <VentaFiscalFields
+            value={fiscal}
+            onChange={setFiscal}
+            errors={errors}
+            baseIva={baseDevuelta ? (BASE_IVA_TEXTO[baseDevuelta] ?? baseDevuelta) : null}
+          />
           {errors.currency ? <p role="alert" data-testid="venta-sin-moneda" className="text-sm text-nk-fg">{errors.currency}</p> : null}
           {venta.isError ? (
             <p role="alert" data-testid="venta-error" className="text-sm text-nk-fg">
-              No se pudo registrar la venta. Prueba de nuevo en unos minutos; si sigue igual, avisa a soporte.
+              {mensajeVenta(reason) ?? "No se pudo registrar la venta. Prueba de nuevo en unos minutos; si sigue igual, avisa a soporte."}
               <DetalleTecnico>
                 <code>{reason}</code>
               </DetalleTecnico>

@@ -10,6 +10,7 @@
  */
 
 import { normalizaImporte } from "./vehicle-manual";
+import { ventaFiscalPayload, type VentaFiscalForm } from "./venta-fiscal";
 import { postVehicleSale } from "@/lib/dealer/vehicle-economics-write";
 
 export const SALE_STATUS = "vendido";
@@ -33,6 +34,7 @@ export function blocksStatusChangeInEdit(target: string | null | undefined): boo
 }
 
 export type SaleForm = { sale_price_amount: string; sold_at: string };
+/** `fiscal` (alicuota y permuta) viaja aparte: SALE_FORM_EMPTY y validateSaleForm no cambian. */
 export type SaleFormErrors = Partial<Record<keyof SaleForm | "currency", string>>;
 
 export const SALE_FORM_EMPTY: SaleForm = { sale_price_amount: "", sold_at: "" };
@@ -56,6 +58,7 @@ export async function registerSale(
   tenantId: string,
   form: SaleForm,
   currency: string,
+  fiscal?: VentaFiscalForm,
 ): Promise<unknown> {
   const amount = normalizaImporte(form.sale_price_amount);
   if (amount === null) throw new Error("sale_price_amount invalido");
@@ -63,5 +66,6 @@ export async function registerSale(
     sale_price_amount: amount,
     currency: currency.trim().toUpperCase(),
     sold_at: new Date(form.sold_at).toISOString(),
+    ...(fiscal ? { fiscal: ventaFiscalPayload(fiscal) } : {}),
   });
 }
