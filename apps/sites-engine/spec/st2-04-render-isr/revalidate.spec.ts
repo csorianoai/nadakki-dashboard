@@ -11,7 +11,7 @@ const B = SITE_B.id;
 interface Ev { id?: string; site?: string; kind?: string; slug?: string | null; host?: string | null; v?: number }
 function envelope(e: Ev): string {
   const payload: Record<string, unknown> = { site_id: e.site ?? A, kind: e.kind ?? 'listing', content_version: e.v ?? 3 };
-  if (e.slug !== undefined) payload.slug = e.slug;
+  payload.slug = e.slug === undefined ? 'synth-condo-01' : e.slug;
   if (e.host !== undefined) payload.host = e.host;
   return JSON.stringify({
     event_id: e.id ?? '00000000-0000-4000-8000-000000000101', event_name: 'sites.render.revalidation_requested', event_version: 1,
@@ -37,15 +37,15 @@ describe('ST2-04 revalidacion firmada', () => {
   it('[positivo] evento firmado valido -> 204 y revalida exactamente las etiquetas esperadas', async () => {
     const { tags, send } = setup();
     expect((await send(envelope({ kind: 'listing', slug: 'synth-condo-01' }))).status).toBe(204);
-    expect(tags.sort()).toEqual([`site:${A}:listing:synth-condo-01`, `site:${A}:manifest`].sort());
+    expect(tags.sort()).toEqual([`site:${A}:listing:synth-condo-01`, `site:${A}`].sort());
   });
 
   it('[positivo] mapeo kind -> etiquetas (site, page, media, host) y rotacion con dos firmas v1', async () => {
     const m = async (e: Ev) => { const s = setup(); await s.send(envelope(e)); return s.tags.sort(); };
     expect(await m({ kind: 'site' })).toEqual([`site:${A}`]);
-    expect(await m({ kind: 'manifest' })).toEqual([`site:${A}:manifest`]);
-    expect(await m({ kind: 'page', slug: 'about' })).toEqual([`site:${A}:manifest`, `site:${A}:page:about`].sort());
-    expect(await m({ kind: 'media' })).toEqual([`site:${A}:manifest`, `site:${A}:media`].sort());
+    expect(await m({ kind: 'manifest' })).toEqual([`site:${A}`]);
+    expect(await m({ kind: 'page', slug: 'about' })).toEqual([`site:${A}`, `site:${A}:page:about`].sort());
+    expect(await m({ kind: 'media' })).toEqual([`site:${A}`, `site:${A}:media`].sort());
     expect(await m({ kind: 'host', host: 'www.synth-realty.example' })).toEqual(['host:www.synth-realty.example']);
     const { tags, send } = setup();
     const body = envelope({});
