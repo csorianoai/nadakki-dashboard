@@ -5,7 +5,7 @@ import { motion } from "@/lib/motion-stub";
 import Link from "next/link";
 import { 
   Workflow, Zap, Users, TrendingUp, Mail, BarChart3, Search, 
-  TestTube, Star, ArrowRight, Play, Clock, CheckCircle2, 
+  TestTube, Star, ArrowRight, Play, Clock, 
   AlertCircle, Loader2, RefreshCw, Filter, Layers, Brain,
   Target, Sparkles, Activity
 } from "lucide-react";
@@ -301,20 +301,20 @@ export default function WorkflowsPage() {
       >
         <h3 className="text-lg font-semibold text-white mb-4">🚀 Acciones Rápidas</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 transition-all text-left">
+          <button disabled title="Aún no disponible" className="p-4 rounded-xl bg-white/5 border border-white/10 text-left opacity-50 cursor-not-allowed">
             <Play className="w-5 h-5 text-green-400 mb-2" />
             <p className="text-sm font-medium text-white">Ejecutar Todos</p>
-            <p className="text-xs text-gray-400">Workflows CORE</p>
+            <p className="text-xs text-gray-400">Workflows CORE · Aún no disponible</p>
           </button>
-          <button className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 transition-all text-left">
+          <button disabled title="Aún no disponible" className="p-4 rounded-xl bg-white/5 border border-white/10 text-left opacity-50 cursor-not-allowed">
             <Clock className="w-5 h-5 text-blue-400 mb-2" />
             <p className="text-sm font-medium text-white">Programar</p>
-            <p className="text-xs text-gray-400">Scheduler</p>
+            <p className="text-xs text-gray-400">Scheduler · Aún no disponible</p>
           </button>
-          <button className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 transition-all text-left">
+          <button disabled title="Aún no disponible" className="p-4 rounded-xl bg-white/5 border border-white/10 text-left opacity-50 cursor-not-allowed">
             <BarChart3 className="w-5 h-5 text-yellow-400 mb-2" />
             <p className="text-sm font-medium text-white">Métricas</p>
-            <p className="text-xs text-gray-400">Ver Analytics</p>
+            <p className="text-xs text-gray-400">Ver Analytics · Aún no disponible</p>
           </button>
           <Link href="/admin/logs" className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 transition-all text-left">
             <Activity className="w-5 h-5 text-purple-400 mb-2" />
