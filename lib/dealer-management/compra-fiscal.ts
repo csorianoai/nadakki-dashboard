@@ -44,7 +44,7 @@ const aCentavos = (t: string): number | null => {
 const tasa = (t: string): number | null =>
   /^\d{1,3}(?:[.,]\d{1,2})?$/.test(t.trim()) && Number(t.replace(",", ".")) <= 100 ? Number(t.replace(",", ".")) : null;
 
-export function validateFiscal(f: FiscalFields): Record<string, string> {
+export function validateFiscal(f: FiscalFields, costoCentavos: number | null = null): Record<string, string> {
   const e: Record<string, string> = {};
   if (!f.seller_tax_status) return e;
   if (!conCondicion(f)) {
@@ -63,6 +63,8 @@ export function validateFiscal(f: FiscalFields): Record<string, string> {
   if (alic === null) e.vat_rate = "Indica la alícuota tal como figura en la factura; no se supone ninguna.";
   if (neto !== null && iva !== null && alic !== null && Math.abs(iva - Math.round((neto * alic) / 100)) > 1) {
     e.vat_amount = "El IVA no sale del neto por la alícuota indicada. Revisa los tres valores.";
+  } else if (neto !== null && iva !== null && costoCentavos !== null && neto + iva !== costoCentavos) {
+    e.net_amount = "El neto más el IVA de la factura debe dar el costo de la compra. Revisa el neto, el IVA o el costo.";
   }
   return e;
 }

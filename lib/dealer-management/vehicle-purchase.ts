@@ -102,6 +102,8 @@ export const MENSAJE_ALTA: Record<string, string> = {
   PAYMENT_SUM_MISMATCH: "La suma de los pagos no coincide con el costo de la compra. Corrígela e intenta de nuevo.",
   CAPABILITY_DENIED: "Tu usuario no tiene permiso para registrar compras de vehículos. Pide a quien administra tu cuenta que revise tus permisos.",
   DEALER_NOT_ASSIGNED: "Tu usuario no está asignado a este concesionario. Pide que te asignen para poder cargar vehículos.",
+  FISCAL_TOTAL_MISMATCH: "El neto más el IVA de la factura no da el costo de la compra. Revisa el neto, el IVA o el costo.",
+  ESQUEMA_FISCAL_NO_APLICADO: "Disponible cuando se active la contabilidad fiscal. Mientras tanto, guarda la compra sin condición fiscal y sin dólar oficial BNA.",
   IDEMPOTENCY_KEY_REUSED: "Esta carga ya se envió antes con otros datos. Revisa el inventario por si el vehículo ya se creó; si no, vuelve a enviarla.",
 };
 
@@ -162,7 +164,7 @@ export function validatePurchase(form: PurchaseForm, functionalCurrency: string 
     }
     if (line.method === "other" && !line.detail.trim()) errors[`payment_${i}_detail`] = "Describe este pago.";
   });
-  Object.assign(errors, validateFiscal(form));
+  Object.assign(errors, validateFiscal(form, costo));
   if (form.payment_lines.length > 20) errors.payment_sum = "Se admiten hasta 20 líneas de pago.";
   if (form.payment_lines.length === 0) errors.payment_sum = "Agrega al menos una línea de pago.";
   else if (costo !== null && sumaPagos(form.payment_lines) !== costo) {
