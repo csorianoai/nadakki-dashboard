@@ -1,10 +1,9 @@
 "use client";
 import { motion } from "@/lib/motion-stub";
 import Link from "next/link";
-import { Mail, FileText, Send, BarChart3, Users, ArrowRight, Zap } from "lucide-react";
+import { Mail, FileText, Send, Users, ArrowRight, Zap } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
-import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
 const EMAIL_MODULES = [
@@ -12,13 +11,6 @@ const EMAIL_MODULES = [
   { id: "templates", name: "Templates", icon: FileText, desc: "Plantillas de email", href: "/email/templates", color: "#8b5cf6" },
   { id: "automation", name: "Automatizacion", icon: Zap, desc: "Secuencias automaticas", href: "/automations", color: "#f59e0b" },
   { id: "lists", name: "Listas", icon: Users, desc: "Gestiona tus contactos", href: "/audiences/manager", color: "#3b82f6" },
-];
-
-const STATS = [
-  { value: "45.2K", label: "Emails Enviados", icon: <Send className="w-6 h-6 text-green-400" />, color: "#22c55e" },
-  { value: "38.5%", label: "Tasa Apertura", icon: <Mail className="w-6 h-6 text-blue-400" />, color: "#3b82f6" },
-  { value: "12.3%", label: "Click Rate", icon: <BarChart3 className="w-6 h-6 text-purple-400" />, color: "#8b5cf6" },
-  { value: "2.1%", label: "Conversion", icon: <Zap className="w-6 h-6 text-yellow-400" />, color: "#f59e0b" },
 ];
 
 export default function EmailPage() {
@@ -39,12 +31,6 @@ export default function EmailPage() {
           </div>
         </div>
       </motion.div>
-
-      <div className="grid grid-cols-4 gap-6 mb-8">
-        {STATS?.map((stat, i) => (
-          <StatCard key={i} {...stat} delay={i * 0.1} />
-        ))}
-      </div>
 
       <h2 className="text-xl font-bold text-white mb-4">Modulos</h2>
       <div className="grid grid-cols-2 gap-6">
