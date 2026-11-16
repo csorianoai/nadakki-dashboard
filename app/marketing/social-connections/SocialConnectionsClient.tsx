@@ -37,8 +37,8 @@ const PLATFORM_CONFIG: Record<
     enabled: true,
   },
   google: {
-    name: "Google (Ads + Analytics + YouTube)",
-    Icon: Youtube,
+    name: "Google (Ads + Analytics)",
+    Icon: BarChart3,
     color: "#EA4335",
     enabled: true,
   },
