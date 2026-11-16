@@ -18,9 +18,10 @@ describe("white-label brand-display", () => {
     expect(resolveVisiblePlatformTitle({ display_name: "Banco Piloto RD" }, null)).toBe("Banco Piloto RD");
   });
 
-  it("external bank fallback never contains Nadakki literal", () => {
+  it("external bank fallback is the neutral platform title; Forge wordmark never says Nadakki", () => {
     expect(resolveVisiblePlatformTitle(null, null)).toBe(NEUTRAL_PLATFORM_TITLE);
-    expect(resolveVisiblePlatformTitle(null, null)).not.toMatch(/nadakki/i);
+    // B2-PORTADA-POR-TENANT: el título neutro es el de la plataforma, «Nadakki AI Suite»; la marca propia gana.
+    expect(resolveVisiblePlatformTitle(null, null)).toBe("Nadakki AI Suite");
     expect(resolveForgeWordmarkLabel(null, null)).not.toMatch(/nadakki/i);
   });
 
