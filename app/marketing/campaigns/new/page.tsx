@@ -412,7 +412,7 @@ function CampaignWizardContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0a0f1c]">
+    <div className="min-h-screen shrink-0 bg-[#0a0f1c]">
       <div className="h-14 border-b border-white/10 px-4 flex items-center justify-between bg-[#0d1117]">
         <div className="flex items-center gap-4">
           <Link href="/marketing/campaigns" className="p-2 hover:bg-white/10 rounded-lg text-gray-400">
@@ -431,7 +431,7 @@ function CampaignWizardContent() {
                 className="text-lg font-bold bg-transparent border-none text-white focus:outline-none w-64"
               />
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">{typeConfig.label}</span>
+                <span className="text-xs text-gray-400">{typeConfig.label}</span>
                 {campaign?.tags?.map((tag) => (
                   <span
                     key={tag}
@@ -461,7 +461,7 @@ function CampaignWizardContent() {
                   <button
                     type="button"
                     onClick={() => setShowTagInput(true)}
-                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-purple-400"
+                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-purple-400"
                   >
                     <Tag className="w-3 h-3" /> Etiquetas
                   </button>
@@ -512,7 +512,7 @@ function CampaignWizardContent() {
                   <button
                     type="button"
                     onClick={() => setCurrentStep(step.id)}
-                    className={`flex flex-col items-center gap-2 ${isCurrent ? "opacity-100" : "opacity-60 hover:opacity-80"}`}
+                    className={`flex flex-col items-center gap-2 ${isCurrent ? "opacity-100" : "hover:opacity-80"}`}
                   >
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${isCompleted ? "bg-green-500" : isCurrent ? "bg-purple-500" : "bg-white/10"}`}
@@ -573,7 +573,7 @@ function CampaignWizardContent() {
                         </option>
                       ))}
                     </select>
-                    <p className="text-xs text-gray-500 mt-1 m-0">Por dónde le llegará el mensaje a cada contacto.</p>
+                    <p className="text-xs text-gray-400 mt-1 m-0">Por dónde le llegará el mensaje a cada contacto.</p>
                   </div>
                   <div>
                     <label className="text-sm text-gray-400 block mb-2">Descripción (opcional)</label>
@@ -600,7 +600,7 @@ function CampaignWizardContent() {
                   <div className="flex gap-6">
                     <div className="w-64 max-h-[420px] overflow-y-auto space-y-2">
                       {templates.length === 0 ? (
-                        <p className="text-gray-500 text-sm">No hay plantillas disponibles.</p>
+                        <p className="text-gray-400 text-sm">No hay plantillas disponibles.</p>
                       ) : (
                         templates.map((t) => {
                           const tid = rowTemplateId(t);
@@ -618,7 +618,7 @@ function CampaignWizardContent() {
                                   {templateOriginLabel(t)}
                                 </span>
                               </div>
-                              <div className="text-xs text-gray-500 mt-1">
+                              <div className="text-xs text-gray-400 mt-1">
                                 {channelLabel(t.type)} · {objectiveLabel(t.objective)}
                               </div>
                             </button>
@@ -710,7 +710,7 @@ function CampaignWizardContent() {
               <GlassCard className="p-6">
                 <h2 className="text-xl font-bold text-white mb-2">Elegir el público</h2>
                 <p className="text-gray-400 mb-2">Un segmento es el grupo de contactos que recibirá la campaña.</p>
-                <p className="text-gray-500 text-sm mb-6 m-0">Elige un segmento tuyo o uno del sistema.</p>
+                <p className="text-gray-400 text-sm mb-6 m-0">Elige un segmento tuyo o uno del sistema.</p>
                 {assetsLoading ? (
                   <div className="flex items-center gap-2 text-gray-400">
                     <Loader2 className="w-5 h-5 animate-spin" /> Cargando segmentos…
@@ -718,7 +718,7 @@ function CampaignWizardContent() {
                 ) : (
                   <div className="grid grid-cols-2 gap-4">
                     {segments.length === 0 ? (
-                      <p className="text-gray-500 text-sm col-span-2">No hay segmentos disponibles.</p>
+                      <p className="text-gray-400 text-sm col-span-2">No hay segmentos disponibles.</p>
                     ) : (
                       segments.map((s) => {
                         const sid = rowSegmentId(s);
@@ -740,14 +740,14 @@ function CampaignWizardContent() {
                                 {selected && <Check className="w-3 h-3 text-white" />}
                               </div>
                             </div>
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 mb-2">
+                            <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400 mb-2">
                               <span className="uppercase tracking-wide px-1.5 py-0.5 rounded bg-white/10 text-gray-400">
                                 {segmentOriginLabel(s)}
                               </span>
                               <span>{segmentTypeLabel(s.type)}</span>
                             </div>
                             <div className="text-2xl font-bold text-white">{size.toLocaleString()}</div>
-                            <div className="text-xs text-gray-500">{size === 1 ? "contacto" : "contactos"}</div>
+                            <div className="text-xs text-gray-400">{size === 1 ? "contacto" : "contactos"}</div>
                             {size === 0 ? <div className="text-xs text-amber-300 mt-1">{ZERO_AUDIENCE_NOTICE}</div> : null}
                           </button>
                         );
@@ -841,7 +841,7 @@ function CampaignWizardContent() {
                     <div>
                       <div className="text-sm text-gray-400">Plantilla</div>
                       <div className="text-white">{selectedTemplateRow ? String(selectedTemplateRow.name) : "—"}</div>
-                      <div className="text-xs text-gray-500">{campaign.selectedTemplate}</div>
+                      <div className="text-xs text-gray-400">{campaign.selectedTemplate}</div>
                     </div>
                     <button type="button" onClick={() => setCurrentStep(1)} className="text-purple-400 text-sm">
                       Editar
@@ -851,7 +851,7 @@ function CampaignWizardContent() {
                     <div>
                       <div className="text-sm text-gray-400">Segmento</div>
                       <div className="text-white">{selectedSegmentRow ? String(selectedSegmentRow.name) : "—"}</div>
-                      <div className="text-xs text-gray-500">{campaign.selectedSegmentId}</div>
+                      <div className="text-xs text-gray-400">{campaign.selectedSegmentId}</div>
                     </div>
                     <button type="button" onClick={() => setCurrentStep(3)} className="text-purple-400 text-sm">
                       Editar
@@ -895,7 +895,7 @@ function CampaignWizardContent() {
                   type="button"
                   onClick={launchCampaign}
                   disabled={saving || assetsLoading || !!assetsError}
-                  className="flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 rounded-xl text-white font-bold text-lg disabled:opacity-50"
+                  className="flex items-center gap-2 px-8 py-4 bg-green-700 hover:bg-green-800 rounded-xl text-white font-bold text-lg disabled:opacity-50"
                 >
                   {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}{" "}
                   {saving ? "Procesando…" : `Enviar campaña a ${reach.toLocaleString()} ${reach === 1 ? "persona" : "personas"}`}
@@ -932,7 +932,7 @@ function CampaignWizardContent() {
               type="button"
               key={s.id}
               onClick={() => setCurrentStep(s.id)}
-              className={`flex items-center gap-2 ${currentStep === s.id ? "text-white" : "text-gray-500"}`}
+              className={`flex items-center gap-2 ${currentStep === s.id ? "text-white" : "text-gray-400"}`}
             >
               <div
                 className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${currentStep > s.id ? "bg-green-500 text-white" : currentStep === s.id ? "bg-purple-500 text-white" : "bg-white/10"}`}
@@ -949,7 +949,7 @@ function CampaignWizardContent() {
               type="button"
               onClick={() => setCurrentStep(currentStep + 1)}
               disabled={!canProceed()}
-              className="flex items-center gap-2 px-6 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white font-medium disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white font-medium disabled:opacity-50"
             >
               Siguiente <ChevronRight className="w-4 h-4" />
             </button>
