@@ -33,17 +33,29 @@ const CHANNEL_LABELS: Record<string, string> = {
   email: "Correo", sms: "SMS", push: "Notificación push", "in-app": "Mensaje en la app", banner: "Banner", whatsapp: "WhatsApp",
 };
 
+/**
+ * Busca solo claves propias del mapa. Los valores llegan de plantillas compartidas y de la URL: con un
+ * acceso directo, "constructor" o "toString" devolvían una función heredada y React rompía el asistente.
+ */
+function propia(map: Record<string, string>, k: string): string | undefined {
+  return Object.prototype.hasOwnProperty.call(map, k) ? map[k] : undefined;
+}
+
 export function objectiveLabel(v: unknown): string {
   const k = String(v ?? "");
-  return OBJECTIVE_LABELS[k] ?? k;
+  return propia(OBJECTIVE_LABELS, k) ?? k;
 }
 export function segmentTypeLabel(v: unknown): string {
   const k = String(v ?? "");
-  return SEGMENT_TYPE_LABELS[k] ?? k;
+  return propia(SEGMENT_TYPE_LABELS, k) ?? k;
 }
 export function channelLabel(v: unknown): string {
   const k = String(v ?? "");
-  return CHANNEL_LABELS[k] ?? k;
+  return propia(CHANNEL_LABELS, k) ?? k;
+}
+export function scheduleLabel(v: unknown): string {
+  const k = String(v ?? "");
+  return propia(SCHEDULE_LABELS, k) ?? k;
 }
 
 const EXAMPLE_VALUES: Record<string, string> = {
@@ -59,7 +71,7 @@ export function fillPreviewExample(text: string): { text: string; example: boole
   let example = false;
   const out = text.replace(/\{\{?\s*([^{}]*?)\s*\}?\}/g, (_m, key: string) => {
     example = true;
-    return EXAMPLE_VALUES[key.toLowerCase()] ?? "ejemplo";
+    return propia(EXAMPLE_VALUES, key.toLowerCase()) ?? "ejemplo";
   });
   return { text: out.replace(/[{}]/g, ""), example };
 }
