@@ -194,6 +194,8 @@ for (const p of PANTALLAS) {
       if (paso > 0) {
         await completarPaso(page);
         await page.getByRole("button", { name: /Siguiente/ }).click();
+        // Sacar el cursor: se mide el estado en reposo, no el :hover del botón recién pulsado.
+        await page.mouse.move(0, 0);
         await page.waitForTimeout(500);
       }
       malos.push(...(await contraste(page)).map((m) => `[paso ${paso + 1}] ${m}`));
