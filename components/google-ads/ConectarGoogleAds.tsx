@@ -3,6 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/api/fetch-client";
 import { useTenant } from "@/contexts/TenantContext";
+import { resolveBackendUrl } from "@/lib/config/backend-url";
+
+/**
+ * /auth/google/* vive en el BACKEND y no tiene rewrite en next.config.js: una ruta relativa la contesta el propio
+ * dashboard (HTML, no JSON) y el estado quedaba siempre en "unknown" (medido con Baylara en producción, 15-nov-2026).
+ * Mismo camino que «Cuentas conectadas» (lib/api/marketing.ts): URL absoluta del backend, sin cookies.
+ */
+export function urlGoogleAuth(accion: "status" | "connect", tenantId: string): string {
+  return `${resolveBackendUrl()}/auth/google/${accion}/${encodeURIComponent(tenantId)}`;
+}
 
 export type EstadoGoogleAds = "connected" | "expired" | "not_connected" | "unknown";
 
@@ -32,7 +42,8 @@ export default function ConectarGoogleAds({
     let vivo = true;
     (async () => {
       try {
-        const r = await apiFetch(`/auth/google/status/${encodeURIComponent(tenantId)}`, {
+        const r = await apiFetch(urlGoogleAuth("status", tenantId), {
+          credentials: "omit",
           headers: { Accept: "application/json" },
         });
         const body = r.ok ? await r.json().catch(() => null) : null;
@@ -51,7 +62,8 @@ export default function ConectarGoogleAds({
     setBusy(true);
     setError(null);
     try {
-      const r = await apiFetch(`/auth/google/connect/${encodeURIComponent(tenantId)}`, {
+      const r = await apiFetch(urlGoogleAuth("connect", tenantId), {
+        credentials: "omit",
         headers: { Accept: "application/json" },
       });
       const body = r.ok ? await r.json().catch(() => null) : null;
