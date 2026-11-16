@@ -4,10 +4,9 @@ import { useState, useRef, useEffect } from "react";
 import { LayoutGrid } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { roleKeyAllowsAdminNetwork } from "@/lib/credit-hub/auth/portal-access";
 
 export function UserMenu() {
-  const { user, activeRole, logout } = useAuth();
+  const { user, allRoles, logout } = useAuth();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -31,7 +30,8 @@ export function UserMenu() {
     router.push("/login");
   };
 
-  const showCockpit = roleKeyAllowsAdminNetwork(activeRole?.role_key);
+  // DECISION_CESAR 16-nov-2026: la Consola de Plataforma es solo del superadmin.
+  const showCockpit = (allRoles ?? []).some((r) => r.role_key === "platform_superadmin");
 
   return (
     <div className="relative" ref={menuRef}>
