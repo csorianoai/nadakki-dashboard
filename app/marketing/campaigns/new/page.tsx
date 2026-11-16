@@ -42,41 +42,54 @@ import {
   buildSegmentSnapshot,
   buildTemplateSnapshot,
 } from "@/lib/marketing/campaignAssets";
+import {
+  WIZARD_TITLE,
+  GOOGLE_ADS_HREF,
+  ZERO_AUDIENCE_NOTICE,
+  OBJECTIVE_LABELS,
+  SCHEDULE_LABELS,
+  CONVERSION_LABELS,
+  objectiveLabel,
+  scheduleLabel,
+  segmentTypeLabel,
+  channelLabel,
+  fillPreviewExample,
+} from "@/lib/marketing/campaignWizardCopy";
 
 const STEPS = [
-  { id: 1, name: "Compose", label: "Compose Messages", icon: FileText },
-  { id: 2, name: "Schedule", label: "Schedule Delivery", icon: Calendar },
-  { id: 3, name: "Target", label: "Target Audiences", icon: Users },
-  { id: 4, name: "Assign", label: "Assign Conversions", icon: Target },
-  { id: 5, name: "Review", label: "Review Summary", icon: Check },
+  { id: 1, name: "Redactar", label: "Redactar el mensaje", icon: FileText },
+  { id: 2, name: "Programar", label: "Programar el envío", icon: Calendar },
+  { id: 3, name: "Público", label: "Elegir el público", icon: Users },
+  { id: 4, name: "Resultados", label: "Medir resultados", icon: Target },
+  { id: 5, name: "Revisar", label: "Revisar y enviar", icon: Check },
 ];
 
 const CAMPAIGN_TYPES: Record<string, { icon: LucideIcon; color: string; label: string }> = {
-  email: { icon: Mail, color: "#3b82f6", label: "Email" },
+  email: { icon: Mail, color: "#3b82f6", label: "Correo" },
   sms: { icon: MessageSquare, color: "#22c55e", label: "SMS" },
-  push: { icon: Bell, color: "#f59e0b", label: "Push Notification" },
-  "in-app": { icon: Smartphone, color: "#8b5cf6", label: "In-App Message" },
+  push: { icon: Bell, color: "#f59e0b", label: "Notificación push" },
+  "in-app": { icon: Smartphone, color: "#8b5cf6", label: "Mensaje en la app" },
   banner: { icon: Image, color: "#ec4899", label: "Banner" },
   whatsapp: { icon: MessageSquare, color: "#25D366", label: "WhatsApp" },
 };
 
 const OBJECTIVES = [
-  { id: "convert", label: "Convert" },
-  { id: "engage", label: "Engage" },
-  { id: "retain", label: "Retain" },
-  { id: "awareness", label: "Awareness" },
+  { id: "convert", label: OBJECTIVE_LABELS.convert },
+  { id: "engage", label: OBJECTIVE_LABELS.engage },
+  { id: "retain", label: OBJECTIVE_LABELS.retain },
+  { id: "awareness", label: OBJECTIVE_LABELS.awareness },
 ];
 
 const CONVERSION_EVENTS = [
-  { id: "purchase", name: "Made a Purchase", icon: "💰" },
-  { id: "signup", name: "Completed Signup", icon: "✅" },
-  { id: "upgrade", name: "Upgraded Plan", icon: "⬆️" },
-  { id: "referral", name: "Referred a Friend", icon: "👥" },
-  { id: "review", name: "Left a Review", icon: "⭐" },
+  { id: "purchase", name: CONVERSION_LABELS.purchase, icon: "💰" },
+  { id: "signup", name: CONVERSION_LABELS.signup, icon: "✅" },
+  { id: "upgrade", name: CONVERSION_LABELS.upgrade, icon: "⬆️" },
+  { id: "referral", name: CONVERSION_LABELS.referral, icon: "👥" },
+  { id: "review", name: CONVERSION_LABELS.review, icon: "⭐" },
 ];
 
 function formatApiError(detail: unknown): string {
-  if (detail == null) return "Request failed";
+  if (detail == null) return "No se pudo completar la solicitud";
   if (typeof detail === "string") return detail;
   if (Array.isArray(detail)) {
     return detail
@@ -218,13 +231,13 @@ function CampaignWizardContent() {
   };
 
   function validateForSave(): string | null {
-    if (!tenantId) return "Select a tenant before saving.";
-    if (assetsError) return "Fix template/segment API errors before saving.";
-    if (!campaign.name.trim()) return "Campaign name is required.";
-    if (!marketingObjective.trim()) return "Objective is required.";
-    if (!campaign.type) return "Channel is required.";
-    if (!campaign.selectedTemplate) return "Select a message template.";
-    if (!campaign.selectedSegmentId) return "Select an audience segment.";
+    if (!tenantId) return "Elige una cuenta antes de guardar.";
+    if (assetsError) return "Resuelve los errores de plantillas y segmentos antes de guardar.";
+    if (!campaign.name.trim()) return "Escribe un nombre para la campaña.";
+    if (!marketingObjective.trim()) return "Elige un objetivo.";
+    if (!campaign.type) return "Elige un canal.";
+    if (!campaign.selectedTemplate) return "Elige una plantilla de mensaje.";
+    if (!campaign.selectedSegmentId) return "Elige un segmento de público.";
     return null;
   }
 
@@ -268,7 +281,7 @@ function CampaignWizardContent() {
       setCreatedCampaignId(id);
       router.push(`/marketing/campaigns/${id}`);
     } else {
-      setFormError("Campaign created but response had no id.");
+      setFormError("La campaña se creó pero no se recibió su identificador.");
     }
   };
 
@@ -293,13 +306,13 @@ function CampaignWizardContent() {
       if (id) setCreatedCampaignId(id);
     }
     if (!id) {
-      setFormError("Could not create campaign.");
+      setFormError("No se pudo crear la campaña.");
       setSaving(false);
       return;
     }
     const act = await activateMarketingCampaign(tenantId, id);
     if (!act.ok) {
-      setFormError(act.error || "Could not activate campaign.");
+      setFormError(act.error || "No se pudo activar la campaña.");
       setSaving(false);
       return;
     }
@@ -321,7 +334,7 @@ function CampaignWizardContent() {
     if (!id) {
       const res = await createMarketingCampaign(tenantId, buildCreatePayload());
       if (!res.ok) {
-        setPilotMessage(res.error ? formatApiError(res.error) : "Could not create campaign for pilot.");
+        setPilotMessage(res.error ? formatApiError(res.error) : "No se pudo crear la campaña para la prueba piloto.");
         setPilotLoading(false);
         return;
       }
@@ -329,7 +342,7 @@ function CampaignWizardContent() {
       if (id) setCreatedCampaignId(id);
     }
     if (!id) {
-      setPilotMessage("Could not resolve campaign id for pilot.");
+      setPilotMessage("No se encontró la campaña para la prueba piloto.");
       setPilotLoading(false);
       return;
     }
@@ -338,7 +351,7 @@ function CampaignWizardContent() {
         ? selectedSegmentRow.name
         : String(selectedSegmentRow?.name ?? campaign.name);
     const pilotBody: Record<string, unknown> = {
-      product_name: campaign.name || "Campaign",
+      product_name: campaign.name || "Campaña",
       target_audience: audience,
       dry_run: true,
       campaign_id: id,
@@ -346,15 +359,15 @@ function CampaignWizardContent() {
     const r = await postMarketingLaunchPilot(tenantId, pilotBody);
     setPilotLoading(false);
     if (!r.ok) {
-      setPilotMessage(r.error || "Pilot request failed.");
+      setPilotMessage(r.error || "La prueba piloto falló.");
       return;
     }
     const ok = r.data?.success === true;
     const linked = r.data?.marketing_campaign_id;
     setPilotMessage(
       ok
-        ? `Pilot dry run completed.${linked ? ` Linked campaign: ${String(linked)}.` : ""}`
-        : `Pilot finished with success=${String(r.data?.success)}`
+        ? `Prueba piloto completada, sin enviar nada.${linked ? ` Campaña enlazada: ${String(linked)}.` : ""}`
+        : "La prueba piloto terminó sin éxito."
     );
   };
 
@@ -381,14 +394,22 @@ function CampaignWizardContent() {
     return 0;
   };
 
-  const previewSubject =
-    selectedTemplateRow && typeof selectedTemplateRow.subject === "string"
-      ? selectedTemplateRow.subject
-      : "";
-  const previewBody =
-    selectedTemplateRow && typeof selectedTemplateRow.content === "string"
-      ? selectedTemplateRow.content
-      : "";
+  const previewSubjectFill = fillPreviewExample(
+    selectedTemplateRow && typeof selectedTemplateRow.subject === "string" ? selectedTemplateRow.subject : ""
+  );
+  const previewBodyFill = fillPreviewExample(
+    selectedTemplateRow && typeof selectedTemplateRow.content === "string" ? selectedTemplateRow.content : ""
+  );
+  const previewSubject = previewSubjectFill.text;
+  const previewBody = previewBodyFill.text;
+  const previewIsExample = previewSubjectFill.example || previewBodyFill.example;
+  const reach = getEstimatedReach();
+  const zeroAudience = !!campaign.selectedSegmentId && reach === 0;
+  const zeroNotice = (
+    <div data-testid="aviso-audiencia-cero" className="mt-4 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-sm text-amber-200">
+      {ZERO_AUDIENCE_NOTICE}. Si la envías ahora, no llegará a nadie: elige otro segmento o carga contactos primero.
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-[#0a0f1c]">
@@ -406,7 +427,7 @@ function CampaignWizardContent() {
                 type="text"
                 value={campaign.name}
                 onChange={(e) => updateCampaign("name", e.target.value)}
-                placeholder="Campaign Name"
+                placeholder="Nombre de la campaña"
                 className="text-lg font-bold bg-transparent border-none text-white focus:outline-none w-64"
               />
               <div className="flex items-center gap-2">
@@ -432,7 +453,7 @@ function CampaignWizardContent() {
                       addTag();
                       setShowTagInput(false);
                     }}
-                    placeholder="Tag"
+                    placeholder="Etiqueta"
                     autoFocus
                     className="px-2 py-0.5 bg-white/10 rounded text-xs text-white w-20 focus:outline-none"
                   />
@@ -442,7 +463,7 @@ function CampaignWizardContent() {
                     onClick={() => setShowTagInput(true)}
                     className="flex items-center gap-1 text-xs text-gray-500 hover:text-purple-400"
                   >
-                    <Tag className="w-3 h-3" /> Tags
+                    <Tag className="w-3 h-3" /> Etiquetas
                   </button>
                 )}
               </div>
@@ -456,7 +477,7 @@ function CampaignWizardContent() {
             disabled={saving || assetsLoading || !!assetsError}
             className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-white disabled:opacity-50"
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save as Draft
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Guardar borrador
           </button>
         </div>
       </div>
@@ -466,6 +487,19 @@ function CampaignWizardContent() {
           {formError || assetsError}
         </div>
       )}
+
+      <div className="border-b border-white/10 bg-[#0d1117] px-4 py-4">
+        <div className="max-w-5xl mx-auto">
+          <h1 className="text-2xl font-bold text-white m-0">{WIZARD_TITLE}</h1>
+          <p className="text-sm text-gray-400 mt-1 mb-0">
+            Para enviar correos y mensajes a tus contactos. Para anunciar en Google usa{" "}
+            <Link href={GOOGLE_ADS_HREF} className="text-purple-400 underline">
+              Publicidad &gt; Google Ads
+            </Link>
+            .
+          </p>
+        </div>
+      </div>
 
       <div className="border-b border-white/10 bg-[#0d1117]">
         <div className="max-w-5xl mx-auto px-4 py-4">
@@ -500,20 +534,20 @@ function CampaignWizardContent() {
           {currentStep === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <GlassCard className="p-6 mb-6">
-                <h2 className="text-xl font-bold text-white mb-2">Campaign Details</h2>
+                <h2 className="text-xl font-bold text-white mb-2">Datos de la campaña</h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm text-gray-400 block mb-2">Campaign Name</label>
+                    <label className="text-sm text-gray-400 block mb-2">Nombre de la campaña</label>
                     <input
                       type="text"
                       value={campaign.name}
                       onChange={(e) => updateCampaign("name", e.target.value)}
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white"
-                      placeholder="e.g., Welcome Series"
+                      placeholder="Por ejemplo: Serie de bienvenida"
                     />
                   </div>
                   <div>
-                    <label className="text-sm text-gray-400 block mb-2">Objective</label>
+                    <label className="text-sm text-gray-400 block mb-2">Objetivo</label>
                     <select
                       value={marketingObjective}
                       onChange={(e) => setMarketingObjective(e.target.value)}
@@ -527,7 +561,7 @@ function CampaignWizardContent() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-400 block mb-2">Channel</label>
+                    <label className="text-sm text-gray-400 block mb-2">Canal</label>
                     <select
                       value={campaign.type}
                       onChange={(e) => setChannelType(e.target.value)}
@@ -539,37 +573,34 @@ function CampaignWizardContent() {
                         </option>
                       ))}
                     </select>
-                    <p className="text-xs text-gray-500 mt-1 m-0">
-                      Sent to API as <code className="text-gray-400">channel</code> (maps to campaign type on the server).
-                    </p>
+                    <p className="text-xs text-gray-500 mt-1 m-0">Por dónde le llegará el mensaje a cada contacto.</p>
                   </div>
                   <div>
-                    <label className="text-sm text-gray-400 block mb-2">Description (optional)</label>
+                    <label className="text-sm text-gray-400 block mb-2">Descripción (opcional)</label>
                     <textarea
                       value={campaign.description}
                       onChange={(e) => updateCampaign("description", e.target.value)}
                       rows={2}
                       className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white"
-                      placeholder="Internal notes"
+                      placeholder="Notas internas"
                     />
                   </div>
                 </div>
               </GlassCard>
               <GlassCard className="p-6">
-                <h2 className="text-xl font-bold text-white mb-4">Template</h2>
+                <h2 className="text-xl font-bold text-white mb-4">Plantilla</h2>
                 <p className="text-sm text-gray-400 mb-4">
-                  Templates from <code className="text-gray-500">/api/marketing/templates</code>: sistema (base) + persistidos del
-                  tenant. Origen se muestra en cada fila.
+                  Elige el mensaje que van a recibir tus contactos. Cada plantilla indica si es del sistema o tuya.
                 </p>
                 {assetsLoading ? (
                   <div className="flex items-center gap-2 text-gray-400">
-                    <Loader2 className="w-5 h-5 animate-spin" /> Loading templates…
+                    <Loader2 className="w-5 h-5 animate-spin" /> Cargando plantillas…
                   </div>
                 ) : (
                   <div className="flex gap-6">
                     <div className="w-64 max-h-[420px] overflow-y-auto space-y-2">
                       {templates.length === 0 ? (
-                        <p className="text-gray-500 text-sm">No templates returned.</p>
+                        <p className="text-gray-500 text-sm">No hay plantillas disponibles.</p>
                       ) : (
                         templates.map((t) => {
                           const tid = rowTemplateId(t);
@@ -588,7 +619,7 @@ function CampaignWizardContent() {
                                 </span>
                               </div>
                               <div className="text-xs text-gray-500 mt-1">
-                                {String(t.type ?? "")} · {String(t.objective ?? "")}
+                                {channelLabel(t.type)} · {objectiveLabel(t.objective)}
                               </div>
                             </button>
                           );
@@ -596,15 +627,18 @@ function CampaignWizardContent() {
                       )}
                     </div>
                     <div className="flex-1 flex justify-center">
-                      <div className="w-72 min-h-[360px] bg-gray-900 rounded-3xl border-4 border-gray-700 p-2">
+                      <div data-testid="vista-previa" className="w-72 min-h-[360px] bg-gray-900 rounded-3xl border-4 border-gray-700 p-2">
                         <div className="w-full h-full bg-white rounded-2xl p-4 text-left overflow-y-auto">
                           <TypeIcon className="w-10 h-10 text-purple-500 mb-3" />
-                          <h3 className="text-base font-bold text-gray-800 mb-2">Preview</h3>
+                          <h3 className="text-base font-bold text-gray-800 mb-2">Vista previa</h3>
+                          {previewIsExample ? (
+                            <p className="text-[11px] text-amber-700 mb-2 m-0">Ejemplo: los datos de cada contacto se completan al enviar.</p>
+                          ) : null}
                           {previewSubject ? (
                             <p className="text-xs font-semibold text-gray-700 mb-2">{previewSubject}</p>
                           ) : null}
                           <p className="text-sm text-gray-600 whitespace-pre-wrap">
-                            {previewBody || "Select a template to preview subject and body."}
+                            {previewBody || "Elige una plantilla para ver el asunto y el mensaje."}
                           </p>
                         </div>
                       </div>
@@ -617,13 +651,13 @@ function CampaignWizardContent() {
           {currentStep === 2 && (
             <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <GlassCard className="p-6">
-                <h2 className="text-xl font-bold text-white mb-6">Schedule Delivery</h2>
+                <h2 className="text-xl font-bold text-white mb-6">Programar el envío</h2>
                 <div className="space-y-4">
                   {[
-                    { id: "immediate", label: "Send Immediately", desc: "Send as soon as launched", icon: Zap },
-                    { id: "scheduled", label: "Schedule for Later", desc: "Choose date and time", icon: Calendar },
-                    { id: "action-based", label: "Action-Based", desc: "Trigger on user action", icon: Target },
-                    { id: "recurring", label: "Recurring", desc: "Send on schedule", icon: Clock },
+                    { id: "immediate", label: SCHEDULE_LABELS.immediate, desc: "Se envía en cuanto confirmes", icon: Zap },
+                    { id: "scheduled", label: SCHEDULE_LABELS.scheduled, desc: "Elige el día y la hora", icon: Calendar },
+                    { id: "action-based", label: SCHEDULE_LABELS["action-based"], desc: "Se envía cuando el contacto hace algo", icon: Target },
+                    { id: "recurring", label: SCHEDULE_LABELS.recurring, desc: "Se repite según un calendario", icon: Clock },
                   ].map((o) => (
                     <button
                       type="button"
@@ -649,7 +683,7 @@ function CampaignWizardContent() {
                 {campaign.scheduleType === "scheduled" && (
                   <div className="mt-6 grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm text-gray-400 block mb-2">Date</label>
+                      <label className="text-sm text-gray-400 block mb-2">Fecha</label>
                       <input
                         type="date"
                         value={campaign.scheduledDate}
@@ -658,7 +692,7 @@ function CampaignWizardContent() {
                       />
                     </div>
                     <div>
-                      <label className="text-sm text-gray-400 block mb-2">Time</label>
+                      <label className="text-sm text-gray-400 block mb-2">Hora</label>
                       <input
                         type="time"
                         value={campaign.scheduledTime}
@@ -674,19 +708,17 @@ function CampaignWizardContent() {
           {currentStep === 3 && (
             <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <GlassCard className="p-6">
-                <h2 className="text-xl font-bold text-white mb-2">Target Audiences</h2>
-                <p className="text-gray-400 mb-2">
-                  Segmentos desde <code className="text-gray-500">/api/marketing/segments</code> (sistema + campaña + tenant).
-                </p>
-                <p className="text-gray-500 text-sm mb-6 m-0">Selecciona un segmento persistido o de sistema.</p>
+                <h2 className="text-xl font-bold text-white mb-2">Elegir el público</h2>
+                <p className="text-gray-400 mb-2">Un segmento es el grupo de contactos que recibirá la campaña.</p>
+                <p className="text-gray-500 text-sm mb-6 m-0">Elige un segmento tuyo o uno del sistema.</p>
                 {assetsLoading ? (
                   <div className="flex items-center gap-2 text-gray-400">
-                    <Loader2 className="w-5 h-5 animate-spin" /> Loading segments…
+                    <Loader2 className="w-5 h-5 animate-spin" /> Cargando segmentos…
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-4">
                     {segments.length === 0 ? (
-                      <p className="text-gray-500 text-sm col-span-2">No segments returned.</p>
+                      <p className="text-gray-500 text-sm col-span-2">No hay segmentos disponibles.</p>
                     ) : (
                       segments.map((s) => {
                         const sid = rowSegmentId(s);
@@ -712,10 +744,11 @@ function CampaignWizardContent() {
                               <span className="uppercase tracking-wide px-1.5 py-0.5 rounded bg-white/10 text-gray-400">
                                 {segmentOriginLabel(s)}
                               </span>
-                              <span>{String(s.type ?? "")}</span>
+                              <span>{segmentTypeLabel(s.type)}</span>
                             </div>
                             <div className="text-2xl font-bold text-white">{size.toLocaleString()}</div>
-                            <div className="text-xs text-gray-500">audience size</div>
+                            <div className="text-xs text-gray-500">{size === 1 ? "contacto" : "contactos"}</div>
+                            {size === 0 ? <div className="text-xs text-amber-300 mt-1">{ZERO_AUDIENCE_NOTICE}</div> : null}
                           </button>
                         );
                       })
@@ -724,18 +757,19 @@ function CampaignWizardContent() {
                 )}
                 {campaign.selectedSegmentId ? (
                   <div className="mt-6 p-4 bg-purple-500/10 border border-purple-500/30 rounded-xl flex items-center justify-between">
-                    <span className="text-gray-400">Estimated Reach</span>
-                    <span className="text-2xl font-bold text-white">{getEstimatedReach().toLocaleString()}</span>
+                    <span className="text-gray-400">Personas a las que llegará</span>
+                    <span className="text-2xl font-bold text-white">{reach.toLocaleString()}</span>
                   </div>
                 ) : null}
+                {zeroAudience ? zeroNotice : null}
               </GlassCard>
             </motion.div>
           )}
           {currentStep === 4 && (
             <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <GlassCard className="p-6">
-                <h2 className="text-xl font-bold text-white mb-2">Assign Conversion Events</h2>
-                <p className="text-gray-400 mb-6">Track actions after campaign (optional)</p>
+                <h2 className="text-xl font-bold text-white mb-2">Medir resultados</h2>
+                <p className="text-gray-400 mb-6">Elige qué acciones quieres contar después de la campaña (opcional).</p>
                 <div className="space-y-3">
                   {CONVERSION_EVENTS?.map((e) => (
                     <button
@@ -755,17 +789,17 @@ function CampaignWizardContent() {
                   ))}
                 </div>
                 <div className="mt-6">
-                  <label className="text-sm text-gray-400 block mb-2">Conversion Window</label>
+                  <label className="text-sm text-gray-400 block mb-2">Plazo para contar resultados</label>
                   <select
                     value={campaign.conversionWindow}
                     onChange={(e) => updateCampaign("conversionWindow", parseInt(e.target.value, 10))}
                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white"
                   >
-                    <option value={1}>1 day</option>
-                    <option value={3}>3 days</option>
-                    <option value={7}>7 days</option>
-                    <option value={14}>14 days</option>
-                    <option value={30}>30 days</option>
+                    <option value={1}>1 día</option>
+                    <option value={3}>3 días</option>
+                    <option value={7}>7 días</option>
+                    <option value={14}>14 días</option>
+                    <option value={30}>30 días</option>
                   </select>
                 </div>
               </GlassCard>
@@ -774,29 +808,29 @@ function CampaignWizardContent() {
           {currentStep === 5 && (
             <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <GlassCard className="p-6 mb-6">
-                <h2 className="text-xl font-bold text-white mb-6">Review Campaign</h2>
+                <h2 className="text-xl font-bold text-white mb-6">Revisar la campaña</h2>
                 <div className="space-y-4">
                   <div className="p-4 bg-white/5 rounded-xl flex justify-between">
                     <div>
-                      <div className="text-sm text-gray-400">Name</div>
-                      <div className="text-white font-medium">{campaign.name || "Untitled"}</div>
+                      <div className="text-sm text-gray-400">Nombre</div>
+                      <div className="text-white font-medium">{campaign.name || "Sin nombre"}</div>
                     </div>
                     <button type="button" onClick={() => setCurrentStep(1)} className="text-purple-400 text-sm">
-                      Edit
+                      Editar
                     </button>
                   </div>
                   <div className="p-4 bg-white/5 rounded-xl flex justify-between">
                     <div>
-                      <div className="text-sm text-gray-400">Objective</div>
-                      <div className="text-white font-medium">{marketingObjective}</div>
+                      <div className="text-sm text-gray-400">Objetivo</div>
+                      <div className="text-white font-medium">{objectiveLabel(marketingObjective)}</div>
                     </div>
                     <button type="button" onClick={() => setCurrentStep(1)} className="text-purple-400 text-sm">
-                      Edit
+                      Editar
                     </button>
                   </div>
                   <div className="p-4 bg-white/5 rounded-xl flex justify-between">
                     <div>
-                      <div className="text-sm text-gray-400">Type</div>
+                      <div className="text-sm text-gray-400">Canal</div>
                       <div className="flex items-center gap-2">
                         <TypeIcon className="w-5 h-5" style={{ color: typeConfig.color }} />
                         <span className="text-white">{typeConfig.label}</span>
@@ -805,55 +839,56 @@ function CampaignWizardContent() {
                   </div>
                   <div className="p-4 bg-white/5 rounded-xl flex justify-between">
                     <div>
-                      <div className="text-sm text-gray-400">Template</div>
+                      <div className="text-sm text-gray-400">Plantilla</div>
                       <div className="text-white">{selectedTemplateRow ? String(selectedTemplateRow.name) : "—"}</div>
                       <div className="text-xs text-gray-500">{campaign.selectedTemplate}</div>
                     </div>
                     <button type="button" onClick={() => setCurrentStep(1)} className="text-purple-400 text-sm">
-                      Edit
+                      Editar
                     </button>
                   </div>
                   <div className="p-4 bg-white/5 rounded-xl flex justify-between">
                     <div>
-                      <div className="text-sm text-gray-400">Segment</div>
+                      <div className="text-sm text-gray-400">Segmento</div>
                       <div className="text-white">{selectedSegmentRow ? String(selectedSegmentRow.name) : "—"}</div>
                       <div className="text-xs text-gray-500">{campaign.selectedSegmentId}</div>
                     </div>
                     <button type="button" onClick={() => setCurrentStep(3)} className="text-purple-400 text-sm">
-                      Edit
+                      Editar
                     </button>
                   </div>
                   <div className="p-4 bg-white/5 rounded-xl flex justify-between">
                     <div>
-                      <div className="text-sm text-gray-400">Schedule</div>
-                      <div className="text-white capitalize">{campaign.scheduleType.replace("-", " ")}</div>
+                      <div className="text-sm text-gray-400">Envío</div>
+                      <div className="text-white">{scheduleLabel(campaign.scheduleType)}</div>
                     </div>
                     <button type="button" onClick={() => setCurrentStep(2)} className="text-purple-400 text-sm">
-                      Edit
+                      Editar
                     </button>
                   </div>
                   <div className="p-4 bg-white/5 rounded-xl flex justify-between">
                     <div>
-                      <div className="text-sm text-gray-400">Reach</div>
-                      <div className="text-2xl font-bold text-purple-400">{getEstimatedReach().toLocaleString()}</div>
+                      <div className="text-sm text-gray-400">Personas a las que llegará</div>
+                      <div className="text-2xl font-bold text-purple-400">{reach.toLocaleString()}</div>
                     </div>
                     <button type="button" onClick={() => setCurrentStep(3)} className="text-purple-400 text-sm">
-                      Edit
+                      Editar
                     </button>
                   </div>
                   <div className="p-4 bg-white/5 rounded-xl flex justify-between">
                     <div>
-                      <div className="text-sm text-gray-400">Conversions</div>
+                      <div className="text-sm text-gray-400">Resultados a medir</div>
                       <div className="text-white">
-                        {campaign.conversionEvents.length} events · {campaign.conversionWindow} days
+                        {campaign.conversionEvents.length} acciones · {campaign.conversionWindow} días
                       </div>
                     </div>
                     <button type="button" onClick={() => setCurrentStep(4)} className="text-purple-400 text-sm">
-                      Edit
+                      Editar
                     </button>
                   </div>
                 </div>
               </GlassCard>
+              {zeroAudience ? <div className="max-w-xl mx-auto mb-4">{zeroNotice}</div> : null}
               {pilotMessage ? <p className="text-center text-sm text-gray-400 mb-4">{pilotMessage}</p> : null}
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <button
@@ -863,7 +898,7 @@ function CampaignWizardContent() {
                   className="flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 rounded-xl text-white font-bold text-lg disabled:opacity-50"
                 >
                   {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}{" "}
-                  {saving ? "Working…" : "Launch Campaign"}
+                  {saving ? "Procesando…" : `Enviar campaña a ${reach.toLocaleString()} ${reach === 1 ? "persona" : "personas"}`}
                 </button>
                 <button
                   type="button"
@@ -872,15 +907,17 @@ function CampaignWizardContent() {
                   className="flex items-center gap-2 px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl text-white text-sm disabled:opacity-50"
                 >
                   {pilotLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                  Meta pilot (dry run)
+                  Prueba piloto en Meta (sin enviar)
                 </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+      {/* Margen para que el botón flotante del copiloto no tape "Siguiente" ni el pie del asistente. */}
+      <div data-testid="margen-copiloto" aria-hidden="true" className="h-24" />
 
-      <div className="fixed bottom-0 left-0 right-0 h-16 border-t border-white/10 bg-[#0d1117] px-4 flex items-center justify-between">
+      <div className="fixed bottom-0 left-0 right-0 h-16 border-t border-white/10 bg-[#0d1117] pl-4 pr-24 flex items-center justify-between">
         <button
           type="button"
           onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
@@ -914,7 +951,7 @@ function CampaignWizardContent() {
               disabled={!canProceed()}
               className="flex items-center gap-2 px-6 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white font-medium disabled:opacity-50"
             >
-              Next <ChevronRight className="w-4 h-4" />
+              Siguiente <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
             <button
@@ -923,7 +960,7 @@ function CampaignWizardContent() {
               disabled={saving || assetsLoading || !!assetsError}
               className="px-6 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-white font-medium disabled:opacity-50"
             >
-              Save Draft
+              Guardar borrador
             </button>
           )}
         </div>

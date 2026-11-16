@@ -10,6 +10,7 @@ import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import { DataSourceBadge } from "@/components/ui/DataSourceBadge";
 import { useMarketingCampaigns } from "@/hooks/useMarketingCampaigns";
+import { WIZARD_TITLE } from "@/lib/marketing/campaignWizardCopy";
 
 const MARKETING_CAMPAIGNS_LABEL = "API marketing";
 
@@ -43,7 +44,7 @@ export default function CampaignsPage() {
             <Megaphone className="w-8 h-8 text-orange-400" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-white m-0">Campaigns</h1>
+            <h1 className="text-3xl font-bold text-white m-0">{WIZARD_TITLE}</h1>
             <p className="text-gray-400 text-sm m-0 mt-1">
               {loading ? "Cargando…" : `${total} campaña(s) · ${MARKETING_CAMPAIGNS_LABEL}`}
             </p>
@@ -54,7 +55,7 @@ export default function CampaignsPage() {
             href="/marketing/campaigns/new"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-orange-500/90 hover:bg-orange-500 text-sm font-medium text-white"
           >
-            Nueva campaña
+            Nueva campaña de correo y mensajes
           </Link>
           <button
             type="button"
@@ -88,7 +89,7 @@ export default function CampaignsPage() {
             href="/marketing/campaigns/new"
             className="inline-block mt-6 px-4 py-2 rounded-lg bg-orange-500/90 hover:bg-orange-500 text-sm font-medium text-white"
           >
-            Crear campaña con segmento y plantilla
+            Crear campaña de correo y mensajes
           </Link>
         </GlassCard>
       ) : (

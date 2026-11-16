@@ -309,6 +309,8 @@ export default function AMEPage() {
   );
 
   return (
+    // La pagina pinta su propio fondo oscuro en todo su contenedor: el marco deja --forge-surface-page (claro) detras.
+    <div style={{ background: colors.bg, minHeight: "100vh", color: colors.text }}>
     <div style={{ padding: "24px", maxWidth: "1200px", margin: "0 auto", color: colors.text }}>
       <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "20px" }}>
         <div
@@ -643,6 +645,7 @@ export default function AMEPage() {
           </div>
         )
       )}
+    </div>
     </div>
   );
 }

@@ -23,7 +23,7 @@ const manrope = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Plataforma de crédito",
+  title: "Nadakki AI Suite",
   description: "AI-Powered Credit Operations Platform",
   manifest: "/manifest.json",
   appleWebApp: {
