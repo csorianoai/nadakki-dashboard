@@ -23,11 +23,12 @@ describe("F4E-4 asistente contable en el dealer", () => {
     ruta = "/autos/dealer/inventario";
     const DealerAsistente = cargar();
     render(<DealerAsistente />);
-    expect(screen.queryByTestId("asistente-panel")).toBeNull();
+    const oculto = () => screen.getByTestId("asistente-panel").closest("[hidden]") !== null;
+    expect(oculto()).toBe(true);
     fireEvent.click(screen.getByRole("button", { name: /asistente contable/i }));
-    expect(screen.getByTestId("asistente-panel")).toBeTruthy();
+    expect(oculto()).toBe(false);
     fireEvent.click(screen.getByRole("button", { name: /cerrar/i }));
-    expect(screen.queryByTestId("asistente-panel")).toBeNull();
+    expect(oculto()).toBe(true);
   });
 
   it("cerrar el panel no pierde la conversación: el panel se oculta, no se desmonta", () => {
