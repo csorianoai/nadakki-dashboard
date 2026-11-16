@@ -29,7 +29,7 @@ const INGLES = [
   "Compose", "Schedule", "Target", "Assign", "Review", "Next", "Launch Campaign", "Send Immediately",
   "Campaign Details", "Campaign Name", "Objective", "Channel", "Template", "Preview", "Save as Draft", "Save Draft",
   "audience size", "Estimated Reach", "Made a Purchase", "Upgraded Plan", "Completed Signup", "Referred a Friend",
-  "Left a Review", "Conversion Window", "Schedule for Later", "Action-Based", "Recurring", "Limited Time Offer",
+  "Left a Review", "Conversion Window", "Schedule for Later", "Action-Based", "Recurring",
   "Loading", "No templates", "Select a template", "Push Notification", "In-App Message",
 ];
 
