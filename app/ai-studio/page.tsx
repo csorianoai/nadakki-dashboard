@@ -3,11 +3,10 @@ import { motion } from "@/lib/motion-stub";
 import Link from "next/link";
 import { 
   Sparkles, Wand2, FileText, Image, History, 
-  Settings, Bot, ArrowRight, Zap, BookOpen
+  Settings, Bot, ArrowRight, BookOpen
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
-import StatCard from "@/components/ui/StatCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 
 const AI_TOOLS = [
@@ -17,13 +16,6 @@ const AI_TOOLS = [
   { id: "agents", name: "Mis Agentes", icon: Bot, desc: "Agentes personalizados", href: "/ai-studio/agents", color: "#ec4899" },
   { id: "prompts", name: "Prompt Library", icon: BookOpen, desc: "Biblioteca de prompts", href: "/library/prompts", color: "#06b6d4" },
   { id: "settings", name: "Configuración", icon: Settings, desc: "Ajustes de generación", href: "/ai-studio/settings", color: "#6b7280" },
-];
-
-const STATS = [
-  { value: "6", label: "Herramientas", icon: <Wand2 className="w-6 h-6 text-purple-400" />, color: "#8b5cf6" },
-  { value: "15K", label: "Generaciones", icon: <FileText className="w-6 h-6 text-green-400" />, color: "#22c55e" },
-  { value: "4.8", label: "Rating", icon: <Sparkles className="w-6 h-6 text-yellow-400" />, color: "#f59e0b" },
-  { value: "99%", label: "Uptime", icon: <Zap className="w-6 h-6 text-cyan-400" />, color: "#06b6d4" },
 ];
 
 export default function AIStudioPage() {
@@ -47,11 +39,11 @@ export default function AIStudioPage() {
         </div>
       </motion.div>
 
-      <div className="grid grid-cols-4 gap-6 mb-8">
-        {STATS?.map((stat, i) => (
-          <StatCard key={i} {...stat} delay={i * 0.1} />
-        ))}
-      </div>
+      {/* Sin llamada al backend para estadisticas de uso: estado vacio honesto, sin cifras de ejemplo. */}
+      <GlassCard className="p-6 mb-8 text-center" hover={false}>
+        <p className="text-white font-medium" data-testid="estado-vacio">Aun no hay datos de uso de AI Studio en tu cuenta</p>
+        <p className="text-sm text-gray-400 mt-2">Cuando generes contenido, lo veras aqui.</p>
+      </GlassCard>
 
       <h2 className="text-xl font-bold text-white mb-4">Herramientas Disponibles</h2>
       <div className="grid grid-cols-3 gap-6 mb-8">
