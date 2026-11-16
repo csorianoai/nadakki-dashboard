@@ -3,12 +3,48 @@
 /** Analisis de Costos: por vehiculo, por tipo y por mes (lector F1). Moneda: la funcional del tenant. */
 
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { COST_TYPES, COSTS_CAPABILITY_KEYS } from "@/lib/dealer-management/vehicle-costs";
 import { agrupar, fetchCostos, hrefVehiculo } from "../analisis";
-import { AnalisisMarco } from "../AnalisisMarco";
+import { resolveDealerAccessContext } from "@/lib/dealer/access-context";
+import { AnalisisMarco, type Formato } from "../AnalisisMarco";
 import { BarrasAnalisis } from "../BarrasAnalisis";
+import { useUsuarioCache } from "../usuarioCache";
+import { SIN_FILTROS, etiquetaUnidad, fetchInventario } from "../inventario/inventario";
 
 const etiquetaTipo = (t: string) => COST_TYPES.find((c) => c.value === t)?.label ?? t;
+
+/**
+ * Nombres legibles de las unidades (F4E-1): la barra por vehiculo nunca se etiqueta con el UUID.
+ * Vive en un hijo del marco: solo se monta con contexto y capability concedidos, asi que
+ * el reporte de inventario no se pide con el acceso denegado.
+ */
+function BarrasPorVehiculo({ titulo, datos, formato }: { titulo: string; datos: ReturnType<typeof agrupar>; formato: Formato }) {
+  const resolved = resolveDealerAccessContext();
+  const tenantId = resolved.status === "ready" ? resolved.context.tenantId : "none";
+  const userId = useUsuarioCache();
+  const unidades = useQuery({
+    queryKey: ["finanzas-inventario-nombres", tenantId, userId],
+    queryFn: () => fetchInventario(SIN_FILTROS),
+    enabled: resolved.status === "ready",
+    // Respuesta filtrada por rol: no se retiene ni se reutiliza al desmontar.
+    staleTime: 0,
+    gcTime: 0,
+    retry: false,
+  });
+  const nombres = new Map((unidades.data?.filas ?? []).map((u) => [u.vehicle_id, etiquetaUnidad(u)]));
+  return (
+    <BarrasAnalisis
+      titulo={titulo}
+      datos={datos}
+      formato={formato}
+      etiqueta={(id) => nombres.get(id) ?? "Unidad"}
+      href={hrefVehiculo}
+      testidFila="costos-vehiculo"
+      horizontal
+    />
+  );
+}
 
 export default function AnalisisCostosPage() {
   const [tipo, setTipo] = useState<string | null>(null);
@@ -42,13 +78,10 @@ export default function AnalisisCostosPage() {
               elegida={tipo}
               testidFila="costos-tipo"
             />
-            <BarrasAnalisis
+            <BarrasPorVehiculo
               titulo={tipo ? `Por vehículo — ${etiquetaTipo(tipo)}` : "Por vehículo"}
               datos={agrupar(vista, (f) => f.vehicle_id)}
               formato={formato}
-              href={hrefVehiculo}
-              testidFila="costos-vehiculo"
-              horizontal
             />
             <BarrasAnalisis
               titulo={tipo ? `Por mes — ${etiquetaTipo(tipo)}` : "Por mes"}
