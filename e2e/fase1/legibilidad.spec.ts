@@ -68,12 +68,111 @@ async function completarPaso(page: Page): Promise<void> {
   if (await segmento.count()) await segmento.click();
 }
 
-async function contraste(page: Page): Promise<string[]> {
-  const r = await new AxeBuilder({ page }).include("#main-content").withRules(["color-contrast"]).analyze();
-  return r.violations.flatMap((v) => v.nodes.map((n) => `${n.target.join(" ")} :: ${n.any[0]?.message ?? v.help}`));
+/** Luminancia relativa WCAG de un color sRGB 0-255. */
+const luz = (r: number, g: number, b: number): number => {
+  const c = [r, g, b].map((v) => { const x = v / 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; });
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+};
+
+/**
+ * axe no puede decidir el fondo de lo que va sobre un degradado (p. ej. GlassCard) y lo devuelve como `incomplete`.
+ * Para esos nodos se mide sobre PIXELES reales: se captura el elemento con su texto transparente (queda solo el fondo
+ * renderizado), se toma el peor pixel frente al color del texto y se compara con 4.5 (3 si es texto grande).
+ */
+async function contrastePixeles(page: Page, selector: string): Promise<string | null> {
+  const el = page.locator(selector).first();
+  // Centrado en el area visible: los encabezados fijos (pestanas, barra de pasos) no lo tapan al capturarlo.
+  await el.evaluate((n) => n.scrollIntoView({ block: "center", inline: "nearest" }));
+  await page.waitForTimeout(100);
+  const info = await el.evaluate((n) => {
+    const cs = getComputedStyle(n);
+    const m = cs.color.match(/[\d.]+/g)!.map(Number);
+    let op = 1;
+    for (let e: Element | null = n; e; e = e.parentElement) op *= Number(getComputedStyle(e).opacity);
+    return { rgb: m.slice(0, 3), alpha: (m[3] ?? 1) * op, px: parseFloat(cs.fontSize), peso: parseInt(cs.fontWeight, 10) || 400 };
+  });
+  const png = await el.screenshot({ style: "*{color:transparent !important;caret-color:transparent !important;text-shadow:none !important;-webkit-text-fill-color:transparent !important}*::placeholder{color:transparent !important}" });
+  const fondos: number[][] = await page.evaluate(async (b64) => {
+    const img = new Image();
+    img.src = "data:image/png;base64," + b64;
+    await img.decode();
+    const cv = document.createElement("canvas");
+    cv.width = img.width; cv.height = img.height;
+    const cx = cv.getContext("2d")!;
+    cx.drawImage(img, 0, 0);
+    const d = cx.getImageData(0, 0, img.width, img.height).data;
+    const out: number[][] = [];
+    // Solo el interior (sin bordes, esquinas redondeadas ni franjas de encabezados fijos que rozan el borde): banda central, donde va el texto.
+    const mx = Math.min(6, Math.floor(img.width / 4)), my = Math.floor(img.height * 0.3);
+    const paso = Math.max(1, Math.floor(((img.width - 2 * mx) * (img.height - 2 * my)) / 400));
+    let k = 0;
+    for (let y = my; y < img.height - my; y++) for (let x = mx; x < img.width - mx; x++) {
+      if (k++ % paso) continue;
+      const i = (y * img.width + x) * 4;
+      out.push([d[i], d[i + 1], d[i + 2]]);
+    }
+    return out;
+  }, png.toString("base64"));
+  const grande = info.px >= 24 || (info.px >= 18.66 && info.peso >= 700);
+  const umbral = grande ? 3 : 4.5;
+  let peor = Infinity, cual = [0, 0, 0];
+  for (const [r, g, b] of fondos) {
+    // texto semitransparente: se mezcla con el fondo de ese pixel
+    const t = info.rgb.map((v, i) => v * info.alpha + [r, g, b][i] * (1 - info.alpha));
+    const l1 = luz(t[0], t[1], t[2]), l2 = luz(r, g, b);
+    const cr = (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+    if (cr < peor) { peor = cr; cual = [r, g, b]; }
+  }
+  return peor < umbral ? `contraste real ${peor.toFixed(2)} < ${umbral} (pixeles renderizados, texto ${info.px}px ${info.rgb.join(',')} sobre ${cual.join(',')})` : null;
 }
 
-test.describe.configure({ mode: "serial" });
+/** Contenedores con scroll propio (y la ventana): axe no evalua lo que queda bajo el pliegue, hay que traerlo a la vista. */
+async function posicionesDeScroll(page: Page): Promise<number> {
+  return page.evaluate(() => {
+    const hs = [document.documentElement, ...Array.from(document.querySelectorAll<HTMLElement>("*"))]
+      .filter((e) => e.scrollHeight > e.clientHeight + 40 && /auto|scroll/.test(getComputedStyle(e).overflowY) || e === document.documentElement)
+      .map((e) => Math.ceil(e.scrollHeight / Math.max(1, e.clientHeight * 0.8)));
+    return Math.min(12, Math.max(1, ...hs));
+  });
+}
+
+async function scrollA(page: Page, i: number): Promise<void> {
+  await page.evaluate((k) => {
+    const els = [document.documentElement, ...Array.from(document.querySelectorAll<HTMLElement>("*"))]
+      .filter((e) => e.scrollHeight > e.clientHeight + 40 && (/auto|scroll/.test(getComputedStyle(e).overflowY) || e === document.documentElement));
+    for (const e of els) e.scrollTop = k * e.clientHeight * 0.8;
+  }, i);
+  await page.waitForTimeout(150);
+}
+
+/**
+ * Mide violations Y incomplete de 'color-contrast' en cada posicion de scroll.
+ * `incomplete` NO se descarta: los de degradado se miden sobre pixeles; el unico motivo excluido es
+ * "content too short" (circulos numericos de 1-2 caracteres: axe no los mide, y son decorativos junto a su etiqueta).
+ */
+async function contraste(page: Page): Promise<string[]> {
+  const malos = new Map<string, string>();
+  const pendientes = new Map<string, string>();
+  const n = await posicionesDeScroll(page);
+  for (let i = 0; i < n; i++) {
+    await scrollA(page, i);
+    const r = await new AxeBuilder({ page }).include("#main-content").withRules(["color-contrast"]).analyze();
+    for (const v of r.violations) for (const nodo of v.nodes) malos.set(nodo.target.join(" "), nodo.any[0]?.message ?? v.help);
+    for (const v of r.incomplete) for (const nodo of v.nodes) {
+      const motivo = nodo.any[0]?.message ?? v.help;
+      if (/too short/i.test(motivo)) continue;
+      pendientes.set(nodo.target.join(" "), motivo);
+    }
+  }
+  for (const [sel, motivo] of pendientes) {
+    if (malos.has(sel)) continue;
+    let res: string | null;
+    try { res = await contrastePixeles(page, sel); } catch (e) { res = `no medible (${motivo}): ${(e as Error).message.split("\n")[0]}`; }
+    if (res) malos.set(sel, res);
+  }
+  return [...malos].map(([sel, m]) => `${sel} :: ${m}`);
+}
+
 
 for (const p of PANTALLAS) {
   test(`contraste ${p.nombre} (${p.ruta}) con tema graphite`, async ({ page, context, baseURL }) => {
