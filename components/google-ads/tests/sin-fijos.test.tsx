@@ -58,7 +58,7 @@ describe("pagina Google Ads", () => {
     const text = container.textContent || "";
     for (const f of FIJAS) expect(text).not.toContain(f);
     expect(text).toContain("Sin datos aún");
-    expect(text).toContain("Budget Pacing Agent");
+    expect(text).toContain("Agente de ritmo de presupuesto");
   });
 });
 
@@ -67,7 +67,7 @@ describe("GoogleAdsExecutionFlow", () => {
     fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => ({ modules: [] }) });
     const { container } = render(<GoogleAdsExecutionFlow />);
     await waitFor(() => expect(fetchMock).toHaveBeenCalled());
-    await waitFor(() => expect(screen.queryByText(/Platform Fundamentals/)).not.toBeNull());
+    await waitFor(() => expect(screen.queryByText(/Fundamentos de la plataforma/)).not.toBeNull());
     const text = container.textContent || "";
     expect(text).not.toMatch(/hace .*\bd\b/);
     expect(text).toContain("0 / 15");
@@ -84,7 +84,7 @@ describe("GoogleAdsExecutionFlow", () => {
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     await new Promise((r) => setTimeout(r, 0));
     const text = container.textContent || "";
-    expect(text).not.toMatch(/Platform Fundamentals/);
+    expect(text).not.toMatch(/Fundamentos de la plataforma/);
     expect(text).not.toMatch(/hace .*\bd\b/);
   });
 });
