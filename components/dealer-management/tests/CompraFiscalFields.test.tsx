@@ -80,6 +80,16 @@ describe("compra fiscal: validacion y payload", () => {
       invoice_number: "2", net_amount: "100", vat_amount: "0",
     }), "ARS");
     expect(e.vat_rate).toMatch(/alícuota/i);
+    expect(e.vat_amount).toBeUndefined();
+  });
+
+  it.each(["monotributista", "exento"])("%s con factura C, IVA 0 y alicuota 0 valida y envia vat_amount 0", (st) => {
+    const f = valida({
+      seller_tax_status: st, voucher_kind: "factura", invoice_letter: "C", invoice_pos: "1",
+      invoice_number: "2", net_amount: "1000000", vat_amount: "0,00", vat_rate: "0",
+    });
+    expect(validatePurchase(f, "ARS")).toEqual({});
+    expect((purchasePayload(f, "ARS").fiscal as Record<string, string>).vat_amount).toBe("0");
   });
 
   it("el IVA que no sale del neto por la alicuota bloquea", () => {

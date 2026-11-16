@@ -37,8 +37,16 @@ export const conCondicion = (f: Pick<FiscalFields, "seller_tax_status">) =>
 export const tipoComprobante = (f: FiscalFields): "interno" | "factura" =>
   !esParticular(f) && f.voucher_kind === "factura" ? "factura" : "interno";
 
+/** Como normalizaImporte, pero el cero es valido (IVA 0 de una factura C o exenta). */
+const importeOCero = (t: string): string | null =>
+  /^\s*0+(?:[.,]0{1,2})?\s*$/.test(t) ? "0" : normalizaImporte(t);
+
 const aCentavos = (t: string): number | null => {
   const n = normalizaImporte(t);
+  return n === null ? null : Math.round(Number(n) * 100);
+};
+const ivaCentavos = (t: string): number | null => {
+  const n = importeOCero(t);
   return n === null ? null : Math.round(Number(n) * 100);
 };
 const tasa = (t: string): number | null =>
@@ -56,7 +64,7 @@ export function validateFiscal(f: FiscalFields, costoCentavos: number | null = n
   if (!/^\d{1,5}$/.test(f.invoice_pos)) e.invoice_pos = "Indica el punto de venta (hasta 5 números).";
   if (!/^\d{1,8}$/.test(f.invoice_number)) e.invoice_number = "Indica el número de la factura (hasta 8 números).";
   const neto = aCentavos(f.net_amount);
-  const iva = aCentavos(f.vat_amount);
+  const iva = ivaCentavos(f.vat_amount);
   const alic = tasa(f.vat_rate);
   if (neto === null) e.net_amount = "Indica el neto de la factura.";
   if (iva === null) e.vat_amount = "Indica el IVA de la factura (0 si no tiene).";
@@ -76,6 +84,6 @@ export function fiscalPayload(f: FiscalFields): Record<string, string> | undefin
   return {
     seller_tax_status: f.seller_tax_status, voucher_kind: "factura", invoice_letter: f.invoice_letter,
     invoice_pos: f.invoice_pos, invoice_number: f.invoice_number, net_amount: normalizaImporte(f.net_amount) ?? "",
-    vat_amount: normalizaImporte(f.vat_amount) ?? "", vat_rate: f.vat_rate.trim().replace(",", "."),
+    vat_amount: importeOCero(f.vat_amount) ?? "", vat_rate: f.vat_rate.trim().replace(",", "."),
   };
 }
