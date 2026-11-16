@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import GoogleAdsClient from "./GoogleAdsClient";
 import ConectarGoogleAds from "@/components/google-ads/ConectarGoogleAds";
 import { AgentCard } from "@/components/ui/AgentCard";
@@ -301,6 +302,9 @@ export default function GoogleAdsPage() {
   return (
     <div className="space-y-8 p-6 max-w-7xl mx-auto">
       <ConectarGoogleAds />
+      <Link href="/advertising/google-ads/metricas" className="inline-block text-sm font-medium text-blue-600 hover:underline">
+        Ver métricas de campañas →
+      </Link>
       <GoogleAdsClient embed navigationBackHref="/advertising" />
       <AdvertisingDashboardLive title="Google Ads — Dashboard API" />
       <div>
