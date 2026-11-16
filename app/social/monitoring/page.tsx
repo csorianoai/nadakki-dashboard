@@ -13,8 +13,7 @@ export default function SocialMonitoringPage() {
         <div><h1 className="text-3xl font-bold text-white">Social Monitoring</h1><p className="text-gray-400">Monitoreo de menciones y keywords</p></div>
       </div>
       <GlassCard className="p-8 text-center" hover={false}>
-        <p className="text-white font-medium" data-testid="estado-vacio">Aun no hay datos de monitoreo en tu cuenta</p>
-        <p className="text-sm text-gray-400 mt-2">Cuando existan, los veras aqui.</p>
+        <p className="text-white font-medium" data-testid="estado-vacio">Aun no hay datos de monitoreo en tu cuenta</p><p className="text-sm text-gray-400 mt-2">Cuando existan, los veras aqui.</p>
       </GlassCard>
     </div>
   );
