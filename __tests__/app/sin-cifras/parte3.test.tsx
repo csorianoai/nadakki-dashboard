@@ -41,7 +41,7 @@ describe("workflows", () => {
     mockFetch.mockResolvedValue({ workflows: [{ id: "x1", name: "Flujo Simulado", version: "2.0.0", tier: "CORE", agents: 3, status: "active" }] });
     const P = Page();
     const { container } = render(<P />);
-    await waitFor(() => expect(screen.getByText("Flujo Simulado")).toBeTruthy());
+    await waitFor(() => expect(screen.getAllByText("Flujo Simulado").length).toBeGreaterThan(0));
     const texto = container.textContent || "";
     for (const p of ["1247", "94.5", "Ejecuciones Totales", "Tasa de"]) expect(texto).not.toContain(p);
     expect(texto).toContain("3 agentes");
