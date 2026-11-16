@@ -3,7 +3,8 @@ x-contract-id: C-SITES-RENDER
 x-contract-status: proposed
 info:
   title: C-SITES-RENDER - API publica de lectura para el motor de sitios
-  version: "1.0.0"
+  version: "1.0.1"
+  x-changelog: [{"version": "1.0.1", "kind": "corrective", "summary": "Correctivo (decision de Cesar, 2026-11-10): un host conocido sin contenido publicado responde 404 SITE_UNPUBLISHED (antes 410). El codigo SITE_UNPUBLISHED se conserva; el visitante no distingue sitio no publicado de inexistente. Nada mas cambia."}]
   description: "API PUBLICA de lectura que consume el motor de sitios, bajo /api/v1/sites/public/* (no api/v1/public/**). Auth: token de servicio de SOLO LECTURA (credencial emitida por Nadakki; no es un rol de usuario); nunca JWT de usuario ni tenant en la peticion: el tenant se deduce de host/site_id en el servidor. Solo contenido published y medios approved; sin ids internos, tenant_id, storage_key ni contacto privado. El cliente final nunca ve proveedores: todas las URLs (CDN, hosts) son de Nadakki. Cache: ETag + Cache-Control (If-None-Match -> 304); la frescura la dirige el evento de revalidacion firmado HMAC (events.yaml). Errores: application/problem+json con `code` estable. Paginacion por cursor. Ejemplos SINTETICOS."
 servers: [{"url": "https://api.nadakki.example/api/v1/sites"}]
 security: [{"serviceToken": []}]
@@ -14,7 +15,7 @@ paths:
       operationId: resolveHost
       tags: ["public"]
       summary: Resuelve un host a su sitio publicado
-      description: "Host desconocido: 404 HOST_NOT_FOUND. Host conocido sin contenido published: 410 SITE_UNPUBLISHED. Host en releasing: 200 con state=redirect (301 temporal). Lee sites_host_directory."
+      description: "Host desconocido: 404 HOST_NOT_FOUND. Host conocido sin contenido published: 404 SITE_UNPUBLISHED (decision de Cesar 2026-11-10; antes 410). Host en releasing: 200 con state=redirect (301 temporal). Lee sites_host_directory."
       parameters: [{"name": "host", "in": "query", "description": "Host de la peticion del visitante, en minusculas.", "required": true, "schema": {"$ref": "schema.json#/$defs/Host"}}, {"$ref": "#/components/parameters/IfNoneMatch"}]
       responses:
         "200": {"description": "OK.", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}, "X-Content-Version": {"$ref": "#/components/headers/X-Content-Version"}}, "content": {"application/json": {"schema": {"$ref": "schema.json#/$defs/ResolveResult"}, "examples": {"synth": {"value": {"site_id": "00000000-0000-4000-8000-0000000000b1", "vertical": "realestate", "template_id": "realestate-agent-v1", "template_version": 1, "languages": ["es", "en"], "default_language": "es", "content_version": 3, "host": "www.synth-realty.example", "host_kind": "custom", "primary_host": "www.synth-realty.example", "state": "serve", "redirect": null}}}}}}
@@ -150,9 +151,9 @@ components:
   securitySchemes:
     serviceToken: {"type": "http", "scheme": "bearer", "description": "Token de servicio opaco de SOLO LECTURA (credencial emitida por Nadakki; no es un rol de usuario) del motor. Cualquier metodo distinto de GET: 403 FORBIDDEN."}
   parameters: {"Limit": {"name": "limit", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 200, "default": 50}}, "Cursor": {"name": "cursor", "in": "query", "description": "Cursor opaco devuelto en next_cursor; invalido o caducado: 422 VALIDATION_ERROR.", "schema": {"type": "string", "maxLength": 512}}, "SiteIdPath": {"name": "site_id", "in": "path", "required": true, "schema": {"$ref": "schema.json#/$defs/Uuid"}}, "IfNoneMatch": {"name": "If-None-Match", "in": "header", "description": "ETag previo; coincide -> 304 sin cuerpo.", "schema": {"type": "string"}}}
-  headers: {"ETag": {"description": "Validador fuerte del recurso.", "schema": {"type": "string"}}, "Cache-Control": {"description": "Siempre public, s-maxage=60, stale-while-revalidate=300; los 404/410 llevan max-age=30.", "schema": {"type": "string", "example": "public, s-maxage=60, stale-while-revalidate=300"}}, "X-Content-Version": {"description": "content_version del sitio al servir.", "schema": {"type": "integer"}}}
+  headers: {"ETag": {"description": "Validador fuerte del recurso.", "schema": {"type": "string"}}, "Cache-Control": {"description": "Siempre public, s-maxage=60, stale-while-revalidate=300; los 404 llevan max-age=30.", "schema": {"type": "string", "example": "public, s-maxage=60, stale-while-revalidate=300"}}, "X-Content-Version": {"description": "content_version del sitio al servir.", "schema": {"type": "integer"}}}
   responses:
     NotModified: {"description": "Sin cambios (If-None-Match coincide).", "headers": {"ETag": {"$ref": "#/components/headers/ETag"}, "Cache-Control": {"$ref": "#/components/headers/Cache-Control"}}}
     Error:
-      description: Error. 401 UNAUTHENTICATED, 403 FORBIDDEN, 404 NOT_FOUND/HOST_NOT_FOUND, 410 SITE_UNPUBLISHED, 422 VALIDATION_ERROR, 429 RATE_LIMITED (con Retry-After).
+      description: Error. 401 UNAUTHENTICATED, 403 FORBIDDEN, 404 NOT_FOUND/HOST_NOT_FOUND/SITE_UNPUBLISHED, 422 VALIDATION_ERROR, 429 RATE_LIMITED (con Retry-After).
       content: {"application/problem+json": {"schema": {"$ref": "schema.json#/$defs/Problem"}}}

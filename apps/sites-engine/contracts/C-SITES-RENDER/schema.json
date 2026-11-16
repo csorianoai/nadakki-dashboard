@@ -1,7 +1,7 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://contracts.nadakki.example/C-SITES-RENDER/1.0.0/schema.json", "title": "C-SITES-RENDER - tipos de lectura publica para el motor",
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "$id": "https://contracts.nadakki.example/C-SITES-RENDER/1.0.1/schema.json", "title": "C-SITES-RENDER - tipos de lectura publica para el motor",
   "description": "Vistas publicas (sin tenant_id ni ids internos) derivadas por nombre de C-SITES-DATA; los nombres de campo coinciden con DATA. Sin $ref entre contratos: x-contract-ref.",
-  "x-contract": {"id": "C-SITES-RENDER", "version": "1.0.0", "status": "proposed"}, "x-contract-uses": [{"id": "C-SITES-DATA", "version": "1.0.0"}],
+  "x-contract": {"id": "C-SITES-RENDER", "version": "1.0.1", "status": "proposed", "changelog": [{"version": "1.0.1", "kind": "corrective", "summary": "Correctivo (decision de Cesar, 2026-11-10): un host conocido sin contenido publicado responde 404 SITE_UNPUBLISHED (antes 410). El codigo SITE_UNPUBLISHED se conserva; el visitante no distingue sitio no publicado de inexistente. Nada mas cambia."}]}, "x-contract-uses": [{"id": "C-SITES-DATA", "version": "1.0.0"}],
   "$defs": {
     "PublicMedia": {
       "type": "object", "additionalProperties": false, "x-contract-ref": "C-SITES-DATA@1.0.0#/$defs/MediaAsset",
