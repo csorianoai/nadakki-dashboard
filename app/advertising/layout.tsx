@@ -14,7 +14,7 @@ import type { ReactNode } from "react";
 export default function AdvertisingLayout({ children }: { children: ReactNode }) {
   return (
     <div
-      className="dark ndk-fade-in min-h-screen w-full bg-slate-950 text-slate-100 antialiased [color-scheme:dark]"
+      className="dark ndk-fade-in min-h-screen shrink-0 w-full bg-slate-950 text-slate-100 antialiased [color-scheme:dark]"
       data-advertising-dark-canvas
     >
       {children}

@@ -14,8 +14,8 @@ const PANTALLAS: Array<{ nombre: string; ruta: string; pasos?: number; pendiente
   { nombre: "AME", ruta: "/ame" },
   { nombre: "Campanas", ruta: "/marketing/campaigns" },
   { nombre: "Nueva campana", ruta: "/marketing/campaigns/new", pasos: 4 },
-  { nombre: "Google Ads", ruta: "/advertising/google-ads", pendiente: "parte 3" },
-  { nombre: "Social inbox", ruta: "/social/inbox", pendiente: "parte 3" },
+  { nombre: "Google Ads", ruta: "/advertising/google-ads" },
+  { nombre: "Social inbox", ruta: "/social/inbox" },
 ];
 
 const TENANT = { id: "00000000-0000-4000-8000-0000000000a1", slug: "qa", display_name: "QA", subscribed_cores: ["marketing"], is_demo: false };
