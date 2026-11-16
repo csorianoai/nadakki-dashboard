@@ -59,7 +59,7 @@ describe('ST2-03 proxy host -> sitio', () => {
 
   it('[negativo] host malformado, IDN raro, puerto y mayusculas se normalizan o se rechazan', async () => {
     const { f, run } = setup();
-    for (const h of ['', 'a b.example', 'www.maria.example/x', 'user@www.maria.example', '[::1]', '127.0.0.1', 'localhost', 'www.maria.example:abc', '-x.example', 'a..example', 'www.maria.example\r\nx: y']) {
+    for (const h of ['', 'a b.example', 'www.maria.example/x', 'user@www.maria.example', '[::1]', '127.0.0.1', 'localhost', 'www.maria.example:abc', '-x.example', 'a..example', 'www.maria.example;x']) {
       expect(await run('https://x/', h), h).toMatchObject({ kind: 'status', status: 404 });
     }
     expect(await run('https://x/', null)).toMatchObject({ kind: 'status', status: 404 });
