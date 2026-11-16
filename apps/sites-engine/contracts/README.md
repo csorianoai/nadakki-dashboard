@@ -1,10 +1,10 @@
 # Contratos vendorizados (solo lectura)
 
-Copias exactas de los contratos de Nadakki Sites que el motor consume. Fuente: `csorianoai/nadakki-ai-suite`, `docs/contracts/`, rama `main` (commit `c30cf8b33`).
+Copias exactas de los contratos de Nadakki Sites que el motor consume. Fuente: `csorianoai/nadakki-ai-suite`, `docs/contracts/`, rama `main` (commit `d06b3100e`; C-SITES-LEADS sin cambios desde `c30cf8b33`).
 
 | Contrato | Versión | Ficheros |
 |---|---|---|
-| `C-SITES-RENDER` | 1.0.0 | `schema.json`, `openapi.yaml`, `events.yaml` |
+| `C-SITES-RENDER` | 1.0.1 (404 SITE_UNPUBLISHED, decisión de César 2026-11-10) | `schema.json`, `openapi.yaml`, `events.yaml` |
 | `C-SITES-LEADS` | 1.1.0 (#2627) | `schema.json`, `openapi.yaml`, `events.yaml` |
 
 - `CONTRACTS.sha256` lista la huella de cada fichero; se comprueba con `cd apps/sites-engine/contracts && sha256sum -c CONTRACTS.sha256`.

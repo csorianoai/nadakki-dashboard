@@ -1,5 +1,6 @@
 contract: C-SITES-RENDER
-version: "1.0.0"
+version: "1.0.1"
+changelog: [{"version": "1.0.1", "kind": "corrective", "summary": "Correctivo (decision de Cesar, 2026-11-10): un host conocido sin contenido publicado responde 404 SITE_UNPUBLISHED (antes 410). El codigo SITE_UNPUBLISHED se conserva; el visitante no distingue sitio no publicado de inexistente. Nada mas cambia."}]
 builds_on: [{"contract": "C-SITES-DATA", "version": "1.0.0"}]
 description: "Evento de revalidacion core -> motor. Mismo sobre que el resto de eventos Sites; la carga no contiene contenido ni datos de marca ni PII."
 envelope: {"$ref": "schema.json#/$defs/EventEnvelope"}
