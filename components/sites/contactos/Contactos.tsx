@@ -9,13 +9,14 @@ import { pick } from "@/lib/sites/copy-util";
 import { SitesApiError } from "@/lib/sites/errors";
 import { ERR } from "@/lib/sites/medios/copy";
 import { SIZE, ST } from "@/lib/sites/tokens";
+import { DetalleContacto } from "./DetalleContacto";
 import { Aviso } from "../shell/Aviso";
 import { useSites } from "../shell/SitesContext";
 
 type Carga = { k: "cargando" } | { k: "ok"; items: Lead[]; next: string | null } | { k: "error"; code: string };
 const ctl = { minHeight: SIZE.target, padding: "0 10px", border: `1px solid ${ST.control}`, borderRadius: SIZE.radius, font: "inherit", background: ST.white, color: ST.ink };
 
-/** Bandeja de contactos (PARTE 1/2: lista y filtros; el detalle y la revocacion van en la PARTE 2/2). Sin ids de clic en la lista ni datos personales en la URL. */
+/** Bandeja de contactos (lista, filtros y detalle con revocacion por canal). Sin ids de clic en la lista ni datos personales en la URL. */
 export function Contactos() {
   const { sites, demo, selectedId, lang } = useSites();
   const siteId = selectedId ?? sites[0]?.id ?? null;
@@ -23,6 +24,7 @@ export function Contactos() {
   const [status, setStatus] = useState<LeadStatus | "">("");
   const [channel, setChannel] = useState<ConsentChannel | "">("");
   const [errMas, setErrMas] = useState(false);
+  const [abierto, setAbierto] = useState<string | null>(null);
   const t = (k: string) => pick(CT[k], lang);
   const q = { status: status || undefined, channel: channel || undefined };
 
@@ -69,7 +71,7 @@ export function Contactos() {
   else {
     lista = (
       <table data-testid="lista-contactos" style={{ width: "100%", borderCollapse: "collapse", background: ST.white }}>
-        <thead><tr>{["colName", "colChannels", "colState", "colDate", "colPage"].map((k) => <th key={k} scope="col" style={cell}>{t(k)}</th>)}</tr></thead>
+        <thead><tr>{["colName", "colChannels", "colState", "colDate", "colPage", "colActions"].map((k) => <th key={k} scope="col" style={cell}>{t(k)}</th>)}</tr></thead>
         <tbody>
           {c.items.map((l) => (
             <tr key={l.id} data-testid={`contacto-${l.id}`}>
@@ -78,6 +80,7 @@ export function Contactos() {
               <td style={cell} data-testid={`estado-${l.id}`}>{t(l.status)}</td>
               <td style={cell}>{l.created_at.slice(0, 10)}</td>
               <td style={cell}>{l.source_page}</td>
+              <td style={cell}><button type="button" data-testid={`ver-${l.id}`} className="sx-focus" style={ctl} aria-label={`${t("view")}: ${l.name}`} onClick={() => setAbierto(l.id)}>{t("view")}</button></td>
             </tr>
           ))}
         </tbody>
@@ -93,6 +96,10 @@ export function Contactos() {
         {filtro("f-canal", t("fChannel"), channel, (v) => setChannel(v as ConsentChannel | ""), CHANNELS)}
       </div>
       {lista}
+      {abierto && (
+        <DetalleContacto key={abierto} siteId={siteId} leadId={abierto} demo={demo} lang={lang} onClose={() => setAbierto(null)}
+          onUpdated={(n) => setC((p) => (p.k === "ok" ? { ...p, items: p.items.map((x) => (x.id === n.id ? n : x)) } : p))} />
+      )}
       {errMas && <p role="alert" data-testid="error-mas" style={{ color: ST.badText }}>⚠ {t("errMore")}</p>}
       {c.k === "ok" && c.next && <button type="button" data-testid="cargar-mas" className="sx-focus" style={{ ...ctl, marginTop: 12 }} onClick={mas}>{t("more")}</button>}
     </section>

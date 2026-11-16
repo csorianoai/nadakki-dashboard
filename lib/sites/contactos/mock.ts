@@ -1,4 +1,4 @@
-import type { Lead } from "./types";
+import type { ConsentChannel, Lead } from "./types";
 
 /** Mocks SINTETICOS del modo DEMO (siempre con badge DEMO). Almacen en memoria; sin red. */
 const T = "2026-11-07T15:00:00Z";
@@ -16,3 +16,17 @@ const inicial = (): Lead[] => [
 let almacen = inicial();
 export const listDemoLeads = (): Lead[] => [...almacen];
 export const resetDemoLeads = (): void => { almacen = inicial(); };
+
+/** Detalle y revocacion DEMO: en memoria, sin red. Lanza "CONFLICT" si el canal no tiene consentimiento vigente. */
+export const getDemoLead = (id: string): Lead | undefined => almacen.find((l) => l.id === id);
+export function revokeDemoConsent(id: string, channel: ConsentChannel): Lead {
+  const l = getDemoLead(id);
+  if (!l) throw new Error("NOT_FOUND");
+  if (!l.contactable_channels.includes(channel)) throw new Error("CONFLICT");
+  const n: Lead = {
+    ...l, contactable_channels: l.contactable_channels.filter((c) => c !== channel),
+    consents: l.consents.map((c) => (c.channel === channel && c.status === "granted" ? { ...c, status: "revoked" as const, recorded_at: new Date().toISOString() } : c)),
+  };
+  almacen = almacen.map((x) => (x.id === id ? n : x));
+  return n;
+}

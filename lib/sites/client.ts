@@ -67,7 +67,7 @@ async function call<T>(method: "GET" | "POST" | "PATCH" | "PUT", pathFn: () => s
 // La ruta es un thunk: un id invalido rechaza la promesa en vez de lanzar de forma sincrona.
 type P = () => string;
 const get = <T>(p: P, q?: object) => call<T>("GET", () => p() + qs(q));
-const post = <T>(p: P, b: object, o?: CallOpts) => call<T>("POST", p, b, o);
+const post = <T>(p: P, b: object | undefined, o?: CallOpts) => call<T>("POST", p, b, o);
 const patch = <T>(p: P, b: object) => call<T>("PATCH", p, b);
 const sp = (siteId: string) => `/sites/${seg(siteId)}`;
 
@@ -118,3 +118,7 @@ export const revokeMedia = (siteId: string, mediaId: string, reason: MediaRevoke
 // Contactos (C-SITES-LEADS 1.1.0). Filtros y cursor en query; nunca datos personales.
 export const listLeads = (siteId: string, q: ListQuery & { status?: LeadStatus; channel?: ConsentChannel } = {}) =>
   get<Paginated<Lead>>(() => `${sp(siteId)}/leads`, q);
+export const getLead = (siteId: string, leadId: string) => get<Lead>(() => `${sp(siteId)}/leads/${seg(leadId)}`);
+/** Revoca el consentimiento vigente de un canal. Sin cuerpo; la Idempotency-Key la fija quien llama para reutilizarla en reintentos. */
+export const revokeLeadConsent = (siteId: string, leadId: string, channel: ConsentChannel, o?: CallOpts) =>
+  post<Lead>(() => `${sp(siteId)}/leads/${seg(leadId)}/consents/${seg(channel)}/revoke`, undefined, o);
