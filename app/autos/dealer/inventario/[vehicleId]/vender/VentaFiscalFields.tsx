@@ -104,11 +104,11 @@ export function VentaFiscalFields({
           {campo("ti_vin", "VIN (opcional)", undefined, 17)}
           {campo("ti_mileage_km", "Kilómetros (opcional)", "numeric")}
           {campo("ti_plate", "Patente (opcional)", undefined, 16)}
-          {value.ti_acquisition_mode_code === "consignacion" ? (
-            <p data-testid="venta-permuta-consignado" className="text-xs text-nk-fg md:col-span-2">
-              Si el vehículo que vendes es consignado, el usado entra a inventario pero no se reconoce ganancia por él.
-            </p>
-          ) : null}
+          <p data-testid="venta-permuta-consignado" className="text-xs text-nk-fg md:col-span-2">
+            El usado entra a inventario. Si el vehículo que vendes es consignado, no se reconoce ganancia por esta
+            permuta; si lo compraste con factura, se reconoce como parte de la venta. Lo decide el sistema según cómo
+            compraste el vehículo que vendes, no según el origen del usado.
+          </p>
         </div>
       ) : null}
     </fieldset>
