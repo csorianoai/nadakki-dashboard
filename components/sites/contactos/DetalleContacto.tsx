@@ -69,10 +69,10 @@ export function DetalleContacto({ siteId, leadId, demo, lang, onClose, onUpdated
   if (c.k === "error") return <Aviso testid="estado-error-detalle" alert title={t("errDetail")} body={c.code === "NOT_FOUND" ? t("notFound") : pick(ERR[c.code] ?? ERR.UNKNOWN, lang)} />;
   const l = c.lead;
   const clic = l.ad_click;
-  const ids = clic?.click_consent === "granted" ? CLICK_IDS.filter((x) => clic[x]) : [];
+  const ids = clic && (clic.click_consent === "granted" || clic.click_consent === "not_required") ? CLICK_IDS.filter((x) => clic[x]) : [];
   let estadoClic: React.ReactNode;
   if (clic?.click_consent === "denied" || clic?.click_consent === "unknown") estadoClic = t("clickNone");
-  else if (!clic || clic.click_consent === "not_required") estadoClic = t("clickAbsent");
+  else if (!clic) estadoClic = t("clickAbsent");
   else if (!ids.length) estadoClic = t("clickEmpty");
   else estadoClic = <ul>{ids.map((x) => <li key={x}>{x}: <span>{clic[x]}</span></li>)}</ul>;
 
