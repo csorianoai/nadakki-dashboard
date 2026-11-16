@@ -411,7 +411,7 @@ function CampaignWizardContent() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0a0f1c]">
+    <div className="min-h-screen shrink-0 bg-[#0a0f1c]">
       <div className="h-14 border-b border-white/10 px-4 flex items-center justify-between bg-[#0d1117]">
         <div className="flex items-center gap-4">
           <Link href="/marketing/campaigns" className="p-2 hover:bg-white/10 rounded-lg text-gray-400">
@@ -894,7 +894,7 @@ function CampaignWizardContent() {
                   type="button"
                   onClick={launchCampaign}
                   disabled={saving || assetsLoading || !!assetsError}
-                  className="flex items-center gap-2 px-8 py-4 bg-green-500 hover:bg-green-600 rounded-xl text-white font-bold text-lg disabled:opacity-50"
+                  className="flex items-center gap-2 px-8 py-4 bg-green-700 hover:bg-green-800 rounded-xl text-white font-bold text-lg disabled:opacity-50"
                 >
                   {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5" />}{" "}
                   {saving ? "Procesando…" : `Enviar campaña a ${reach.toLocaleString()} ${reach === 1 ? "persona" : "personas"}`}
