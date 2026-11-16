@@ -1,5 +1,6 @@
 import { apiFetch } from "@/lib/api/fetch-client";
 import { SitesApiError, errorFromResponse } from "./errors";
+import type { ConsentChannel, Lead, LeadStatus } from "./contactos/types";
 import type {
   Building, BuildingCreate, BuildingUpdate, ComplianceEvaluation, ComplianceOverride, Development, DevelopmentCreate,
   DevelopmentUpdate, Listing, ListingCreate, ListingUpdate, MediaAsset, MediaCreate, MediaPresign, MediaPresignRequest,
@@ -113,3 +114,7 @@ export const listMedia = (siteId: string, q: ListQuery = {}) => get<Paginated<Me
 export const updateMedia = (siteId: string, mediaId: string, b: MediaUpdate) => patch<MediaAsset>(() => `${sp(siteId)}/media/${seg(mediaId)}`, b);
 export const revokeMedia = (siteId: string, mediaId: string, reason: MediaRevoke["reason"], o?: CallOpts) =>
   post<MediaAsset>(() => `${sp(siteId)}/media/${seg(mediaId)}/revoke`, { reason }, o);
+
+// Contactos (C-SITES-LEADS 1.1.0). Filtros y cursor en query; nunca datos personales.
+export const listLeads = (siteId: string, q: ListQuery & { status?: LeadStatus; channel?: ConsentChannel } = {}) =>
+  get<Paginated<Lead>>(() => `${sp(siteId)}/leads`, q);
