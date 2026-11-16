@@ -948,7 +948,7 @@ function CampaignWizardContent() {
               type="button"
               onClick={() => setCurrentStep(currentStep + 1)}
               disabled={!canProceed()}
-              className="flex items-center gap-2 px-6 py-2 bg-purple-500 hover:bg-purple-600 rounded-lg text-white font-medium disabled:opacity-50"
+              className="flex items-center gap-2 px-6 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-white font-medium disabled:opacity-50"
             >
               Siguiente <ChevronRight className="w-4 h-4" />
             </button>
