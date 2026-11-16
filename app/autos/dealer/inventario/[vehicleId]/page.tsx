@@ -15,6 +15,7 @@ import { isSold } from "@/lib/dealer-management/vehicle-sale";
 import { DEALER_VEHICLE_CAPABILITY } from "@/lib/dealer/capabilities";
 import type { EntitlementDecision } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
+import { SenasPanel } from "./SenasPanel";
 import { FotosVehiculoPanel } from "./FotosVehiculoPanel";
 import { PHOTOS_CAPABILITY } from "./fotos";
 import { DetalleTecnico } from "../DetalleTecnico";
@@ -135,6 +136,7 @@ function VehicleFicha({
       {/* Sin `autos.costs.view` la seccion no se pinta: ni vacia. */}
       {costsView ? <FichaCompraDetalle vehicleId={vehicleId} /> : null}
       {costsView ? <FichaCostos vehicleId={vehicleId} /> : null}
+      <SenasPanel vehicleId={vehicleId} />
       {costsView ? <FichaVendedor vehicleId={vehicleId} /> : null}
       <FichaEdicionTecnica />
     </>
