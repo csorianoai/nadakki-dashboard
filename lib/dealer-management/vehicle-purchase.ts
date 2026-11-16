@@ -12,6 +12,7 @@
 
 import { normalizaImporte } from "@/lib/dealer-management/vehicle-manual";
 import { vehicleCreatePayload, type VehicleManualForm, type VehicleDealerIdentity } from "./vehicle-manual";
+import { FISCAL_EMPTY, fiscalPayload, validateFiscal, type FiscalFields } from "@/lib/dealer-management/compra-fiscal";
 import { apiFetch } from "@/lib/api/fetch-client";
 import { accessApiErrorFromHttp } from "@/lib/access/client";
 
@@ -19,13 +20,14 @@ export const PAYMENT_METHODS = [
   { value: "cash", label: "Efectivo" },
   { value: "transfer", label: "Transferencia" },
   { value: "cheque", label: "Cheque" },
+  { value: "cheque_diferido", label: "Cheque diferido" },
   { value: "other", label: "Otro" },
 ] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number]["value"];
 
 /** Lista fija de fuentes del tipo de cambio. */
 export const FX_SOURCES = [
-  { value: "oficial_bna", label: "Oficial BNA" },
+  { value: "oficial_bna", label: "Oficial BNA (dólar compra)" },
   { value: "mep", label: "MEP" },
   { value: "blue", label: "Blue" },
   { value: "acordado", label: "Acordado" },
@@ -65,7 +67,7 @@ export type PurchaseForm = {
   country_code: string;
   acquisition_mode_code: string;
   fx_as_of: string;
-};
+} & FiscalFields;
 
 export const EMPTY_LINE: PaymentLine = {
   method: "cash",
@@ -90,6 +92,7 @@ export const PURCHASE_EMPTY: PurchaseForm = {
   country_code: "",
   acquisition_mode_code: "",
   fx_as_of: "",
+  ...FISCAL_EMPTY,
 };
 
 /** Mensajes propios de los reason_code del alta con compra; lo desconocido usa el generico. */
@@ -99,6 +102,8 @@ export const MENSAJE_ALTA: Record<string, string> = {
   PAYMENT_SUM_MISMATCH: "La suma de los pagos no coincide con el costo de la compra. Corrígela e intenta de nuevo.",
   CAPABILITY_DENIED: "Tu usuario no tiene permiso para registrar compras de vehículos. Pide a quien administra tu cuenta que revise tus permisos.",
   DEALER_NOT_ASSIGNED: "Tu usuario no está asignado a este concesionario. Pide que te asignen para poder cargar vehículos.",
+  FISCAL_TOTAL_MISMATCH: "El neto más el IVA de la factura no da el costo de la compra. Revisa el neto, el IVA o el costo.",
+  ESQUEMA_FISCAL_NO_APLICADO: "Disponible cuando se active la contabilidad fiscal. Mientras tanto, guarda la compra sin condición fiscal y sin dólar oficial BNA.",
   IDEMPOTENCY_KEY_REUSED: "Esta carga ya se envió antes con otros datos. Revisa el inventario por si el vehículo ya se creó; si no, vuelve a enviarla.",
 };
 
@@ -152,13 +157,14 @@ export function validatePurchase(form: PurchaseForm, functionalCurrency: string 
   form.payment_lines.forEach((line, i) => {
     if (!PAYMENT_METHODS.some((m) => m.value === line.method)) errors[`payment_${i}_method`] = "Medio de pago inválido.";
     if (centavos(line.amount) === null) errors[`payment_${i}_amount`] = "Ingresa el importe de este pago.";
-    if (line.method === "cheque") {
+    if (line.method === "cheque" || line.method === "cheque_diferido") {
       if (!line.cheque_number.trim()) errors[`payment_${i}_cheque_number`] = "Falta el número del cheque.";
       if (!line.bank.trim()) errors[`payment_${i}_bank`] = "Falta el banco del cheque.";
       if (!dateOK(line.cobro_date)) errors[`payment_${i}_cobro_date`] = "Falta la fecha de cobro del cheque.";
     }
     if (line.method === "other" && !line.detail.trim()) errors[`payment_${i}_detail`] = "Describe este pago.";
   });
+  Object.assign(errors, validateFiscal(form, costo));
   if (form.payment_lines.length > 20) errors.payment_sum = "Se admiten hasta 20 líneas de pago.";
   if (form.payment_lines.length === 0) errors.payment_sum = "Agrega al menos una línea de pago.";
   else if (costo !== null && sumaPagos(form.payment_lines) !== costo) {
@@ -171,7 +177,7 @@ export function validatePurchase(form: PurchaseForm, functionalCurrency: string 
 export function purchasePayload(form: PurchaseForm, functionalCurrency: string | null): Record<string, unknown> {
   const errors = validatePurchase(form, functionalCurrency);
   if (Object.keys(errors).length) throw new Error(Object.values(errors).join(" "));
-  const methods = { cash: "efectivo", transfer: "transferencia", cheque: "cheque", other: "otro" };
+  const methods = { cash: "efectivo", transfer: "transferencia", cheque: "cheque", cheque_diferido: "cheque_diferido", other: "otro" };
   const payload: Record<string, unknown> = {
     amount: normalizaImporte(form.cost),
     currency: form.currency.trim().toUpperCase(),
@@ -179,7 +185,7 @@ export function purchasePayload(form: PurchaseForm, functionalCurrency: string |
     acquisition_mode_code: form.acquisition_mode_code.trim(), seller_contact_id: form.seller_contact_id,
     payments: form.payment_lines.map((line) => {
       const out: Record<string, unknown> = { method: methods[line.method], amount: normalizaImporte(line.amount) };
-      if (line.method === "cheque") {
+      if (line.method === "cheque" || line.method === "cheque_diferido") {
         out.check_number = line.cheque_number.trim();
         out.check_bank = line.bank.trim();
         out.check_cash_date = line.cobro_date;
@@ -188,7 +194,9 @@ export function purchasePayload(form: PurchaseForm, functionalCurrency: string |
       return out;
     }),
   };
-  if (needsFx(form.currency.trim().toUpperCase(), functionalCurrency)) payload.fx = { rate: form.fx_rate.replace(",", "."), source: form.fx_source, detail: form.fx_source === "otra" ? form.fx_source_detail.trim() : undefined, as_of: `${form.fx_as_of}T00:00:00Z` };
+  const fiscal = fiscalPayload(form);
+  if (fiscal) payload.fiscal = fiscal;
+  if (needsFx(form.currency.trim().toUpperCase(), functionalCurrency)) payload.fx = { rate: form.fx_rate.replace(",", "."), source: form.fx_source, detail: form.fx_source === "otra" ? form.fx_source_detail.trim() : undefined, bna_side: form.fx_source === "oficial_bna" ? "compra" : undefined, as_of: `${form.fx_as_of}T00:00:00Z` };
   return payload;
 }
 
