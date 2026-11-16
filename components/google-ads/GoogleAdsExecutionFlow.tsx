@@ -37,7 +37,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m01",
     title: "Fundamentos de la plataforma",
-    description: "Entender la plataforma y metricas clave",
+    description: "Entender la plataforma y las métricas clave",
     status: "not_ready",
     dependencies: [],
     actionKey: "google_ads_m01_fundamentals",
@@ -45,7 +45,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m02",
     title: "Estructura de la cuenta",
-    description: "Jerarquia de cuenta y campana",
+    description: "Jerarquía de la cuenta y de las campañas",
     status: "not_ready",
     dependencies: ["m01"],
     actionKey: "google_ads_m02_account_structure",
@@ -53,7 +53,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m03",
     title: "Investigación de palabras clave",
-    description: "Investigacion de palabras clave y match types",
+    description: "Investigación de palabras clave y tipos de concordancia",
     status: "ready",
     dependencies: ["m02"],
     actionKey: "google_ads_m03_keyword_research",
@@ -61,7 +61,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m04",
     title: "Palabras clave negativas",
-    description: "Limpieza de search terms y listas negativas",
+    description: "Limpieza de términos de búsqueda y listas de exclusión",
     status: "blocked",
     dependencies: ["m03"],
     blockedReason: "Requiere completar M03 primero",
@@ -70,7 +70,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m05",
     title: "Nivel de calidad y posición del anuncio",
-    description: "Diagnostico de calidad y ad rank",
+    description: "Diagnóstico de calidad y posición del anuncio",
     status: "blocked",
     dependencies: ["m03"],
     blockedReason: "Requiere completar M03 primero",
@@ -79,7 +79,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m06",
     title: "Puja inteligente",
-    description: "Estrategias de puja automatica",
+    description: "Estrategias de puja automática",
     status: "blocked",
     dependencies: ["m05"],
     blockedReason: "Requiere completar M05 primero",
@@ -88,7 +88,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m07",
     title: "Textos de anuncios responsivos",
-    description: "Creativos responsivos y ad strength",
+    description: "Anuncios responsivos y calidad del anuncio",
     status: "ready",
     dependencies: ["m02"],
     actionKey: "google_ads_m07_rsa_copy",
@@ -104,7 +104,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m09",
     title: "Audiencias",
-    description: "Segmentacion y senales de audiencia",
+    description: "Segmentación y señales de audiencia",
     status: "blocked",
     dependencies: ["m03"],
     blockedReason: "Requiere completar M03 primero",
@@ -113,7 +113,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m10",
     title: "Performance Max",
-    description: "Campanas PMax y asset groups",
+    description: "Campañas de máximo rendimiento y grupos de recursos",
     status: "blocked",
     dependencies: ["m13"],
     blockedReason: "Requiere configurar seguimiento de conversiones (M13)",
@@ -122,7 +122,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m11",
     title: "Campañas de Shopping",
-    description: "Shopping estandar y Merchant Center",
+    description: "Shopping estándar y Merchant Center",
     status: "blocked",
     dependencies: ["m13"],
     blockedReason: "Requiere configurar seguimiento de conversiones (M13)",
@@ -131,7 +131,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m12",
     title: "Generación de demanda",
-    description: "Campanas de generacion de demanda",
+    description: "Campañas de generación de demanda",
     status: "blocked",
     dependencies: ["m13"],
     blockedReason: "Requiere configurar seguimiento de conversiones (M13)",
@@ -140,7 +140,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m13",
     title: "Seguimiento de conversiones",
-    description: "Tracking y enhanced conversions",
+    description: "Seguimiento y conversiones mejoradas",
     status: "not_ready",
     blockedReason: "Google Tag no detectado en la cuenta",
     dependencies: ["m02"],
@@ -149,7 +149,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m14",
     title: "Atribución y GA4",
-    description: "Modelo de atribucion y consent mode v2",
+    description: "Modelo de atribución y modo de consentimiento",
     status: "blocked",
     dependencies: ["m13"],
     blockedReason: "Requiere configurar seguimiento de conversiones (M13)",
@@ -158,7 +158,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m15",
     title: "Conexión técnica con Google Ads",
-    description: "Google Ads API y operaciones programaticas",
+    description: "Conexión con Google Ads y operaciones automáticas",
     status: "ready",
     dependencies: [],
     actionKey: "google_ads_m15_api",
@@ -221,7 +221,7 @@ function notReadyFallback(
     tenant_id: tenantId,
     status: "not_ready",
     reasons: ["El servicio de verificación previa no está disponible"],
-    required_fixes: ["Verificar conectividad del backend"],
+    required_fixes: ["Verificar la conexión con el servicio"],
     approval_required: false,
     next_step: detail,
   };

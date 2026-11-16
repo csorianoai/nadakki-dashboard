@@ -208,7 +208,7 @@ export default function GoogleAdsPage() {
                 (data.google_ads_preflight as { preflight_notice?: string })?.preflight_notice ??
                   "Solo propuesta: esta acción necesita aprobación antes de ejecutarse."
               ),
-              `Modo de prueba (sin cambios reales): ${data.dry_run ? "sí" : "no"}`,
+              `Modo de prueba (sin cambios reales): ${typeof data.dry_run === "boolean" ? (data.dry_run ? "sí" : "no") : "no informado"}`,
             ]
           : ["La acción se ejecutó según la política del backend."],
         executePayload: undefined,
@@ -318,7 +318,7 @@ export default function GoogleAdsPage() {
       <section className="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/50 dark:bg-slate-900/40 p-4">
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Acciones con verificación previa automática</h2>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Antes de ejecutar, se evalúa preparación del tenant y reglas por acción. Si algo está bloqueado o no está listo, no se ejecuta;
+          Antes de ejecutar, se evalúa la preparación de la cuenta y reglas por acción. Si algo está bloqueado o no está listo, no se ejecuta;
           las propuestas se quedan en modo de prueba hasta que alguien las apruebe.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
