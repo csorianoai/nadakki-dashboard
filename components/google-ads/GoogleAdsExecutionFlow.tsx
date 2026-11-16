@@ -1,5 +1,6 @@
 "use client";
 
+import { moduleDisplayTitle } from "@/lib/agentDisplayNames";
 import { useState, useCallback, useEffect, useRef } from "react";
 import {
   CheckCircle2,
@@ -35,7 +36,7 @@ type GoogleAdsModuleStep = {
 const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m01",
-    title: "Platform Fundamentals",
+    title: "Fundamentos de la plataforma",
     description: "Entender la plataforma y metricas clave",
     status: "not_ready",
     dependencies: [],
@@ -43,7 +44,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
   {
     id: "m02",
-    title: "Account Structure",
+    title: "Estructura de la cuenta",
     description: "Jerarquia de cuenta y campana",
     status: "not_ready",
     dependencies: ["m01"],
@@ -51,7 +52,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
   {
     id: "m03",
-    title: "Keyword Research",
+    title: "Investigación de palabras clave",
     description: "Investigacion de palabras clave y match types",
     status: "ready",
     dependencies: ["m02"],
@@ -59,7 +60,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
   {
     id: "m04",
-    title: "Negative Keywords",
+    title: "Palabras clave negativas",
     description: "Limpieza de search terms y listas negativas",
     status: "blocked",
     dependencies: ["m03"],
@@ -68,7 +69,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
   {
     id: "m05",
-    title: "Quality Score & Ad Rank",
+    title: "Nivel de calidad y posición del anuncio",
     description: "Diagnostico de calidad y ad rank",
     status: "blocked",
     dependencies: ["m03"],
@@ -77,7 +78,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
   {
     id: "m06",
-    title: "Smart Bidding",
+    title: "Puja inteligente",
     description: "Estrategias de puja automatica",
     status: "blocked",
     dependencies: ["m05"],
@@ -86,7 +87,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
   {
     id: "m07",
-    title: "RSA Ad Copy",
+    title: "Textos de anuncios responsivos",
     description: "Creativos responsivos y ad strength",
     status: "ready",
     dependencies: ["m02"],
@@ -94,7 +95,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
   {
     id: "m08",
-    title: "Extensions & Assets",
+    title: "Extensiones y activos",
     description: "Extensiones de anuncio y activos",
     status: "ready",
     dependencies: ["m02"],
@@ -102,7 +103,7 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
   {
     id: "m09",
-    title: "Audiences",
+    title: "Audiencias",
     description: "Segmentacion y senales de audiencia",
     status: "blocked",
     dependencies: ["m03"],
@@ -115,30 +116,30 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
     description: "Campanas PMax y asset groups",
     status: "blocked",
     dependencies: ["m13"],
-    blockedReason: "Requiere configurar Conversion Tracking (M13)",
+    blockedReason: "Requiere configurar seguimiento de conversiones (M13)",
     actionKey: "google_ads_m10_pmax",
   },
   {
     id: "m11",
-    title: "Shopping Campaigns",
+    title: "Campañas de Shopping",
     description: "Shopping estandar y Merchant Center",
     status: "blocked",
     dependencies: ["m13"],
-    blockedReason: "Requiere configurar Conversion Tracking (M13)",
+    blockedReason: "Requiere configurar seguimiento de conversiones (M13)",
     actionKey: "google_ads_m11_shopping",
   },
   {
     id: "m12",
-    title: "Demand Gen",
+    title: "Generación de demanda",
     description: "Campanas de generacion de demanda",
     status: "blocked",
     dependencies: ["m13"],
-    blockedReason: "Requiere configurar Conversion Tracking (M13)",
+    blockedReason: "Requiere configurar seguimiento de conversiones (M13)",
     actionKey: "google_ads_m12_demand_gen",
   },
   {
     id: "m13",
-    title: "Conversion Tracking",
+    title: "Seguimiento de conversiones",
     description: "Tracking y enhanced conversions",
     status: "not_ready",
     blockedReason: "Google Tag no detectado en la cuenta",
@@ -147,16 +148,16 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
   {
     id: "m14",
-    title: "Attribution & GA4",
+    title: "Atribución y GA4",
     description: "Modelo de atribucion y consent mode v2",
     status: "blocked",
     dependencies: ["m13"],
-    blockedReason: "Requiere configurar Conversion Tracking (M13)",
+    blockedReason: "Requiere configurar seguimiento de conversiones (M13)",
     actionKey: "google_ads_m14_attribution",
   },
   {
     id: "m15",
-    title: "API Primer",
+    title: "Conexión técnica con Google Ads",
     description: "Google Ads API y operaciones programaticas",
     status: "ready",
     dependencies: [],
@@ -219,7 +220,7 @@ function notReadyFallback(
     action_key: actionKey,
     tenant_id: tenantId,
     status: "not_ready",
-    reasons: ["Preflight service unavailable"],
+    reasons: ["El servicio de verificación previa no está disponible"],
     required_fixes: ["Verificar conectividad del backend"],
     approval_required: false,
     next_step: detail,
@@ -305,11 +306,11 @@ function ModuleCard({ module, isRunning, onRun }: CardProps) {
               <ModuleStatusBadge status={module.status} />
               {module.score != null && (
                 <span className="text-xs text-slate-400">
-                  Score: <span className="text-indigo-400 font-medium">{module.score}</span>
+                  Puntaje: <span className="text-indigo-400 font-medium">{module.score}</span>
                 </span>
               )}
             </div>
-            <p className="text-sm font-medium text-slate-100 mb-0.5">{module.title}</p>
+            <p className="text-sm font-medium text-slate-100 mb-0.5">{moduleDisplayTitle(module.id, module.title)}</p>
             <p className="text-xs text-slate-500 mb-2">{module.description}</p>
             {module.blockedReason && (
               <p className="text-xs text-amber-300 flex items-center gap-1">
@@ -415,7 +416,7 @@ export default function GoogleAdsExecutionFlow() {
             notReadyFallback(
               module.actionKey,
               safeTenantId,
-              pfRes.error || "Revisa que el backend esté activo en Render"
+              pfRes.error || "Revisa que el servicio esté disponible e inténtalo de nuevo"
             )
           );
           setPendingModule(module);
@@ -425,7 +426,7 @@ export default function GoogleAdsExecutionFlow() {
         setPendingModule(module);
       } catch {
         setPreflightResult(
-          notReadyFallback(module.actionKey, safeTenantId, "Revisa que el backend esté activo en Render")
+          notReadyFallback(module.actionKey, safeTenantId, "Revisa que el servicio esté disponible e inténtalo de nuevo")
         );
         setPendingModule(module);
       } finally {
@@ -494,7 +495,7 @@ export default function GoogleAdsExecutionFlow() {
               Flujo de Ejecución Google Ads
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Progreso guiado M01–M15 · Pre-flight automático antes de ejecutar
+              Progreso guiado M01–M15 · verificación previa automática antes de ejecutar
             </p>
           </div>
           <div className="flex items-center gap-6">
