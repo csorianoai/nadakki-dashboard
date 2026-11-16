@@ -31,6 +31,6 @@ describe("LoginPage white-label", () => {
   it("uses neutral platform title when branding unavailable", () => {
     render(<LoginPage />);
     expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(NEUTRAL_PLATFORM_TITLE);
-    expect(screen.getByRole("heading", { level: 1 }).textContent).not.toMatch(/nadakki/i);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Nadakki AI Suite");
   });
 });
