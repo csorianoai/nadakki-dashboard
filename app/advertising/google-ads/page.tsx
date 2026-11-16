@@ -210,7 +210,7 @@ export default function GoogleAdsPage() {
               ),
               `Modo de prueba (sin cambios reales): ${typeof data.dry_run === "boolean" ? (data.dry_run ? "sí" : "no") : "no informado"}`,
             ]
-          : ["La acción se ejecutó según la política del backend."],
+          : ["La acción se ejecutó según las reglas de tu cuenta."],
         executePayload: undefined,
       });
     } finally {

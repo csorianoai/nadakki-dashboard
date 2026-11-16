@@ -46,7 +46,7 @@ describe("barrido de ficheros", () => {
     // texto visible: ni "tenant" ni "backend" en cadenas de la pantalla
     const cadenas = src.match(/"[^"\n]*"|`[^`\n]*`/g) ?? [];
     const visibles = cadenas.filter((c) => /\s/.test(c) && !/^"(use client|@\/|\.)/.test(c));
-    expect(visibles.filter((c) => /\b(tenant|backend)\b(?![_.:\w])/i.test(c) && !/[{}$]|tenant_id|X-Tenant/.test(c))).toEqual([]);
+    expect(visibles.filter((c) => /\b(tenant|backend)\b(?![_\w]|\.\w)/i.test(c) && !/[{}$]|tenant_id|X-Tenant/.test(c))).toEqual([]);
     // palabras sin tilde ni enie y terminos en ingles
     expect(src).not.toMatch(/(?<![/\w-])(campana|campanas|senales|metricas|Jerarquia|Investigacion|Diagnostico|automatica|Segmentacion|estandar|generacion|atribucion|programaticas)\b/i);
     expect(src).not.toMatch(/match types|search terms|ad rank|ad strength|asset groups|enhanced conversions|consent mode/);
