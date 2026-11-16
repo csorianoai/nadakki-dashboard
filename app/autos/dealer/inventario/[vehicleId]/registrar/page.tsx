@@ -175,14 +175,6 @@ export default function DealerVehicleRegisterPage() {
             </p>
           ) : null}
 
-          <section data-testid="dealer-register-fiscal" className="rounded-r-sm border border-nk-border bg-nk-surface p-4">
-            <h2 className="font-manrope text-lg font-bold text-nk-fg">Vendedor y comprobante</h2>
-            <p className="mt-1 text-sm text-nk-fg-muted">
-              Disponible cuando se active la contabilidad fiscal. La condición fiscal del vendedor y la factura se cargan
-              hoy al dar de alta la compra del vehículo; aquí no se pueden completar después.
-            </p>
-          </section>
-
           <form onSubmit={onAcquisition} className="space-y-3 rounded-r-sm border border-nk-border bg-nk-surface p-4">
             <h2 className="font-manrope text-lg font-bold text-nk-fg">Adquisición</h2>
             <label className="block text-sm text-nk-fg">
