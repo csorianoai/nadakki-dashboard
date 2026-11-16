@@ -43,6 +43,7 @@ export const MODULOS = [
   "/autos/dealer/publicar-rapido",
   "/autos/dealer/leads",
   "/autos/dealer/finanzas",
+  "/autos/dealer/finanzas/inventario",
   "/contable",
   "/contable/plan-cuentas",
   "/contable/libro-mayor",
