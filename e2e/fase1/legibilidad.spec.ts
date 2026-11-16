@@ -12,8 +12,8 @@ import { expect, test, type BrowserContext, type Page } from "@playwright/test";
 /** TODA pantalla nueva de marketing se anade aqui. `pasos`: clics en "Siguiente" para medir cada paso de un asistente. */
 const PANTALLAS: Array<{ nombre: string; ruta: string; pasos?: number; pendiente?: string }> = [
   { nombre: "AME", ruta: "/ame" },
-  { nombre: "Campanas", ruta: "/marketing/campaigns", pendiente: "parte 2" },
-  { nombre: "Nueva campana", ruta: "/marketing/campaigns/new", pasos: 4, pendiente: "parte 2" },
+  { nombre: "Campanas", ruta: "/marketing/campaigns" },
+  { nombre: "Nueva campana", ruta: "/marketing/campaigns/new", pasos: 4 },
   { nombre: "Google Ads", ruta: "/advertising/google-ads", pendiente: "parte 3" },
   { nombre: "Social inbox", ruta: "/social/inbox", pendiente: "parte 3" },
 ];
@@ -57,6 +57,17 @@ async function interceptarBackend(context: BrowserContext, origenLocal: string):
   return externas;
 }
 
+/** Rellena lo minimo del asistente para que "Siguiente" se habilite (nombre, plantilla, segmento). */
+async function completarPaso(page: Page): Promise<void> {
+  const nombre = page.getByPlaceholder(/Serie de bienvenida/);
+  if (await nombre.count()) {
+    if (!(await nombre.inputValue())) await nombre.fill("Campana de prueba");
+    await page.getByRole("button", { name: /Convert — EMAIL/ }).click();
+  }
+  const segmento = page.getByRole("button", { name: /Clientes activos/ });
+  if (await segmento.count()) await segmento.click();
+}
+
 async function contraste(page: Page): Promise<string[]> {
   const r = await new AxeBuilder({ page }).include("#main-content").withRules(["color-contrast"]).analyze();
   return r.violations.flatMap((v) => v.nodes.map((n) => `${n.target.join(" ")} :: ${n.any[0]?.message ?? v.help}`));
@@ -69,16 +80,20 @@ for (const p of PANTALLAS) {
     test.setTimeout(240_000);
     test.fixme(!!p.pendiente, `se arregla en la ${p.pendiente} de D7-LEGIBILIDAD`);
     const externas = await interceptarBackend(context, new URL(baseURL!).origin);
-    await context.addInitScript(() => {
+    await context.addInitScript((tenantId) => {
+      // Sesion heredada (AuthContext/TenantContext): sin ella el asistente de campanas no recibe tenant y no pide plantillas.
+      window.localStorage.setItem("nadakki_auth", "true");
+      window.localStorage.setItem("nadakki_tenant_id", tenantId);
       window.localStorage.setItem("nadakki_refresh_token_v2", "rt-fixture");
       window.localStorage.setItem("nadakki-theme", "graphite");
-    });
+    }, TENANT.id);
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto(p.ruta, { waitUntil: "networkidle", timeout: 200_000 });
     await page.waitForTimeout(1500);
     const malos: string[] = [];
     for (let paso = 0; paso <= (p.pasos ?? 0); paso++) {
       if (paso > 0) {
+        await completarPaso(page);
         await page.getByRole("button", { name: /Siguiente/ }).click();
         await page.waitForTimeout(500);
       }
