@@ -6,30 +6,34 @@ import { siteKey } from './sitekey';
 export type SendResult = { kind: 'accepted' } | { kind: 'rejected'; status: number } | { kind: 'unavailable' };
 export interface SendOptions {
   fetch: typeof globalThis.fetch; baseUrl: string; siteId: string; secret: string; key: string; submission: LeadSubmission;
-  sleep?: (ms: number) => Promise<void>; now?: () => number; attemptTimeoutMs?: number;
+  sleep?: (ms: number) => Promise<void>; now?: () => number; attemptTimeoutMs?: number; budgetMs?: number;
 }
 const BACKOFF = [200, 800];
 const BUDGET_MS = 8_000;
+const MIN_ATTEMPT_MS = 50;
 const MAX_ATTEMPTS = 3;
 
 export async function sendLead(o: SendOptions): Promise<SendResult> {
   const sleep = o.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
   const now = o.now ?? Date.now;
   const start = now();
+  const budget = o.budgetMs ?? BUDGET_MS;
   const url = `${o.baseUrl.replace(/\/$/, '')}/public/${o.siteId}/leads`;
   const headers = { 'content-type': 'application/json', 'x-site-key': siteKey(o.secret, o.siteId), 'idempotency-key': o.key };
   const body = JSON.stringify(o.submission);
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
     let wait = BACKOFF[attempt] ?? 0;
+    const remaining = budget - (now() - start);
+    if (attempt > 0 && remaining < MIN_ATTEMPT_MS) break;
     try {
-      const res = await o.fetch(url, { method: 'POST', headers, body, signal: AbortSignal.timeout(o.attemptTimeoutMs ?? 3_000) });
+      const res = await o.fetch(url, { method: 'POST', headers, body, signal: AbortSignal.timeout(Math.max(1, Math.min(o.attemptTimeoutMs ?? 3_000, remaining))) });
       if (res.status === 202) return { kind: 'accepted' };
       const retryable = res.status === 408 || res.status === 429 || res.status >= 500;
       if (!retryable) return { kind: 'rejected', status: res.status };
       const ra = Number(res.headers.get('retry-after'));
       if (res.status === 429 && Number.isFinite(ra) && ra > 0) wait = ra * 1000;
     } catch { /* red: se reintenta */ }
-    if (attempt === MAX_ATTEMPTS - 1 || now() - start + wait > BUDGET_MS) break;
+    if (attempt === MAX_ATTEMPTS - 1 || now() - start + wait >= budget) break;
     await sleep(wait);
   }
   return { kind: 'unavailable' };
