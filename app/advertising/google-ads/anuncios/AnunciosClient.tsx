@@ -3,6 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch } from "@/lib/api/fetch-client";
 import { useTenant } from "@/contexts/TenantContext";
+import { tokenStorage } from "@/lib/auth/token-storage";
+import { decodeJWT } from "@/lib/auth/jwt-decode";
+
+/** APPROVER_ROLES del router del backend (google_ads_metrics_router.py). El backend vuelve a comprobarlo. */
+export const ROLES_APROBADORES = ["tenant_admin", "platform_admin", "platform_superadmin"];
+function esAprobador(): boolean {
+  try {
+    const t = tokenStorage.getAccessToken();
+    const roles: unknown = t ? (decodeJWT(t) as any)?.roles : null;
+    return Array.isArray(roles) && roles.some((r) => ROLES_APROBADORES.includes(typeof r === "string" ? r : (r as any)?.role_key));
+  } catch { return false; }
+}
 
 /** Límites medidos en services/marketing/ad_draft_rules.py (HEADLINES, DESCRIPTIONS, KEYWORDS, MATCH_TYPES). */
 export const LIM = { titulos: [3, 15, 30], descripciones: [2, 4, 90], palabras: [1, 20] } as const;
@@ -57,6 +69,10 @@ export default function AnunciosClient() {
   const [form, setForm] = useState(FORM0);
   const [editando, setEditando] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
+  const [bloqueos, setBloqueos] = useState<{ id: string; items: { code?: string; message: string }[] } | null>(null);
+  const [rechazando, setRechazando] = useState<string | null>(null);
+  const [motivo, setMotivo] = useState("");
+  const aprobador = esAprobador();
   const ref = useRef(nuevaRef());
   const base = tenantId ? `/api/v1/tenants/${encodeURIComponent(tenantId)}/google-ads` : "";
 
@@ -70,7 +86,7 @@ export default function AnunciosClient() {
   }, [base]);
 
   useEffect(() => {
-    setItems(null); setCuentas([]); setForm(FORM0); setEditando(null); setMsg(null);
+    setItems(null); setCuentas([]); setForm(FORM0); setEditando(null); setMsg(null); setBloqueos(null); setRechazando(null); setMotivo("");
     if (!base) return;
     cargar();
     (async () => {
@@ -112,6 +128,25 @@ export default function AnunciosClient() {
     } catch { setMsg(MSG_ERROR); }
   }
 
+  async function accion(id: string, paso: "submit" | "approve" | "reject", cuerpo?: unknown) {
+    setMsg(null); setBloqueos(null);
+    try {
+      const r = await apiFetch(`${base}/ad-drafts/${encodeURIComponent(id)}/${paso}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        ...(cuerpo ? { body: JSON.stringify(cuerpo) } : {}),
+      });
+      if (!r.ok) return setMsg(r.status === 403 ? "No tienes permiso para esta acción." : MSG_ERROR);
+      const d = (await r.json().catch(() => null))?.data;
+      if (paso === "submit" && Array.isArray(d?.blocks) && d.blocks.length) {
+        setBloqueos({ id, items: d.blocks.filter((b: any) => typeof b?.message === "string") });
+      } else if (paso === "submit") setMsg("Enviado a revisión.");
+      else if (paso === "approve") setMsg("Borrador aprobado.");
+      else { setMsg("Borrador rechazado."); setRechazando(null); setMotivo(""); }
+      await cargar();
+    } catch { setMsg(MSG_ERROR); }
+  }
+
   const campo = "border rounded px-2 py-1 w-full text-sm dark:bg-gray-900";
   const puede = form.cuenta && form.url && Number(form.presupuesto) > 0 && tit.length && des.length && kws.length;
 
@@ -119,6 +154,7 @@ export default function AnunciosClient() {
     <div className="space-y-8">
       <section aria-label="Borradores">
         <h2 className="text-xl font-semibold mb-2">Tus borradores</h2>
+        {msg && <p role="status" className="text-sm mb-2">{msg}</p>}
         {items === null && !errorLista && <p className="text-sm text-gray-500">Cargando tus borradores…</p>}
         {errorLista && <p className="text-sm text-red-600">No pudimos cargar tus borradores ahora. Inténtalo de nuevo en unos minutos.</p>}
         {items?.length === 0 && <p className="text-sm">Todavía no hay borradores de anuncios.</p>}
@@ -129,10 +165,34 @@ export default function AnunciosClient() {
                 <div>
                   <p className="font-medium">{d.brief?.name || "Sin nombre"}</p>
                   {d.status === "rejected" && d.rejected_reason && <p className="text-xs text-red-600">Motivo: {d.rejected_reason}</p>}
+                  {bloqueos?.id === d.id && (
+                    <ul role="alert" className="mt-1 text-xs text-red-600 list-disc pl-4">
+                      {bloqueos.items.map((b, i) => <li key={i}>{b.message}</li>)}
+                    </ul>
+                  )}
+                  {rechazando === d.id && (
+                    <div className="mt-2 space-y-1">
+                      <label className="block text-xs">Motivo del rechazo
+                        <textarea className={campo} rows={2} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+                      </label>
+                      <button className="text-red-600 text-xs underline disabled:opacity-50" disabled={!motivo.trim()}
+                        onClick={() => accion(d.id, "reject", { reason: motivo.trim() })}>Confirmar rechazo</button>
+                      <button className="ml-3 text-xs underline" onClick={() => { setRechazando(null); setMotivo(""); }}>Cancelar</button>
+                    </div>
+                  )}
                 </div>
                 <span className="px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-xs">{ESTADOS[d.status] ?? d.status}</span>
                 {(d.status === "draft" || d.status === "rejected") && (
                   <button className="text-blue-600 hover:underline" onClick={() => editar(d)}>Editar</button>
+                )}
+                {d.status === "draft" && (
+                  <button className="text-blue-600 hover:underline" onClick={() => accion(d.id, "submit")}>Enviar a revisión</button>
+                )}
+                {aprobador && d.status === "submitted" && (
+                  <>
+                    <button className="text-green-700 hover:underline" onClick={() => accion(d.id, "approve")}>Aprobar</button>
+                    <button className="text-red-600 hover:underline" onClick={() => { setRechazando(d.id); setMotivo(""); }}>Rechazar</button>
+                  </>
                 )}
               </li>
             ))}
@@ -175,7 +235,6 @@ export default function AnunciosClient() {
             {CONCORDANCIAS.map((c) => <option key={c.v} value={c.v}>{c.t}</option>)}
           </select>
         </label>
-        {msg && <p role="status" className="text-sm">{msg}</p>}
         <button className="px-4 py-2 rounded bg-blue-600 text-white text-sm disabled:opacity-50" disabled={!puede} onClick={guardar}>
           Guardar borrador
         </button>
