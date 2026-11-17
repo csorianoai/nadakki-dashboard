@@ -53,6 +53,7 @@ import {
   segmentTypeLabel,
   channelLabel,
   templateDisplayName,
+  propia,
   fillPreviewExample,
 } from "@/lib/marketing/campaignWizardCopy";
 
@@ -858,7 +859,7 @@ function CampaignWizardContent() {
                   <div className="p-4 bg-white/5 rounded-xl flex justify-between">
                     <div>
                       <div className="text-sm text-gray-400">Envío</div>
-                      <div className="text-white">{SCHEDULE_LABELS[campaign.scheduleType]}</div>
+                      <div className="text-white">{propia(SCHEDULE_LABELS, campaign.scheduleType) ?? campaign.scheduleType}</div>
                     </div>
                     <button type="button" onClick={() => setCurrentStep(2)} className="text-purple-400 text-sm">
                       Editar
