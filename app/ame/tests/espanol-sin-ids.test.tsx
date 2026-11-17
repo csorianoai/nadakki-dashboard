@@ -20,7 +20,7 @@ jest.mock("@/hooks/useAMERuns", () => ({
 const INGLES = [
   "Read-only operational view", "Optional tenant override", "Header / Operational identity", "KPI strip",
   "Last Run", "No runs yet", "Runs Total", "Blocked", "Phases OK", "Dry Run", "Idle", "Refresh", "Default:", "Autopilot", "blocked", "failed",
-  "Enabled", "Circuit Breaker", "scheduler_router", "unknown", "Meta Live", "Rate Limit", "Publish Capable",
+  "dry_run", "Enabled", "Circuit Breaker", "scheduler_router", "unknown", "Meta Live", "Rate Limit", "Publish Capable",
 ];
 
 function pintar(rolKey: string) {

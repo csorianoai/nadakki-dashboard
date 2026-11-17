@@ -60,6 +60,13 @@ function Chip({ label, tone }: { label: string; tone: "gray" | "green" | "red" |
   );
 }
 
+function modoTexto(mode: unknown) {
+  const m = String(mode ?? "").toLowerCase();
+  if (m === "dry_run" || m === "dry-run") return "Simulación";
+  if (m === "live") return "En vivo";
+  return m ? "Desconocido" : "—";
+}
+
 function modeChip(mode: string | undefined) {
   const m = (mode ?? "unknown").toLowerCase();
   if (m === "dry_run" || m === "dry-run") return <Chip label="Simulación" tone="gray" />;
@@ -550,7 +557,7 @@ export default function AMEPage() {
               )}
             </div>
             <div>
-              <span style={{ color: colors.muted }}>Modo:</span> {String(lastRun.mode ?? "—")} ·{" "}
+              <span style={{ color: colors.muted }}>Modo:</span> {modoTexto(lastRun.mode)} ·{" "}
               <span style={{ color: colors.muted }}>Cuenta:</span> {cuentaVisible}
             </div>
             <div>
