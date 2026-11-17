@@ -4,6 +4,7 @@ import type { CoreClient } from '@/core/client';
 import { CoreError } from '@/core/client';
 import type { Lang, Manifest } from '@/core/types';
 import { BlockError } from '@/blocks/model';
+import { LegalError, withLegal } from './legal';
 import { getTemplate } from '@/templates';
 
 export type Route = Manifest['routes'][number];
@@ -67,9 +68,9 @@ export async function renderSite(c: CoreClient, siteId: string, segments: string
   if (!template) return { kind: 'error' };
   try {
     const data = await readData(c, siteId, hit.route);
-    return { kind: 'ok', manifest, ...hit, element: template({ manifest, lang: hit.lang, route: hit.route, data }) };
+    return { kind: 'ok', manifest, ...hit, element: withLegal(manifest, hit.lang, template({ manifest, lang: hit.lang, route: hit.route, data })) };
   } catch (e) {
-    if (e instanceof BlockError) return { kind: 'error' };
+    if (e instanceof BlockError || e instanceof LegalError) return { kind: 'error' };
     if (e instanceof CoreError && CLOSED.has(e.code)) return { kind: 'not_found' };
     throw e;
   }
