@@ -307,6 +307,9 @@ export default function GoogleAdsPage() {
       <Link href="/advertising/google-ads/metricas" className="inline-block text-sm font-medium text-blue-400 hover:underline">
         Ver métricas de campañas →
       </Link>
+      <Link href="/advertising/google-ads/anuncios" className="inline-block ml-6 text-sm font-medium text-blue-400 hover:underline">
+        Anuncios de Google Ads →
+      </Link>
       <GoogleAdsClient embed navigationBackHref="/advertising" />
       <AdvertisingDashboardLive title="Google Ads — Panel en vivo" />
       <div>
