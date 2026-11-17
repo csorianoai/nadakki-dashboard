@@ -51,4 +51,10 @@ Origin/Sec-Fetch-Site ajeno -> 403; cuerpo > 16 KiB -> 413; `tenant_id` en el cu
 - **Tokens** (`src/templates/baylara/theme.ts`): esquema de `manifest.theme` de esta plantilla = objeto plano con los 14 colores y `pad`/`section` de `globals.css:2-17` (`navy`, `gold`, `on-navy-2`...). Lista blanca; hex `#rrggbb` o medida `Npx`/`clamp(Npx, Nvw, Npx)`; invalido -> valor de la plantilla. Se sirve en `/theme.css` (same-origin, la CSP no admite estilos en linea).
 - **Discrepancia**: C-SITES-RENDER deja `theme` sin esquema y E6:45 propone `color.primary...`; aqui se fija el de la plantilla.
 - **Bloques legales** (`src/render/legal.ts`): los inyecta el renderizador tras CUALQUIER plantilla. `required_blocks` desconocido, `legal` incompleto o falta la pagina `privacy` -> pagina generica de error, nunca un sitio sin avisos.
-- Pendiente en 2/3 y 3/3: shell, `baylara.profile`, fuentes locales, `<picture>`, sitemap.xml/robots.txt.
+- Pendiente en 3/3: fuentes locales (Cormorant/Manrope), sitemap.xml/robots.txt por host.
+
+## Plantilla Baylara, shell + perfil + medios 2/3 (ST2-06)
+- **Registro**: `baylara@1` (`src/templates/baylara/`). Shell (`shell.ts`) por manifiesto: nombre, idiomas, rutas por slug; contactos legales/EHO/licencia siguen siendo del renderizador.
+- **`baylara.profile`** (bloque de la pagina `home`): esquema en `templates/baylara/blocks.schema.json`; es la INTERFAZ de importacion al core. Campos de site.json que el manifiesto no lleva (agent, brokerage.address, mlsDisclaimer, drPartnerBrokerage, responseTime, valuationDays, testimonials). Discrepancia a S1: ampliar el manifiesto y retirarlo.
+- **Medios** (`media.ts`): `<picture>` avif+webp, solo https de `SITES_MEDIA_HOSTS`, alt ES/EN obligatorio; el credito solo con `credit` explicito. Video del hero de Baylara: `PublicMedia.mime_type` solo admite image/*, se pinta el poster (discrepancia).
+- Las plantillas son `.ts` con `createElement`: vitest no transpila `.tsx` con el tsconfig `jsx: preserve`.
