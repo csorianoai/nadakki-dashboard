@@ -11,17 +11,17 @@ jest.mock("@/hooks/useAuth", () => ({
 }));
 jest.mock("@/hooks/useAMEStatus", () => ({
   useAMEStatus: () => ({
-    data: { ame: { tenant: UUID, mode: "dry_run", overall_status: "idle" }, kpis: {}, last_run: null },
+    data: { ame: { tenant: UUID, mode: "dry_run", overall_status: "idle" }, kpis: {}, last_run: { result: "blocked", mode: "dry_run" } },
     source: "live", loading: false, error: null,
   }),
 }));
 jest.mock("@/hooks/useAMERuns", () => ({
-  useAMERuns: () => ({ data: { items: [], runs: [], total: 0 }, source: "live", loading: false, error: null }),
+  useAMERuns: () => ({ data: { items: [{ id: "r1", result: "failed", mode: "dry_run" }], runs: [], total: 1, actions_feed: [{ id: "a1", status: "blocked", action: "pause", reason: "r" }, { id: "a2", status: "failed", action: "pause", reason: "r" }] }, source: "live", loading: false, error: null }),
 }));
 
 const INGLES = [
   "Read-only operational view", "Optional tenant override", "Header / Operational identity", "KPI strip",
-  "Last Run", "No runs yet", "Runs Total", "Blocked", "Phases OK", "Dry Run", "Idle", "Refresh", "Default:",
+  "Last Run", "No runs yet", "Runs Total", "Blocked", "Phases OK", "Dry Run", "Idle", "Refresh", "Default:", "Autopilot", "blocked", "failed",
 ];
 
 function pintar(rolKey: string) {

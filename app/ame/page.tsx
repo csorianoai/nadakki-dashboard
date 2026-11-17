@@ -75,20 +75,26 @@ function overallChip(overall: string | undefined) {
   return <Chip label="Desconocido" tone="yellow" />;
 }
 
+const RESULT_ES: Record<string, string> = {
+  success: "correcta", completed: "correcta", ok: "correcta", succeeded: "correcta",
+  failed: "fallida", error: "fallida", failure: "fallida",
+  blocked: "bloqueada", partial: "parcial", skipped: "omitida",
+};
+
 function resultChip(result: string | undefined) {
-  const r = (result ?? "unknown").toLowerCase();
-  if (["success", "completed", "ok", "succeeded"].includes(r)) return <Chip label={result ?? "ok"} tone="green" />;
-  if (["failed", "error", "failure"].includes(r)) return <Chip label={result ?? "failed"} tone="red" />;
-  if (["blocked", "partial"].includes(r)) return <Chip label={result ?? r} tone="yellow" />;
-  return <Chip label={result ?? "—"} tone="yellow" />;
+  const r = (result ?? "").toLowerCase();
+  const label = RESULT_ES[r] ?? "—";
+  if (["success", "completed", "ok", "succeeded"].includes(r)) return <Chip label={label} tone="green" />;
+  if (["failed", "error", "failure"].includes(r)) return <Chip label={label} tone="red" />;
+  return <Chip label={label} tone="yellow" />;
 }
 
 function actionStatusChip(status: string | undefined) {
   const s = (status ?? "").toLowerCase();
   if (s === "completed") return <Chip label="completada" tone="green" />;
-  if (s === "blocked" || s === "failed") return <Chip label={status ?? "—"} tone="red" />;
+  if (s === "blocked" || s === "failed") return <Chip label={RESULT_ES[s]} tone="red" />;
   if (s === "skipped") return <Chip label="omitida" tone="yellow" />;
-  if (s) return <Chip label={status} tone="yellow" />;
+  if (s) return <Chip label={RESULT_ES[s] ?? "otro estado"} tone="yellow" />;
   return <Chip label="—" tone="gray" />;
 }
 
@@ -343,7 +349,7 @@ export default function AMEPage() {
           <Gauge size={22} color="#fff" />
         </div>
         <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: "22px", fontWeight: 800, margin: 0 }}>Autopilot (AME)</h1>
+          <h1 style={{ fontSize: "22px", fontWeight: 800, margin: 0 }}>Marketing autónomo (AME)</h1>
           <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.muted }}>
             Vista operativa de solo lectura
             {(statusErr || runsErr) && (
@@ -648,7 +654,7 @@ export default function AMEPage() {
                   <tr key={row.key}>
                     <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>{row.id}</td>
                     <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>{row.time}</td>
-                    <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>{row.mode}</td>
+                    <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>{row.mode.toLowerCase().replace("-", "_") === "dry_run" ? "Simulación" : row.mode.toLowerCase() === "live" ? "En vivo" : row.mode}</td>
                     <td style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>
                       {resultChip(row.result)}
                     </td>
