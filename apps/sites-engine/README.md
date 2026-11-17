@@ -46,3 +46,9 @@ Origin/Sec-Fetch-Site ajeno -> 403; cuerpo > 16 KiB -> 413; `tenant_id` en el cu
 - **Reintentos**: dentro de la peticion, max 3, backoff 200/800 ms, tope 8 s, solo red/408/429/5xx con la misma clave; 429 respeta Retry-After; 4xx no se reintenta.
 - **Pasos humanos**: el almacen DURABLE del outbox es decision humana (hoy en memoria por instancia). Sin 202 del core la respuesta es no-enviado, nunca "enviado".
 - **Discrepancia**: las `text_version` de consentimiento no viajan en C-SITES-RENDER; son constante versionada de la plantilla (`src/leads/consent.ts`) y deben coincidir con el texto mostrado.
+
+## Plantilla Baylara, marco 1/3 (ST2-06)
+- **Tokens** (`src/templates/baylara/theme.ts`): esquema de `manifest.theme` de esta plantilla = objeto plano con los 14 colores y `pad`/`section` de `globals.css:2-17` (`navy`, `gold`, `on-navy-2`...). Lista blanca; hex `#rrggbb` o medida `Npx`/`clamp(Npx, Nvw, Npx)`; invalido -> valor de la plantilla. Se sirve en `/theme.css` (same-origin, la CSP no admite estilos en linea).
+- **Discrepancia**: C-SITES-RENDER deja `theme` sin esquema y E6:45 propone `color.primary...`; aqui se fija el de la plantilla.
+- **Bloques legales** (`src/render/legal.ts`): los inyecta el renderizador tras CUALQUIER plantilla. `required_blocks` desconocido, `legal` incompleto o falta la pagina `privacy` -> pagina generica de error, nunca un sitio sin avisos.
+- Pendiente en 2/3 y 3/3: shell, `baylara.profile`, fuentes locales, `<picture>`, sitemap.xml/robots.txt.
