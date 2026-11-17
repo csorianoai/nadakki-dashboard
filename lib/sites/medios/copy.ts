@@ -7,7 +7,7 @@ export const MED: Record<string, Bi> = {
   fFile: { es: "Archivo de imagen (JPG, PNG, WebP o AVIF, hasta 25 MB)", en: "Image file (JPG, PNG, WebP or AVIF, up to 25 MB)" },
   fAltEs: { es: "Texto alternativo (español, obligatorio)", en: "Alternative text (Spanish, required)" },
   fAltEn: { es: "Texto alternativo (inglés, opcional)", en: "Alternative text (English, optional)" },
-  enWarn: { es: "Sin inglés se usará el texto en español.", en: "Without English the Spanish text will be used." },
+  enWarn: { es: "Sin inglés se mostrará el texto en español.", en: "Without English the Spanish text will be used." },
   fSource: { es: "Fuente de la imagen (obligatorio)", en: "Image source (required)" }, fLicense: { es: "Licencia (obligatorio)", en: "License (required)" },
   fType: { es: "Tipo de permiso (obligatorio)", en: "Permission type (required)" }, pick: { es: "Elija una opción", en: "Choose an option" },
   own: { es: "Imagen propia", en: "Own image" }, developer: { es: "Permiso de la promotora", en: "Developer's permission" },
