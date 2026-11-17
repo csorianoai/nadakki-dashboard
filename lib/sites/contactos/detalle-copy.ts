@@ -18,6 +18,6 @@ export const CD: Record<string, Bi> = {
   confirm: { es: "Sí, revocar", en: "Yes, revoke" }, cancel: { es: "Cancelar", en: "Cancel" },
   revoking: { es: "Revocando…", en: "Revoking…" },
   alreadyRevoked: { es: "Consentimiento ya revocado: no hay nada más que hacer.", en: "Consent already revoked: nothing more to do." },
-  errRevoke: { es: "No se pudo revocar. Puede reintentar: se usará la misma solicitud.", en: "Could not revoke. You can retry: the same request will be used." },
+  errRevoke: { es: "No se pudo revocar. Puede reintentar: se reutilizará la misma solicitud.", en: "Could not revoke. You can retry: the same request will be used." },
   revokedOk: { es: "Consentimiento revocado.", en: "Consent revoked." },
 };
