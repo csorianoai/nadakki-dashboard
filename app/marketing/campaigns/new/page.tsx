@@ -50,9 +50,10 @@ import {
   SCHEDULE_LABELS,
   CONVERSION_LABELS,
   objectiveLabel,
-  scheduleLabel,
   segmentTypeLabel,
   channelLabel,
+  templateDisplayName,
+  propia,
   fillPreviewExample,
 } from "@/lib/marketing/campaignWizardCopy";
 
@@ -613,7 +614,7 @@ function CampaignWizardContent() {
                               className={`w-full p-3 text-left rounded-lg border ${campaign.selectedTemplate === tid ? "border-purple-500 bg-purple-500/10" : "border-white/10 hover:border-white/20"}`}
                             >
                               <div className="flex items-center justify-between gap-2">
-                                <span className="text-sm text-white font-medium">{String(t.name ?? tid)}</span>
+                                <span className="text-sm text-white font-medium">{templateDisplayName(t, tid)}</span>
                                 <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-white/10 text-gray-400 shrink-0">
                                   {templateOriginLabel(t)}
                                 </span>
@@ -840,8 +841,7 @@ function CampaignWizardContent() {
                   <div className="p-4 bg-white/5 rounded-xl flex justify-between">
                     <div>
                       <div className="text-sm text-gray-400">Plantilla</div>
-                      <div className="text-white">{selectedTemplateRow ? String(selectedTemplateRow.name) : "—"}</div>
-                      <div className="text-xs text-gray-400">{campaign.selectedTemplate}</div>
+                      <div className="text-white">{selectedTemplateRow ? templateDisplayName(selectedTemplateRow, "—") : "—"}</div>
                     </div>
                     <button type="button" onClick={() => setCurrentStep(1)} className="text-purple-400 text-sm">
                       Editar
@@ -851,7 +851,6 @@ function CampaignWizardContent() {
                     <div>
                       <div className="text-sm text-gray-400">Segmento</div>
                       <div className="text-white">{selectedSegmentRow ? String(selectedSegmentRow.name) : "—"}</div>
-                      <div className="text-xs text-gray-400">{campaign.selectedSegmentId}</div>
                     </div>
                     <button type="button" onClick={() => setCurrentStep(3)} className="text-purple-400 text-sm">
                       Editar
@@ -860,7 +859,7 @@ function CampaignWizardContent() {
                   <div className="p-4 bg-white/5 rounded-xl flex justify-between">
                     <div>
                       <div className="text-sm text-gray-400">Envío</div>
-                      <div className="text-white">{scheduleLabel(campaign.scheduleType)}</div>
+                      <div className="text-white">{propia(SCHEDULE_LABELS, campaign.scheduleType) ?? campaign.scheduleType}</div>
                     </div>
                     <button type="button" onClick={() => setCurrentStep(2)} className="text-purple-400 text-sm">
                       Editar
