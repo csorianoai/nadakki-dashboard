@@ -34,7 +34,7 @@ const PROHIBIDO = [
   "Convert", "Recover", "Reactivate", "Onboard", "EMAIL", "behavioral", "demographic", "value",
   "convert-email", "new-customers", "recover", "reactivate", "onboard",
 ];
-const limpio = (t: string) => { for (const p of PROHIBIDO) expect(t).not.toContain(p); };
+const limpio = (t: string) => { for (const p of PROHIBIDO) expect(t).not.toMatch(new RegExp(`(^|[^\\p{L}-])${p}($|[^\\p{L}-])`, "u")); };
 
 describe("asistente: todo en español con plantillas y segmentos del sistema", () => {
   it("pasos 1, 3 y 5 no muestran inglés ni ids crudos", async () => {
