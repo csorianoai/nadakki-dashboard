@@ -50,6 +50,12 @@ const nuevaRef = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `ref-${Date.now()}-${Math.random()}`;
 const MSG_ERROR = "No pudimos completar la acción con tus anuncios ahora. Inténtalo de nuevo en unos minutos.";
 
+const ERRORES_PUBLICAR: Record<string, string> = {
+  publicacion_desactivada: "La publicación está desactivada en este momento. Pide a un administrador que la active.",
+  google_not_connected: "Conecta tu cuenta de Google antes de publicar.",
+  google_ads_publish_failed: "Google rechazó la publicación. El borrador queda como «Falló la publicación»; revisa los datos e inténtalo de nuevo.",
+};
+
 const FORM0 = { cuenta: "", nombre: "", url: "", presupuesto: "", titulos: "", descripciones: "", palabras: "", match: "PHRASE" };
 
 function Contador({ n, lo, hi, largo, max, nombre }: { n: number; lo: number; hi: number; largo: number; max: number; nombre: string }) {
@@ -128,6 +134,24 @@ export default function AnunciosClient() {
     } catch { setMsg(MSG_ERROR); }
   }
 
+  async function publicar(id: string) {
+    setMsg(null); setBloqueos(null);
+    try {
+      const r = await apiFetch(`${base}/ad-drafts/${encodeURIComponent(id)}/publish`, {
+        method: "POST", headers: { "Content-Type": "application/json", Accept: "application/json" },
+      });
+      if (r.ok) { setMsg("Publicado en Google en pausa. Para activarlo, entra a Google Ads."); await cargar(); return; }
+      const b = await r.json().catch(() => null);
+      const det = b?.detail ?? b;
+      const code = det?.code;
+      if (code === "publicacion_bloqueada" && Array.isArray(det?.blocks)) {
+        setBloqueos({ id, items: det.blocks.filter((x: any) => typeof x?.message === "string") });
+        setMsg("No se pudo publicar: el borrador tiene bloqueos.");
+      } else setMsg(ERRORES_PUBLICAR[code] ?? (r.status === 403 ? "No tienes permiso para esta acción." : MSG_ERROR));
+      if (code === "google_ads_publish_failed") await cargar();
+    } catch { setMsg(MSG_ERROR); }
+  }
+
   async function accion(id: string, paso: "submit" | "approve" | "reject", cuerpo?: unknown) {
     setMsg(null); setBloqueos(null);
     try {
@@ -193,6 +217,12 @@ export default function AnunciosClient() {
                     <button className="text-green-700 hover:underline" onClick={() => accion(d.id, "approve")}>Aprobar</button>
                     <button className="text-red-600 hover:underline" onClick={() => { setRechazando(d.id); setMotivo(""); }}>Rechazar</button>
                   </>
+                )}
+                {aprobador && (d.status === "approved" || d.status === "publish_failed") && (
+                  <div className="text-xs">
+                    <button className="text-blue-700 hover:underline" onClick={() => publicar(d.id)}>Publicar en Google (en pausa)</button>
+                    <p className="text-gray-500">La campaña queda PAUSADA: se activa en Google Ads.</p>
+                  </div>
                 )}
               </li>
             ))}
