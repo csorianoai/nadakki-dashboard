@@ -1,17 +1,15 @@
 /** C5: /ame en español, sin UUID para el cliente; override de tenant solo para platform_superadmin. */
 import React from "react";
 import { render } from "@testing-library/react";
+import { AuthContext } from "@/lib/auth/auth-context";
 
 const UUID = "1303e38c-efb0-5a09-8ffe-a5f948a74d32";
 let roles: { role_key: string }[] = [];
 
 jest.mock("@/contexts/TenantContext", () => ({ useTenant: () => ({ tenantId: UUID }) }));
-jest.mock("@/hooks/useAuth", () => ({
-  useAuth: () => ({ allRoles: roles, tenant: { id: UUID, display_name: "Baylara" } }),
-}));
 jest.mock("@/hooks/useAMEStatus", () => ({
   useAMEStatus: () => ({
-    data: { ame: { tenant: UUID, mode: "dry_run", overall_status: "idle" }, kpis: {}, last_run: { result: "blocked", mode: "dry_run" } },
+    data: { ame: { tenant: UUID, mode: "dry_run", overall_status: "idle" }, kpis: {}, gates: { meta_live_enabled: true, dry_run_mode: true, circuit_breaker_threshold: 5, publish_capable_agents: ["x"] }, scheduler: { enabled: false, source: "scheduler_router", status: "unknown" }, last_run: { result: "blocked", mode: "dry_run" } },
     source: "live", loading: false, error: null,
   }),
 }));
@@ -22,12 +20,14 @@ jest.mock("@/hooks/useAMERuns", () => ({
 const INGLES = [
   "Read-only operational view", "Optional tenant override", "Header / Operational identity", "KPI strip",
   "Last Run", "No runs yet", "Runs Total", "Blocked", "Phases OK", "Dry Run", "Idle", "Refresh", "Default:", "Autopilot", "blocked", "failed",
+  "Enabled", "Circuit Breaker", "scheduler_router", "unknown", "Meta Live", "Rate Limit", "Publish Capable",
 ];
 
 function pintar(rolKey: string) {
   roles = [{ role_key: rolKey }];
   const Page = require("@/app/ame/page").default;
-  return render(<Page />);
+  const valor = { allRoles: roles, tenant: { id: UUID, display_name: "Baylara" } } as never;
+  return render(<AuthContext.Provider value={valor}><Page /></AuthContext.Provider>);
 }
 
 describe("/ame en español", () => {

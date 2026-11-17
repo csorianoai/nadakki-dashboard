@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { RefreshCw, Gauge } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAMEStatus } from "@/hooks/useAMEStatus";
 import { useAMERuns } from "@/hooks/useAMERuns";
-import { useAuth } from "@/hooks/useAuth";
+import { AuthContext } from "@/lib/auth/auth-context";
 import { esSuperadminDePlataforma } from "@/lib/auth/platform-staff";
 
 const colors = {
@@ -160,10 +160,35 @@ function pickRunRow(raw: unknown, i: number) {
   };
 }
 
+const ETIQUETAS_ES: Record<string, string> = {
+  meta_live_enabled: "Publicación en vivo en Meta",
+  dry_run_mode: "Modo simulación",
+  circuit_breaker_threshold: "Umbral del corte de seguridad",
+  rate_limit_max: "Máximo de acciones por ventana",
+  rate_limit_window_s: "Ventana de límite (segundos)",
+  publish_capable_agents: "Agentes que pueden publicar",
+  status: "Estado",
+  enabled: "Activado",
+  source: "Origen",
+  interval_minutes: "Intervalo (minutos)",
+  next_run: "Próxima ejecución",
+  last_run: "Última ejecución",
+};
+
+const VALORES_ES: Record<string, string> = {
+  unknown: "desconocido", unavailable: "no disponible", running: "en ejecución",
+  idle: "en reposo", stopped: "detenido", active: "activo", inactive: "inactivo",
+  scheduler_router: "Programador", env: "Configuración del servidor",
+};
+
+/** Etiqueta en español; una clave desconocida no se muestra cruda. */
 function gateLabel(key: string): string {
-  return key
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (c) => c.toUpperCase());
+  return ETIQUETAS_ES[key] ?? "Otro parámetro";
+}
+
+function valorEs(v: unknown): string {
+  if (typeof v === "string") return VALORES_ES[v.toLowerCase()] ?? v;
+  return String(v);
 }
 
 function GateRow({ gateKey, value }: { gateKey: string; value: unknown }) {
@@ -187,7 +212,7 @@ function GateRow({ gateKey, value }: { gateKey: string; value: unknown }) {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px", flexWrap: "wrap" }}>
         <span style={{ color: colors.muted, minWidth: "160px", fontSize: "12px" }}>{gateLabel(gateKey)}</span>
-        <Chip label={String(value)} tone="gray" />
+        <Chip label={valorEs(value)} tone="gray" />
       </div>
     );
   }
@@ -195,7 +220,7 @@ function GateRow({ gateKey, value }: { gateKey: string; value: unknown }) {
     return (
       <div style={{ marginBottom: "10px" }}>
         <div style={{ color: colors.muted, fontSize: "12px", marginBottom: "4px" }}>{gateLabel(gateKey)}</div>
-        <div style={{ fontSize: "11px", color: colors.text, opacity: 0.9 }}>{value.join(", ")}</div>
+        <div style={{ fontSize: "11px", color: colors.text, opacity: 0.9 }}>{value.map(valorEs).join(", ")}</div>
       </div>
     );
   }
@@ -208,12 +233,7 @@ function GateRow({ gateKey, value }: { gateKey: string; value: unknown }) {
 
 /** Quién ve el selector de cuenta y cómo se llama la cuenta (nunca el UUID). */
 function useVistaCuenta() {
-  let auth: ReturnType<typeof useAuth> | null = null;
-  try {
-    auth = useAuth();
-  } catch {
-    auth = null;
-  }
+  const auth = useContext(AuthContext);
   const esSuperadmin = esSuperadminDePlataforma(auth?.allRoles);
   const nombre = auth?.tenant?.display_name?.trim();
   return { esSuperadmin, cuentaVisible: nombre || "Tu cuenta" };
@@ -619,14 +639,14 @@ export default function AMEPage() {
               />
             </div>
             <div>
-              <span style={{ color: colors.muted }}>Origen:</span> {String(scheduler.source ?? "—")}
+              <span style={{ color: colors.muted }}>Origen:</span> {scheduler.source ? valorEs(scheduler.source) : "—"}
             </div>
             {Object.entries(scheduler)
               .filter(([k]) => k !== "enabled" && k !== "source")
               .map(([k, v]) => (
                 <div key={k}>
                   <span style={{ color: colors.muted }}>{gateLabel(k)}:</span>{" "}
-                  <span style={{ color: colors.text }}>{typeof v === "object" ? JSON.stringify(v) : String(v)}</span>
+                  <span style={{ color: colors.text }}>{v !== null && typeof v === "object" ? JSON.stringify(v) : valorEs(v)}</span>
                 </div>
               ))}
           </div>
