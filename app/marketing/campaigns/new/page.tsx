@@ -412,7 +412,7 @@ function CampaignWizardContent() {
   );
 
   return (
-    <div className="min-h-screen w-full bg-[#0a0f1c]">
+    <div className="min-h-screen shrink-0 w-full bg-[#0a0f1c]">
       <div className="h-14 border-b border-white/10 px-4 flex items-center justify-between bg-[#0d1117]">
         <div className="flex items-center gap-4">
           <Link href="/marketing/campaigns" className="p-2 hover:bg-white/10 rounded-lg text-gray-400">

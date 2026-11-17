@@ -64,6 +64,6 @@ describe("asistente: todo en español con plantillas y segmentos del sistema", (
     const raiz = container.firstElementChild as HTMLElement;
     expect(raiz.className).toMatch(/min-h-screen/);
     expect(raiz.className).toMatch(/bg-\[#0a0f1c\]/);
-    expect(raiz.className).not.toMatch(/shrink-0/);
+    expect(raiz.className).toMatch(/shrink-0/); // dash#1241: la raíz no se encoge en el marco
   });
 });
