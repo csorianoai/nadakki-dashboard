@@ -1,6 +1,7 @@
 // Proxy de Next 16: Host -> sitio. La logica vive en src/proxy/ (pura y probada con vitest).
 import { NextResponse, type NextRequest } from 'next/server';
 import { CoreError, createCoreClientFromEnv } from '@/core/client';
+import { cspForDeployment } from './lib/csp';
 import { createHandler, type Decision } from '@/proxy/handler';
 
 let handler: ReturnType<typeof createHandler> | undefined;
@@ -23,6 +24,7 @@ export async function proxy(req: NextRequest): Promise<NextResponse> {
     url.pathname = d.pathname;
     url.search = d.search;
     res = NextResponse.rewrite(url, { request: { headers: d.requestHeaders } });
+    res.headers.set('content-security-policy', cspForDeployment()); // por hashes: conserva ISR (ver csp-medicion.md)
     res.headers.set('vary', 'host');
   } else if (d.kind === 'redirect') {
     res = NextResponse.redirect(d.location, d.status);

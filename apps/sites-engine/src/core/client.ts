@@ -120,7 +120,7 @@ export function createCoreClient(opts: CoreClientOptions) {
     try {
       let res: Response;
       try {
-        res = await opts.fetch(url, { method: 'GET', headers, signal: ctl.signal, redirect: 'error', next: { tags } } as RequestInit);
+        res = await opts.fetch(url, { method: 'GET', headers, signal: ctl.signal, redirect: 'error', next: { tags, revalidate: 60 } } as RequestInit);
       } catch {
         throw new CoreError('UNAVAILABLE');
       }
