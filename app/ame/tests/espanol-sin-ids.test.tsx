@@ -16,7 +16,7 @@ jest.mock("@/hooks/useAMEStatus", () => ({
   }),
 }));
 jest.mock("@/hooks/useAMERuns", () => ({
-  useAMERuns: () => ({ data: { items: [{ id: "r1", result: "failed", mode: "dry_run" }], runs: [], total: 1, actions_feed: [{ id: "a1", status: "blocked", action: "pause", reason: "r" }, { id: "a2", status: "failed", action: "pause", reason: "r" }] }, source: "live", loading: false, error: null }),
+  useAMERuns: () => ({ data: { items: [], runs: [{ id: "r1", result: "failed", mode: "dry_run" }], total: 1, actions_feed: [{ id: "a1", status: "blocked", action: "pause", reason: "r" }, { id: "a2", status: "failed", action: "pause", reason: "r" }] }, source: "live", loading: false, error: null }),
 }));
 
 const INGLES = [
