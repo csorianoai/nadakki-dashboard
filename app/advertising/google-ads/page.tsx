@@ -301,9 +301,10 @@ export default function GoogleAdsPage() {
   };
 
   return (
-    <div className="space-y-8 p-6 max-w-7xl mx-auto">
+    // Los botones azules de AgentCard y GoogleAdsClient (blue-500, blanco 3.67:1) viven fuera de esta ruta: se oscurecen aqui, solo en esta pagina.
+    <div className="space-y-8 p-6 max-w-7xl mx-auto [&_.bg-blue-500]:bg-blue-700 [&_.bg-blue-500:hover]:bg-blue-800">
       <ConectarGoogleAds />
-      <Link href="/advertising/google-ads/metricas" className="inline-block text-sm font-medium text-blue-600 hover:underline">
+      <Link href="/advertising/google-ads/metricas" className="inline-block text-sm font-medium text-blue-400 hover:underline">
         Ver métricas de campañas →
       </Link>
       <GoogleAdsClient embed navigationBackHref="/advertising" />
@@ -360,7 +361,7 @@ export default function GoogleAdsPage() {
             <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">Sin datos aún</p>
             <div className="flex gap-3 flex-wrap">
               <button
-                className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded font-semibold disabled:opacity-50"
+                className="bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded font-semibold disabled:opacity-50"
                 type="button"
                 disabled={loading[selected.id]}
                 onClick={() => executeAgent(selected)}
@@ -370,7 +371,7 @@ export default function GoogleAdsPage() {
               <button className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 py-2 px-4 rounded font-semibold" type="button">
                 Historico
               </button>
-              <button className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded font-semibold" type="button">
+              <button className="bg-green-700 hover:bg-green-800 text-white py-2 px-4 rounded font-semibold" type="button">
                 Programar
               </button>
             </div>
