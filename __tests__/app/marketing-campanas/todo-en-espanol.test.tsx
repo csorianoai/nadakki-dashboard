@@ -58,7 +58,7 @@ describe("asistente: todo en español con plantillas y segmentos del sistema", (
     expect(container.textContent).toContain("Convertir — Correo");
   });
 
-  it("el fondo cubre todo el alto", async () => {
+  it("la raíz conserva min-h-screen, shrink-0 y fondo (guarda de dash#1241; no mide alto)", async () => {
     const Page = require("@/app/marketing/campaigns/new/page").default;
     const { container } = render(<Page />);
     const raiz = container.firstElementChild as HTMLElement;
