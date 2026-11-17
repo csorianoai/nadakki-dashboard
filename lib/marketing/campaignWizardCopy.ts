@@ -56,6 +56,10 @@ export function channelLabel(v: unknown): string {
   const k = String(v ?? "");
   return propia(CHANNEL_LABELS, k) ?? k;
 }
+export function scheduleLabel(v: unknown): string {
+  const k = String(v ?? "");
+  return propia(SCHEDULE_LABELS, k) ?? k;
+}
 
 /** Nombre visible de una plantilla: las del sistema con nombre genérico «Objetivo — CANAL» se componen con objetivo + canal; el id no cambia. */
 export function templateDisplayName(t: Record<string, unknown>, fallback: string): string {
@@ -78,7 +82,7 @@ export function fillPreviewExample(text: string): { text: string; example: boole
   let example = false;
   const out = text.replace(/\{\{?\s*([^{}]*?)\s*\}?\}/g, (_m, key: string) => {
     example = true;
-    return EXAMPLE_VALUES[key.toLowerCase()] ?? "ejemplo";
+    return propia(EXAMPLE_VALUES, key.toLowerCase()) ?? "ejemplo";
   });
   return { text: out.replace(/[{}]/g, ""), example };
 }
