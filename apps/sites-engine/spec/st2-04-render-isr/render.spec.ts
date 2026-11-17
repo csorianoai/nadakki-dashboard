@@ -1,7 +1,7 @@
 import { createHmac } from 'node:crypto';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { BlockError, validateBlocks } from '@/blocks/model';
+import { BlockError, MAX_STRING, MAX_TOTAL, validateBlocks } from '@/blocks/model';
 import { createCoreClient } from '@/core/client';
 import { SITE_A, SITE_B, createFakeCore } from '@/core/fixtures';
 import { buildCsp, cspForDeployment, hashesFromEnv, mediaHostsFromEnv } from '../../src/lib/csp';
@@ -70,6 +70,27 @@ describe('ST2-04 render por manifiesto', () => {
     expect(() => validateBlocks(blk({ html: '<img src=x onerror=alert(1)>' }))).toThrow(BlockError);
     expect(() => validateBlocks([{ block_id: 'b', type: 'text', i18n: { text: { es: '<script>x</script>' } } }])).toThrow(BlockError);
     expect(validateBlocks(blk({ text: 'Bienvenidos', href: 'https://example.invalid/x' }))).toHaveLength(1);
+    // la barra sigue detectada con espacios a ambos lados
+    expect(() => validateBlocks(blk({ text: '< / script>' }))).toThrow(BlockError);
+  });
+
+  it('bloques: sin backtracking cuadratico y con limites de tamano (hallazgo Vercel ST2-04)', () => {
+    const blk = (data: Record<string, unknown>) => [{ block_id: 'b1', type: 'text', data }];
+    // tira larga de espacios junto a una etiqueta incompleta: lineal y por debajo del limite por cadena
+    const ws = '<' + ' '.repeat(MAX_STRING - 10) + '/';
+    const t0 = performance.now();
+    expect(validateBlocks(blk({ text: ws }))).toHaveLength(1);
+    expect(performance.now() - t0).toBeLessThan(200);
+    // muchas etiquetas incompletas seguidas
+    const many = ('<' + ' '.repeat(40) + '/' + ' '.repeat(40)).repeat(200);
+    const t1 = performance.now();
+    expect(validateBlocks(blk({ text: many }))).toHaveLength(1);
+    expect(performance.now() - t1).toBeLessThan(200);
+    // cadena demasiado larga y total demasiado grande: falla cerrada
+    expect(() => validateBlocks(blk({ text: 'a'.repeat(MAX_STRING + 1) }))).toThrow(BlockError);
+    const chunk = 'a'.repeat(MAX_STRING);
+    const big = Array.from({ length: Math.ceil(MAX_TOTAL / MAX_STRING) + 1 }, (_, i) => ({ block_id: `b${i}`, type: 'text', text: chunk }));
+    expect(() => validateBlocks(big)).toThrow(BlockError);
   });
 
   it('[negativo] una pagina con un bloque con <script> no se renderiza (error generico)', async () => {
