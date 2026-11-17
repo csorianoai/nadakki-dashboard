@@ -34,7 +34,14 @@ const PROHIBIDO = [
   "Convert", "Recover", "Reactivate", "Onboard", "EMAIL", "behavioral", "demographic", "value",
   "convert-email", "new-customers", "recover", "reactivate", "onboard",
 ];
-const limpio = (t: string) => { for (const p of PROHIBIDO) expect(t).not.toMatch(new RegExp(`(^|[^\\p{L}-])${p}($|[^\\p{L}-])`, "u")); };
+// Cada nodo de texto por separado: textContent pega vecinos sin separador y ocultaría ids pegados al nombre.
+const limpio = (raiz: HTMLElement) => {
+  const w = document.createTreeWalker(raiz, NodeFilter.SHOW_TEXT);
+  for (let n = w.nextNode(); n; n = w.nextNode()) {
+    const t = n.textContent || "";
+    for (const p of PROHIBIDO) expect(t).not.toMatch(new RegExp(`(^|[^\\p{L}-])${p}($|[^\\p{L}-])`, "u"));
+  }
+};
 
 describe("asistente: todo en español con plantillas y segmentos del sistema", () => {
   it("pasos 1, 3 y 5 no muestran inglés ni ids crudos", async () => {
@@ -46,15 +53,15 @@ describe("asistente: todo en español con plantillas y segmentos del sistema", (
     expect(screen.getByText("Reactivar — Correo")).toBeInTheDocument();
     fireEvent.click(screen.getByText("Convertir — SMS"));
     fireEvent.click(screen.getByText("Convertir — Correo"));
-    limpio(container.textContent || "");
+    limpio(container);
     fireEvent.click(screen.getByRole("button", { name: /Siguiente/ }));
     fireEvent.click(screen.getByRole("button", { name: /Siguiente/ }));
     fireEvent.click(screen.getByText("Clientes nuevos"));
-    limpio(container.textContent || "");
+    limpio(container);
     fireEvent.click(screen.getByRole("button", { name: /Siguiente/ }));
     fireEvent.click(screen.getByRole("button", { name: /Siguiente/ }));
     expect(screen.getByRole("button", { name: /Enviar campaña/ })).toBeInTheDocument();
-    limpio(container.textContent || "");
+    limpio(container);
     expect(container.textContent).toContain("Convertir — Correo");
   });
 
