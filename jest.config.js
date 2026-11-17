@@ -10,7 +10,9 @@ module.exports = {
     "**/__tests__/legal/**/*.test.[jt]s?(x)",
     "**/__tests__/app/**/*.test.[jt]s?(x)",
   ],
-  modulePathIgnorePatterns: ["<rootDir>/legacy/"],
+  modulePathIgnorePatterns: ["<rootDir>/legacy/", "<rootDir>/apps/"],
+  // apps/ (p. ej. apps/sites-engine) tiene sus propias pruebas y su propio CI: el panel no las ejecuta.
+  testPathIgnorePatterns: ["/node_modules/", "<rootDir>/apps/"],
   moduleNameMapper: {
     // Las hojas de estilo van primero para que "^@/(.*)$" no las resuelva
     // como modulos JS (p. ej. import "@/styles/legal-research-papel-blanco.css").

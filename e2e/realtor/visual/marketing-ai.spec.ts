@@ -1,32 +1,17 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { sesion } from "../sesion";
 
 /**
  * O2-P-MARKETING-AI sobre el armazón de RE-SHELL: /realtor/marketing-ai (DEMO) frente a la referencia DL10A con el umbral
  * de UMBRAL.md, más el caso sin DEMO (servidor 3101), el acceso denegado y el tenant ajeno.
  */
 
-const B = "http://backend.invalid";
 const THRESHOLD = 0.12;
 const NODEMO = "http://127.0.0.1:3101";
 const REF = join(__dirname, "../../../docs/design/realtor/DL10A/ref/marketing-ai.png");
 
-async function sesion(page: Page, acceso: number) {
-  await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
-  await page.route(`${B}/**`, (route) => route.fulfill({ json: {} }));
-  await page.route(`${B}/api/v2/auth/refresh`, (route) =>
-    route.fulfill({ json: { access_token: "a.b.c", refresh_token: "r", expires_in: 3600 } }));
-  const tenant = { id: "t1", slug: "qa", display_name: "QA", subscribed_cores: ["real_estate"] };
-  await page.route(`${B}/api/v2/auth/me`, (route) =>
-    route.fulfill({ json: {
-      user: { id: "u1", email: "qa@nadakki.test", name: "QA", is_active: true, mfa_enabled: false },
-      current_tenant: tenant, all_tenants: [tenant], active_roles: [],
-    } }));
-  await page.route(/\/api\/v1\/realestate\/acceso/, (route) =>
-    route.fulfill({ status: acceso, json: acceso === 200 ? { ok: true } : { detail: "forbidden" } }));
-  await page.addInitScript(() => localStorage.setItem("nadakki_refresh_token_v2", "r"));
-}
 
 test("positivo con DEMO: marca, cuatro puertas con resumen y enlaces al core", async ({ page }) => {
   await sesion(page, 200);
@@ -71,7 +56,8 @@ test("datos reales (contrato C-RE-OLA3, registros SYNTH) sin DEMO: métricas, ga
   await expect(page.getByTestId("marketing-ai-real")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("metric-campaigns_running")).toHaveText("3");
   await expect(page.getByTestId("metric-suggestions_new")).toHaveText("5");
-  await expect(page.getByTestId("no-disponible-leads_attributed")).toContainText("NO_DISPONIBLE");
+  await expect(page.getByTestId("no-disponible-leads_attributed")).toHaveAttribute("data-quality", "NO_DISPONIBLE");
+  await expect(page.getByTestId("no-disponible-leads_attributed")).toContainText("Sin datos todavía");
   await expect(page.getByTestId("spend-row")).toHaveCount(2);
   await expect(page.getByTestId("marketing-ai-real")).toContainText("800.00");
   await expect(page.getByTestId("marketing-ai-real")).toContainText("150000.00");

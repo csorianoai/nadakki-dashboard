@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { COPY, STAGE_LABEL, STATUS_LABEL, TYPE_LABEL, type Lang } from "@/lib/realtor/propiedades/copy";
 import { fetchProperties } from "@/lib/realtor/propiedades/api";
@@ -7,11 +8,15 @@ import { DEMO_PROPERTIES } from "@/lib/realtor/propiedades/demo";
 import { applyFilters, countByStage, countByStatus, formatPrice } from "@/lib/realtor/propiedades/logic";
 import { NO_FILTERS, STAGES, STATUSES, TYPES, type PropFilters, type Property } from "@/lib/realtor/propiedades/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
+import { AsignacionesSection } from "./AsignacionesSection";
+import { PropiedadForm } from "./PropiedadForm";
 import { RealtorNotice } from "../RealtorNotice";
+import { TextoRecortado } from "../TextoRecortado";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const SELECT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
+const BTN: CSSProperties = { minHeight: 44, padding: "0 18px", borderRadius: 8, border: `1px solid ${RT.teal}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontWeight: 700, cursor: "pointer" };
 const PILL: CSSProperties = { background: RT.calloutBg, border: `1px solid ${RT.calloutLine}`, borderRadius: 999, padding: "6px 14px", fontSize: 13, fontWeight: 700 };
 
 function Select<T extends string>({ label, value, options, all, onChange }: {
@@ -38,12 +43,15 @@ export function PropiedadesPanel() {
 
   // Fuera de DEMO se lee C-RE-OLA2; sin datos (404, 503, lista vacía) queda «Sin datos todavía», sin cifras inventadas.
   const [real, setReal] = useState<readonly Property[]>([]);
+  const [reload, setReload] = useState(0);
+  const [form, setForm] = useState<"new" | "edit" | null>(null);
+  const [saved, setSaved] = useState(false);
   useEffect(() => {
     if (demo || access !== "ok") return;
     let alive = true;
     fetchProperties().then((r) => { if (alive) setReal(r); });
     return () => { alive = false; };
-  }, [demo, access]);
+  }, [demo, access, reload]);
   const props: readonly Property[] = demo ? DEMO_PROPERTIES : real;
   const visible = useMemo(() => applyFilters(props, filters), [props, filters]);
   const byStatus = useMemo(() => countByStatus(props), [props]);
@@ -58,7 +66,7 @@ export function PropiedadesPanel() {
   );
   return (
     <section data-testid="propiedades-panel" style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
         <div>
           <h1 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, lineHeight: 1.15 }}>{t.title}</h1>
           <p style={{ margin: "14px 0 0", maxWidth: 780, fontSize: 16, lineHeight: 1.45, color: RT.muted }}>{t.intro}</p>
@@ -73,6 +81,14 @@ export function PropiedadesPanel() {
           ))}
         </div>
       </div>
+      {!demo ? (
+        <div><button type="button" data-testid="propiedad-new" style={BTN} onClick={() => { setSaved(false); setForm("new"); }}>{t.newProperty}</button></div>
+      ) : null}
+      {saved ? <p role="status" data-testid="propiedad-saved" style={{ margin: 0, fontWeight: 700, color: RT.chipUpText }}>{t.saved}</p> : null}
+      {form ? (
+        <PropiedadForm key={form === "edit" ? current?.propertyId : "new"} propertyId={form === "edit" ? current?.propertyId : undefined} lang={lang} onCancel={() => setForm(null)}
+          onSaved={() => { setForm(null); setSaved(true); setReload((n) => n + 1); }} />
+      ) : null}
       {demo ? (
         <p role="note" data-testid="demo-banner" style={{ margin: 0, background: RT.demoBg, color: RT.demoText, borderRadius: 8, padding: "8px 12px", fontSize: 13, fontWeight: 600 }}>{t.demo}</p>
       ) : null}
@@ -112,7 +128,7 @@ export function PropiedadesPanel() {
                         border: `${current?.id === p.id ? 2 : 1}px solid ${current?.id === p.id ? RT.teal : RT.line}` }}>
                       <span aria-hidden="true" style={{ display: "block", height: 96, background: RT.calloutBg }} />
                       <span style={{ display: "block", padding: "18px 18px 20px" }}>
-                        <strong style={{ display: "block", fontFamily: FONT_DISPLAY, fontSize: 18 }}>{p.address}</strong>
+                        <TextoRecortado texto={p.address} lineas={2} style={{ fontFamily: FONT_DISPLAY, fontSize: 18, fontWeight: 700 }} />
                         <span style={{ display: "block", fontSize: 14, color: RT.muted, margin: "8px 0 10px" }}>
                           {TYPE_LABEL[lang][p.type]}{p.stage ? ` · ${STAGE_LABEL[lang][p.stage]}` : ""}
                         </span>
@@ -140,6 +156,9 @@ export function PropiedadesPanel() {
                       {current.units.map((u) => (<li key={u.label}>{u.label} · {u.beds} {t.beds} · {u.baths} {t.baths}</li>))}
                     </ul>
                   )}
+                  {current.propertyId && !demo ? <button type="button" data-testid="propiedad-edit" style={{ ...BTN, marginTop: 14 }} onClick={() => { setSaved(false); setForm("edit"); }}>{t.editProperty}</button> : null}
+                  {current.propertyId && !demo ? <Link href={`/realtor/operaciones?property_id=${encodeURIComponent(current.propertyId)}`} data-testid="propiedad-abrir-operacion" style={{ ...BTN, marginTop: 14, marginLeft: 10, display: "inline-flex", alignItems: "center", textDecoration: "none" }}>Abrir operación</Link> : null}
+                  {current.propertyId && !demo ? <AsignacionesSection key={current.propertyId} propertyId={current.propertyId} /> : null}
                 </>
               ) : <p style={{ color: RT.muted }}>{t.pickOne}</p>}
             </div>

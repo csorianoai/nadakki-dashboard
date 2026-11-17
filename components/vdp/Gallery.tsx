@@ -75,6 +75,14 @@ export function Gallery({ vehicle }: { vehicle: Vehicle }) {
         ) : null}
       </div>
 
+      {!hayFotos && !total ? (
+        // Fuera del role="img": sus hijos son presentacionales y un lector de pantalla no los anunciaria.
+        <p className="flex items-center gap-1.5 text-sm text-nk-fg-muted" data-testid="gallery-sin-fotos">
+          <Camera className="h-4 w-4" aria-hidden />
+          Sin fotos todavia
+        </p>
+      ) : null}
+
       <div className="grid grid-cols-5 gap-2" data-testid="gallery-miniaturas">
         {Array.from({ length: thumbCount }, (_, i) => (
           <button
