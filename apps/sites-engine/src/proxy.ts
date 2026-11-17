@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { CoreError, createCoreClientFromEnv } from '@/core/client';
 import { cspForDeployment } from './lib/csp';
 import { createHandler, type Decision } from '@/proxy/handler';
+import { formCookieFor } from '@/leads/cookie';
 
 let handler: ReturnType<typeof createHandler> | undefined;
 
@@ -33,6 +34,11 @@ export async function proxy(req: NextRequest): Promise<NextResponse> {
     res = new NextResponse(null, { status: d.status, headers: d.headers });
   }
   res.headers.delete('set-cookie'); // nunca cookies de dominio compartido
+  if (d.kind === 'rewrite') {
+    // Unica cookie permitida: __Host-nk_fr (tiempo de relleno sin JS). Ver README: Set-Cookie puede degradar la cache del CDN.
+    const c = formCookieFor({ method: req.method, headers: req.headers, pathname: d.pathname, secret: process.env.SITES_SITE_KEY_SECRET, now: Date.now() });
+    if (c) res.headers.append('set-cookie', c);
+  }
   return res;
 }
 
