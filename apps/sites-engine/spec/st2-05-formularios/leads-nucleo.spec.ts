@@ -5,7 +5,7 @@ import schema from '../../contracts/C-SITES-LEADS/schema.json';
 import { checkOrigin, checkTiming, signFormCookie, verifyFormCookie } from '@/leads/antispam';
 import { consentsFor } from '@/leads/consent';
 import { buildSubmission, isHoneypot } from '@/leads/mapping';
-import { createMemoryOutbox } from '@/leads/outbox';
+import { createMemoryOutbox, DEDUPE_WINDOW_MS, OutboxFullError, PENDING_TTL_MS } from '@/leads/outbox';
 import { sendLead } from '@/leads/core-send';
 import { siteKey } from '@/leads/sitekey';
 
@@ -188,5 +188,50 @@ describe('ST2-05 LeadOutbox', () => {
     const k = async (s: string, f: string) => (await o.enqueue({ siteId: s, fingerprint: f, payload: {} })).key;
     const keys = new Set([await k(A, 'v1'), await k(A, 'v2'), await k(B, 'v1')]);
     expect(keys.size).toBe(3);
+  });
+});
+
+describe('ST2-05 LeadOutbox acotado (hallazgo Vercel dash#1267: DoS por memoria)', () => {
+  it('[negativo] sin cupo global o del sitio lanza OutboxFullError sin guardar nada; otro sitio sigue entrando', async () => {
+    const o = createMemoryOutbox({ now: () => 1, maxItems: 5, maxPerSite: 3 });
+    for (let i = 0; i < 3; i++) await o.enqueue({ siteId: A, fingerprint: `a${i}`, payload: {} });
+    await expect(o.enqueue({ siteId: A, fingerprint: 'a9', payload: {} })).rejects.toBeInstanceOf(OutboxFullError);
+    expect(o.size()).toBe(3);
+    await o.enqueue({ siteId: B, fingerprint: 'b0', payload: {} });
+    await o.enqueue({ siteId: B, fingerprint: 'b1', payload: {} });
+    await expect(o.enqueue({ siteId: B, fingerprint: 'b2', payload: {} })).rejects.toMatchObject({ scope: 'global' });
+    expect(o.size()).toBe(5);
+  });
+  it('[positivo] los enviados caducan tras la ventana y los pendientes tras su TTL: la memoria no crece con el historico', async () => {
+    let now = 1_000;
+    const o = createMemoryOutbox({ now: () => now, maxItems: 50, maxPerSite: 50 });
+    for (let i = 0; i < 40; i++) { const it = await o.enqueue({ siteId: A, fingerprint: `s${i}`, payload: { n: i } }); await o.markSent(it.id); }
+    for (let i = 0; i < 5; i++) await o.enqueue({ siteId: A, fingerprint: `p${i}`, payload: {} });
+    expect(o.size()).toBe(45);
+    now += DEDUPE_WINDOW_MS;                                  // los 40 enviados salen; los 5 pendientes siguen
+    await o.enqueue({ siteId: A, fingerprint: 'nuevo', payload: {} });
+    expect(o.size()).toBe(6);
+    now += PENDING_TTL_MS;                                    // los pendientes vencidos tambien salen
+    await o.enqueue({ siteId: A, fingerprint: 'otro', payload: {} });
+    expect(o.size()).toBe(1);
+  });
+  it('[positivo] markSent libera el payload; release borra el item; el doble clic tras enviar no reenvia', async () => {
+    const o = createMemoryOutbox({ now: () => 1 });
+    const a = await o.enqueue({ siteId: A, fingerprint: 'f1', payload: { email: 'v@synth.invalid' } });
+    await o.markSent(a.id);
+    const again = await o.enqueue({ siteId: A, fingerprint: 'f1', payload: { email: 'v@synth.invalid' } });
+    expect(again.status).toBe('sent');
+    expect(again.payload).toBeNull();
+    const b = await o.enqueue({ siteId: A, fingerprint: 'f2', payload: {} });
+    await o.release(b.id);
+    expect(o.size()).toBe(1);
+    expect((await o.enqueue({ siteId: A, fingerprint: 'f2', payload: {} })).key).not.toBe(b.key);
+  });
+  it('[negativo] 2000 envios distintos: cada alta en tiempo constante (sin recorrer el historico)', async () => {
+    const o = createMemoryOutbox({ now: () => 1 });
+    const t0 = performance.now();
+    for (let i = 0; i < 2_000; i++) await o.enqueue({ siteId: `s${i % 10}`, fingerprint: `f${i}`, payload: {} });
+    expect(performance.now() - t0).toBeLessThan(2_000);
+    await expect(o.enqueue({ siteId: 's0', fingerprint: 'x', payload: {} })).rejects.toBeInstanceOf(OutboxFullError);
   });
 });

@@ -138,3 +138,26 @@ describe('ST2-05 ruta de formularios', () => {
     expect(calls[0].headers['idempotency-key']).not.toBe(calls[1].headers['idempotency-key']);
   });
 });
+
+describe('ST2-05 ruta de formularios con el outbox acotado (hallazgo Vercel dash#1267)', () => {
+  it('[negativo] outbox sin cupo -> 303 a no-enviado y el core NO recibe nada', async () => {
+    const { deps, calls } = mkDeps();
+    deps.outbox = createMemoryOutbox({ now: deps.now, maxItems: 1, maxPerSite: 1 });
+    await handleLead(urlenc(fields({ email: 'u1@synth.invalid' })), A, { ...deps, fetch: (async () => new Response(null, { status: 503 })) as unknown as typeof fetch });
+    const r = await handleLead(urlenc(fields({ email: 'u2@synth.invalid' })), A, deps);
+    expect(r.status).toBe(303);
+    expect(r.headers.get('location')).not.toBe('/es/mensaje-enviado');
+    expect(calls).toHaveLength(0);
+  });
+  it('[positivo] el core rechaza (4xx) -> el envio se libera del outbox; el aceptado queda sin payload', async () => {
+    const o = createMemoryOutbox({ now: () => T + 10_000 });
+    const rej = mkDeps([422]);
+    rej.deps.outbox = o;
+    await handleLead(urlenc(fields({ email: 'r1@synth.invalid' })), A, rej.deps);
+    expect(o.size()).toBe(0);
+    const ok = mkDeps([202]);
+    ok.deps.outbox = o;
+    await handleLead(urlenc(fields({ email: 'r2@synth.invalid' })), A, ok.deps);
+    expect(o.size()).toBe(1);
+  });
+});

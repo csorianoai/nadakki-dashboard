@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 import { checkOrigin, checkTiming, FORM_COOKIE, verifyFormCookie } from './antispam';
 import { sendLead } from './core-send';
 import { buildSubmission, isHoneypot } from './mapping';
-import type { LeadOutbox } from './outbox';
+import { OutboxFullError, type LeadOutbox } from './outbox';
 
 export interface LeadDeps {
   fetch: typeof globalThis.fetch; baseUrl: string; secret: string; outbox: LeadOutbox;
@@ -85,13 +85,25 @@ export async function handleLead(req: Request, siteId: string, deps: LeadDeps): 
 
   // Idempotency-Key del MOTOR: una por envio recibido; el mismo cuerpo en 60 s reutiliza item y clave.
   const fingerprint = createHash('sha256').update(`${siteId}\n${raw}`).digest('hex');
-  const item = await deps.outbox.enqueue({ siteId, fingerprint, payload: mapped.submission });
+  let item;
+  try {
+    item = await deps.outbox.enqueue({ siteId, fingerprint, payload: mapped.submission });
+  } catch (e) {
+    // Sin cupo (tope global o del sitio): no se guarda ni se llama al core; respuesta honesta de no-enviado.
+    if (e instanceof OutboxFullError) return reply(native, mapped.locale, { ok: false, status: 503 });
+    throw e;
+  }
   if (item.status === 'sent') return reply(native, lang, { ok: true });
   const res = await sendLead({ fetch: deps.fetch, baseUrl: deps.baseUrl, siteId, secret: deps.secret, key: item.key, submission: mapped.submission, now: deps.now, sleep: deps.sleep });
   if (res.kind === 'accepted') {
     await deps.outbox.markSent(item.id);
     return reply(native, mapped.locale, { ok: true });
   }
-  // Sin 202 la respuesta honesta es no-enviado (el item queda pendiente en el outbox para drain); nunca 'enviado'.
-  return reply(native, mapped.locale, { ok: false, status: res.kind === 'rejected' ? 422 : 503 });
+  // Sin 202 la respuesta honesta es no-enviado; nunca 'enviado'. Rechazo definitivo (4xx): se libera, no hay reintento;
+  // fallo transitorio: queda pendiente en el outbox para drain (hasta su TTL).
+  if (res.kind === 'rejected') {
+    await deps.outbox.release(item.id);
+    return reply(native, mapped.locale, { ok: false, status: 422 });
+  }
+  return reply(native, mapped.locale, { ok: false, status: 503 });
 }
