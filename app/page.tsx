@@ -114,9 +114,14 @@ export default function HomePage() {
     };
   }, [esPlataforma]);
 
-  const coresList = Object.values(CORES_CONFIG).sort((a, b) =>
+  const coresCatalogo = Object.values(CORES_CONFIG);
+  /** Un core del catálogo se muestra si el tenant tiene el módulo con ese mismo id; el superadmin ve todo. */
+  const coresList = (esSuperadmin ? coresCatalogo : coresCatalogo.filter((c) => idsModulos.includes(c.id))).sort((a, b) =>
     a.displayName.localeCompare(b.displayName, "es")
   );
+  const idsCores = new Set(coresList.map((c) => c.id));
+  /** Accesos rápidos de dominio (Legal, Compliance) solo si el dominio está a la vista del usuario. */
+  const DOMINIO_DE_ACCESO: Record<string, string> = { "/legal": "legal", "/compliance": "compliance" };
 
   const pagina = (
     <div className="ndk-page ndk-fade-in min-h-[80vh]">
@@ -192,7 +197,7 @@ export default function HomePage() {
               <BarChart3 className="w-5 h-5 text-green-400" />
               <span className="text-gray-400 text-sm">Dominios (catálogo)</span>
             </div>
-            <span className="text-2xl font-bold text-white">{coresList.length}</span>
+            <span className="text-2xl font-bold text-white">{coresCatalogo.length}</span>
           </div>
         </motion.div>
         ) : null}
@@ -210,7 +215,7 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-2">
             {HIGHLIGHT_CORE_IDS.map((id) => {
               const c = CORES_CONFIG[id];
-              if (!c) return null;
+              if (!c || !idsCores.has(id)) return null;
               return (
                 <Link
                   key={id}
@@ -259,7 +264,7 @@ export default function HomePage() {
           <h2 className="text-xl font-bold text-white mb-1">Acceso rápido por función</h2>
           <p className="text-sm text-gray-500 mb-4">Operacion diaria, inteligencia autonoma, cumplimiento y gobierno.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {QUICK_LINKS.filter((l) => tieneCredito || !SOLO_CREDITO.includes(l.href)).map((link) => (
+            {QUICK_LINKS.filter((l) => (tieneCredito || !SOLO_CREDITO.includes(l.href)) && (!DOMINIO_DE_ACCESO[l.href] || idsCores.has(DOMINIO_DE_ACCESO[l.href]))).map((link) => (
               <Link key={link.href} href={link.href}>
                 <motion.div
                   whileHover={{ scale: 1.02, y: -2 }}
