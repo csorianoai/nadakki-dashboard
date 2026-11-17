@@ -150,6 +150,15 @@ describe('ST2-05 envio al core con reintentos', () => {
     expect(new Headers(c.calls[0].init.headers).get('x-site-key')).toBe(siteKey(SECRET, B));
     expect(String(c.calls[0].init.body)).not.toMatch(/tenant_id|site_id/);
   });
+  it('[negativo] core colgado: el tope total se respeta aunque cada intento se cuelgue hasta abortar', async () => {
+    const hang = ((_u: unknown, init: RequestInit) => new Promise((_res, rej) => {
+      init.signal?.addEventListener('abort', () => rej(new Error('abort')));
+    })) as unknown as typeof fetch;
+    const t0 = Date.now();
+    const r = await sendLead({ fetch: hang, baseUrl: 'https://core.test/api/v1/sites', siteId: A, secret: SECRET, key: 'k-1', submission: sub(), attemptTimeoutMs: 300, budgetMs: 500, sleep: (ms) => new Promise((x) => setTimeout(x, ms)) });
+    expect(r.kind).toBe('unavailable');
+    expect(Date.now() - t0).toBeLessThanOrEqual(700);
+  });
 });
 
 describe('ST2-05 LeadOutbox', () => {
