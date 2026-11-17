@@ -80,7 +80,11 @@ export default function WorkflowsPage() {
         setWorkflows(data.workflows || []);
         setError(null);
       } catch (err) {
-        setError("No pudimos cargar estos datos");
+        // "/workflows" es una ruta relativa sin reescritura ni ruta de listado en el backend: el servidor
+        // devuelve el HTML de la propia pagina (no JSON) o 404. Eso es "sin flujos", no un fallo.
+        const status = (err as { status?: number } | null)?.status;
+        const sinRuta = err instanceof SyntaxError || status === 404;
+        setError(sinRuta ? null : "No pudimos cargar estos datos");
         setWorkflows([]);
       } finally {
         setLoading(false);
@@ -181,6 +185,14 @@ export default function WorkflowsPage() {
         <div className="mb-6 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-yellow-400" />
           <p className="text-sm text-yellow-400">{error}</p>
+        </div>
+      )}
+
+      {/* Estado vacio honesto */}
+      {!loading && !error && workflows.length === 0 && (
+        <div className="py-16 text-center text-gray-400">
+          <Workflow className="w-10 h-10 mx-auto mb-3 text-gray-600" />
+          <p className="text-sm">Aún no hay flujos en tu cuenta</p>
         </div>
       )}
 

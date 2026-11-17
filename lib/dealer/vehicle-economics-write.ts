@@ -24,6 +24,8 @@ export type SaleBody = {
   sale_price_amount: string;
   currency: string;
   sold_at: string;
+  /** F4F-6: campos fiscales de la venta (`vat.rate`, `trade_in`); nunca `vat_base`. */
+  fiscal?: Record<string, unknown>;
 };
 
 function vehicleWriteUrl(vehicleId: string, suffix: "acquisition" | "costs" | "sale"): string {
@@ -76,6 +78,7 @@ export function salePayload(form: SaleBody): Record<string, unknown> {
     sale_price_amount: form.sale_price_amount,
     currency: form.currency,
     sold_at: form.sold_at,
+    ...(form.fiscal ?? {}),
   };
 }
 
