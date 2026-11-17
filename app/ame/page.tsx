@@ -5,6 +5,8 @@ import { RefreshCw, Gauge } from "lucide-react";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAMEStatus } from "@/hooks/useAMEStatus";
 import { useAMERuns } from "@/hooks/useAMERuns";
+import { useAuth } from "@/hooks/useAuth";
+import { esSuperadminDePlataforma } from "@/lib/auth/platform-staff";
 
 const colors = {
   bg: "#0f172a",
@@ -27,7 +29,7 @@ function DataSourceBadge({ live }: { live: boolean }) {
         border: `1px solid ${live ? "rgba(34,197,94,0.45)" : "rgba(148,163,184,0.35)"}`,
       }}
     >
-      {live ? "Live" : "Reference"}
+      {live ? "En vivo" : "Referencia"}
     </span>
   );
 }
@@ -60,17 +62,17 @@ function Chip({ label, tone }: { label: string; tone: "gray" | "green" | "red" |
 
 function modeChip(mode: string | undefined) {
   const m = (mode ?? "unknown").toLowerCase();
-  if (m === "dry_run" || m === "dry-run") return <Chip label="Dry Run" tone="gray" />;
-  if (m === "live") return <Chip label="Live" tone="green" />;
-  return <Chip label="Unknown" tone="yellow" />;
+  if (m === "dry_run" || m === "dry-run") return <Chip label="Simulación" tone="gray" />;
+  if (m === "live") return <Chip label="En vivo" tone="green" />;
+  return <Chip label="Desconocido" tone="yellow" />;
 }
 
 function overallChip(overall: string | undefined) {
   const o = (overall ?? "unknown").toLowerCase();
-  if (o === "running") return <Chip label="Running" tone="blue" />;
-  if (o === "idle") return <Chip label="Idle" tone="gray" />;
-  if (o === "degraded") return <Chip label="Degraded" tone="red" />;
-  return <Chip label="Unknown" tone="yellow" />;
+  if (o === "running") return <Chip label="En ejecución" tone="blue" />;
+  if (o === "idle") return <Chip label="En reposo" tone="gray" />;
+  if (o === "degraded") return <Chip label="Degradado" tone="red" />;
+  return <Chip label="Desconocido" tone="yellow" />;
 }
 
 function resultChip(result: string | undefined) {
@@ -83,9 +85,9 @@ function resultChip(result: string | undefined) {
 
 function actionStatusChip(status: string | undefined) {
   const s = (status ?? "").toLowerCase();
-  if (s === "completed") return <Chip label="completed" tone="green" />;
+  if (s === "completed") return <Chip label="completada" tone="green" />;
   if (s === "blocked" || s === "failed") return <Chip label={status ?? "—"} tone="red" />;
-  if (s === "skipped") return <Chip label="skipped" tone="yellow" />;
+  if (s === "skipped") return <Chip label="omitida" tone="yellow" />;
   if (s) return <Chip label={status} tone="yellow" />;
   return <Chip label="—" tone="gray" />;
 }
@@ -163,7 +165,7 @@ function GateRow({ gateKey, value }: { gateKey: string; value: unknown }) {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
         <span style={{ color: colors.muted, minWidth: "160px", fontSize: "12px" }}>{gateLabel(gateKey)}</span>
-        <Chip label="unknown" tone="yellow" />
+        <Chip label="desconocido" tone="yellow" />
       </div>
     );
   }
@@ -171,7 +173,7 @@ function GateRow({ gateKey, value }: { gateKey: string; value: unknown }) {
     return (
       <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
         <span style={{ color: colors.muted, minWidth: "160px", fontSize: "12px" }}>{gateLabel(gateKey)}</span>
-        <Chip label={value ? "enabled" : "disabled"} tone={value ? "green" : "red"} />
+        <Chip label={value ? "activado" : "desactivado"} tone={value ? "green" : "red"} />
       </div>
     );
   }
@@ -198,10 +200,24 @@ function GateRow({ gateKey, value }: { gateKey: string; value: unknown }) {
   );
 }
 
+/** Quién ve el selector de cuenta y cómo se llama la cuenta (nunca el UUID). */
+function useVistaCuenta() {
+  let auth: ReturnType<typeof useAuth> | null = null;
+  try {
+    auth = useAuth();
+  } catch {
+    auth = null;
+  }
+  const esSuperadmin = esSuperadminDePlataforma(auth?.allRoles);
+  const nombre = auth?.tenant?.display_name?.trim();
+  return { esSuperadmin, cuentaVisible: nombre || "Tu cuenta" };
+}
+
 type TenantOpt = { slug: string; name?: string; display_name?: string };
 
 export default function AMEPage() {
   const { tenantId } = useTenant();
+  const { esSuperadmin, cuentaVisible } = useVistaCuenta();
   const [refreshKey, setRefreshKey] = useState(0);
   const [pickedTenant, setPickedTenant] = useState("");
   const [tenants, setTenants] = useState<TenantOpt[]>([]);
@@ -329,7 +345,7 @@ export default function AMEPage() {
         <div style={{ flex: 1 }}>
           <h1 style={{ fontSize: "22px", fontWeight: 800, margin: 0 }}>Autopilot (AME)</h1>
           <p style={{ margin: "4px 0 0", fontSize: "12px", color: colors.muted }}>
-            Read-only operational view
+            Vista operativa de solo lectura
             {(statusErr || runsErr) && (
               <span style={{ color: "#f87171", marginLeft: "8px" }}>
                 {[statusErr, runsErr].filter(Boolean).join(" · ")}
@@ -369,12 +385,12 @@ export default function AMEPage() {
           }}
         >
           <RefreshCw size={16} />
-          Refresh
+          Actualizar
         </button>
 
-        {tenants.length > 1 ? (
+        {!esSuperadmin ? null : tenants.length > 1 ? (
           <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: colors.muted }}>
-            <span>Tenant (X-Tenant-ID)</span>
+            <span>Cuenta</span>
             <select
               value={pickedTenant}
               onChange={(e) => setPickedTenant(e.target.value)}
@@ -387,7 +403,7 @@ export default function AMEPage() {
                 minWidth: "200px",
               }}
             >
-              <option value="">Dashboard tenant / unscoped</option>
+              <option value="">Cuenta actual</option>
               {tenants.map((t) => (
                 <option key={t.slug} value={t.slug}>
                   {t.display_name || t.name || t.slug}
@@ -397,11 +413,11 @@ export default function AMEPage() {
           </label>
         ) : (
           <label style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: colors.muted }}>
-            <span>Optional tenant override</span>
+            <span>Cuenta alternativa (opcional)</span>
             <input
               value={pickedTenant}
               onChange={(e) => setPickedTenant(e.target.value)}
-              placeholder={tenantId ? `Default: ${tenantId}` : "X-Tenant-ID"}
+              placeholder={tenantId ? "Cuenta actual" : "Identificador de cuenta"}
               style={{
                 background: colors.bg,
                 color: colors.text,
@@ -416,27 +432,27 @@ export default function AMEPage() {
       </div>
 
       {section(
-        "Header / Operational identity",
+        "Identidad operativa",
         <div style={{ display: "flex", flexWrap: "wrap", gap: "12px", alignItems: "center" }}>
           <div style={{ fontSize: "13px", color: colors.muted }}>
-            Tenant: <span style={{ color: colors.text }}>{String(ame.tenant ?? "—")}</span>
+            Cuenta: <span style={{ color: colors.text }}>{cuentaVisible}</span>
           </div>
           <div style={{ fontSize: "13px", color: colors.muted }}>
-            Environment: <span style={{ color: colors.text }}>{String(ame.environment ?? "—")}</span>
+            Entorno: <span style={{ color: colors.text }}>{String(ame.environment ?? "—")}</span>
           </div>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            <span style={{ fontSize: "12px", color: colors.muted }}>Mode</span>
+            <span style={{ fontSize: "12px", color: colors.muted }}>Modo</span>
             {modeChip(String(ame.mode ?? ""))}
           </div>
           <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-            <span style={{ fontSize: "12px", color: colors.muted }}>Overall</span>
+            <span style={{ fontSize: "12px", color: colors.muted }}>Estado general</span>
             {overallChip(String(ame.overall_status ?? ""))}
           </div>
         </div>
       )}
 
       {section(
-        "KPI strip",
+        "Indicadores",
         <div
           style={{
             display: "grid",
@@ -445,13 +461,13 @@ export default function AMEPage() {
           }}
         >
           {[
-            { label: "Last Run", value: lastRun ? formatTime(runStartedAt(lastRun)) : "No runs yet" },
-            { label: "Runs Total", value: kpiVal(runs.total) },
-            { label: "Actions", value: kpiVal(kpis.actions_executed as number | undefined) },
-            { label: "Blocked", value: kpiVal(kpis.actions_blocked as number | undefined) },
-            { label: "Phases OK", value: kpiVal(kpis.phases_ok as number | undefined) },
+            { label: "Última ejecución", value: lastRun ? formatTime(runStartedAt(lastRun)) : "Sin ejecuciones" },
+            { label: "Ejecuciones totales", value: kpiVal(runs.total) },
+            { label: "Acciones", value: kpiVal(kpis.actions_executed as number | undefined) },
+            { label: "Bloqueadas", value: kpiVal(kpis.actions_blocked as number | undefined) },
+            { label: "Fases correctas", value: kpiVal(kpis.phases_ok as number | undefined) },
             {
-              label: "Phases Fail",
+              label: "Fases fallidas",
               value: kpiVal(kpis.phases_fail as number | undefined),
               danger: Number(kpis.phases_fail) > 0,
             },
@@ -483,42 +499,42 @@ export default function AMEPage() {
       )}
 
       {section(
-        "Last run summary",
+        "Resumen de la última ejecución",
         !lastRun ? (
           <p style={{ color: colors.muted, margin: 0, fontSize: "13px" }}>
-            No runs recorded yet. Run the pilot to see data here.
+            Aún no hay ejecuciones. Ejecuta el piloto para ver datos aquí.
           </p>
         ) : (
           <div style={{ fontSize: "13px", display: "grid", gap: "10px" }}>
             <div style={{ display: "flex", flexWrap: "wrap", gap: "10px", alignItems: "center" }}>
-              <span style={{ color: colors.muted }}>Run ID</span>
+              <span style={{ color: colors.muted }}>ID de ejecución</span>
               <span>{String(lastRun.id ?? lastRun.run_id ?? "—")}</span>
               {resultChip(String(lastRun.result ?? lastRun.status ?? lastRun.outcome))}
             </div>
             <div>
-              <span style={{ color: colors.muted }}>Started:</span> {formatTime(runStartedAt(lastRun))} ·{" "}
-              <span style={{ color: colors.muted }}>Ended:</span>{" "}
-              {lastRun.ended_at ? formatTime(String(lastRun.ended_at)) : "In progress"}
+              <span style={{ color: colors.muted }}>Inicio:</span> {formatTime(runStartedAt(lastRun))} ·{" "}
+              <span style={{ color: colors.muted }}>Fin:</span>{" "}
+              {lastRun.ended_at ? formatTime(String(lastRun.ended_at)) : "En curso"}
             </div>
             <div>
-              <span style={{ color: colors.muted }}>Duration:</span>{" "}
+              <span style={{ color: colors.muted }}>Duración:</span>{" "}
               {formatDuration(
                 runStartedAt(lastRun),
                 lastRun.ended_at ? String(lastRun.ended_at) : null
               )}
             </div>
             <div>
-              <span style={{ color: colors.muted }}>Mode:</span> {String(lastRun.mode ?? "—")} ·{" "}
-              <span style={{ color: colors.muted }}>Tenant:</span> {String(lastRun.tenant ?? ame.tenant ?? "—")}
+              <span style={{ color: colors.muted }}>Modo:</span> {String(lastRun.mode ?? "—")} ·{" "}
+              <span style={{ color: colors.muted }}>Cuenta:</span> {cuentaVisible}
             </div>
             <div>
-              <span style={{ color: colors.muted }}>Phase count:</span>{" "}
+              <span style={{ color: colors.muted }}>Fases:</span>{" "}
               {lastRun.phase_count != null
                 ? String(lastRun.phase_count)
                 : Array.isArray(lastRun.phases)
                   ? String(lastRun.phases.length)
                   : "—"}{" "}
-              · <span style={{ color: colors.muted }}>Action count:</span>{" "}
+              · <span style={{ color: colors.muted }}>Acciones:</span>{" "}
               {lastRun.action_count != null
                 ? String(lastRun.action_count)
                 : Array.isArray(lastRun.actions)
@@ -530,15 +546,15 @@ export default function AMEPage() {
       )}
 
       {section(
-        "Actions feed",
+        "Acciones recientes",
         actionsDisplay.length === 0 ? (
-          <p style={{ color: colors.muted, margin: 0, fontSize: "13px" }}>No actions recorded yet.</p>
+          <p style={{ color: colors.muted, margin: 0, fontSize: "13px" }}>Aún no hay acciones.</p>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
               <thead>
                 <tr style={{ color: colors.muted, textAlign: "left" }}>
-                  {["Time", "Campaign / Entity", "Action", "Platform", "Status", "Reason"].map((h) => (
+                  {["Hora", "Campaña / Entidad", "Acción", "Plataforma", "Estado", "Motivo"].map((h) => (
                     <th key={h} style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>
                       {h}
                     </th>
@@ -567,10 +583,10 @@ export default function AMEPage() {
       )}
 
       {section(
-        "Gates status",
+        "Estado de las compuertas",
         gateKeys.length === 0 ? (
           <p style={{ color: colors.muted, margin: 0, fontSize: "13px" }}>
-            Gates state unavailable — showing reference.
+            Estado de compuertas no disponible: se muestra la referencia.
           </p>
         ) : (
           <div>
@@ -582,22 +598,22 @@ export default function AMEPage() {
       )}
 
       {section(
-        "Scheduler status",
+        "Estado del programador",
         !scheduler || Object.keys(scheduler).length === 0 ? (
           <p style={{ color: colors.muted, margin: 0, fontSize: "13px" }}>
-            Scheduler state not available.
+            Estado del programador no disponible.
           </p>
         ) : (
           <div style={{ fontSize: "13px", display: "grid", gap: "10px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ color: colors.muted }}>Enabled</span>
+              <span style={{ color: colors.muted }}>Activado</span>
               <Chip
-                label={scheduler.enabled ? "YES" : "NO"}
+                label={scheduler.enabled ? "SÍ" : "NO"}
                 tone={scheduler.enabled ? "green" : "gray"}
               />
             </div>
             <div>
-              <span style={{ color: colors.muted }}>Source:</span> {String(scheduler.source ?? "—")}
+              <span style={{ color: colors.muted }}>Origen:</span> {String(scheduler.source ?? "—")}
             </div>
             {Object.entries(scheduler)
               .filter(([k]) => k !== "enabled" && k !== "source")
@@ -612,15 +628,15 @@ export default function AMEPage() {
       )}
 
       {section(
-        "Recent runs table",
+        "Ejecuciones recientes",
         runsDisplay.length === 0 ? (
-          <p style={{ color: colors.muted, margin: 0, fontSize: "13px" }}>No run history available.</p>
+          <p style={{ color: colors.muted, margin: 0, fontSize: "13px" }}>No hay historial de ejecuciones.</p>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "12px" }}>
               <thead>
                 <tr style={{ color: colors.muted, textAlign: "left" }}>
-                  {["Run ID", "Time", "Mode", "Result", "Phases", "Actions"].map((h) => (
+                  {["ID de ejecución", "Hora", "Modo", "Resultado", "Fases", "Acciones"].map((h) => (
                     <th key={h} style={{ padding: "8px", borderBottom: `1px solid ${colors.border}` }}>
                       {h}
                     </th>
