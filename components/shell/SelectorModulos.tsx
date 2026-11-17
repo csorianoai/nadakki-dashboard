@@ -36,19 +36,20 @@ export function SelectorModulos({ modulos, actual }: { modulos: ModuloConfig[]; 
   }, [abierto]);
 
   return (
-    <div ref={raiz} className="relative" data-testid="selector-modulos">
+    <div ref={raiz} className="relative shrink-0" data-testid="selector-modulos">
       <button
         ref={boton}
         type="button"
         aria-expanded={abierto}
         aria-controls="selector-modulos-lista"
         aria-haspopup="true"
+        aria-label="Módulos"
         onClick={() => setAbierto((a) => !a)}
         className={`${CLASES.boton} ${abierto ? CLASES.botonActivo : ""}`}
       >
         <LayoutGrid aria-hidden className="h-4 w-4" />
         <span className="hidden sm:inline">Módulos</span>
-        <ChevronDown aria-hidden className="h-3.5 w-3.5" />
+        <ChevronDown aria-hidden className="hidden h-3.5 w-3.5 sm:block" />
       </button>
       {abierto ? (
         <ul id="selector-modulos-lista" data-testid="selector-modulos-lista" className={CLASES.desplegable}>

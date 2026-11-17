@@ -24,7 +24,7 @@ it("estructura aprobada: cuatro grupos, en orden, sin «Próximamente» ni Finan
     ["Mi día", "Bandeja del broker"],
     ["Contactos", "Propietarios", "Conversaciones", "Propiedades"],
     ["Operaciones", "Documentos"],
-    ["Marketing", "Mercado", "Resultados", "Career Director", "Alta", "Agente web", "Academia"],
+    ["Marketing", "Mercado", "Inteligencia de propiedad", "Resultados", "Career Director", "Alta", "Agente web", "Academia"],
   ]);
   const all = REALTOR_MENU.flatMap((g) => g.items);
   expect(all.some((i) => /finanzas|crm|mi oficina/i.test(i.label))).toBe(false);
@@ -33,6 +33,7 @@ it("estructura aprobada: cuatro grupos, en orden, sin «Próximamente» ni Finan
   expect(byId["clientes"].href).toBe("/realtor/clientes");
   expect(byId["marketing-ai"].href).toBe("/realtor/marketing-ai");
   expect(byId["demand-radar"].href).toBe("/realtor/demand-radar");
+  expect(byId["property-intel"].href).toBe("/realtor/property-intel");
   expect(byId["resultados"].href).toBe("/realtor/resultados");
   expect(byId["conversaciones"].href).toBeUndefined();
   expect(byId["career-director"].href).toBe("/realtor/career-director");
@@ -73,7 +74,7 @@ it("todas las rutas actuales siguen resolviendo: cada page.tsx está en el menú
   for (const r of OFF_MENU_ROUTES) expect(r.reason.length).toBeGreaterThan(5);
   for (const must of ["/realtor", "/realtor/mi-dia", "/realtor/clientes", "/realtor/propietarios", "/realtor/propiedades", "/realtor/marketing-ai",
     "/realtor/demand-radar", "/realtor/operaciones", "/realtor/documentos", "/realtor/smart-calendar", "/realtor/career-director", "/realtor/alta",
-    "/realtor/agente-web", "/realtor/resultados"]) expect(routes).toContain(must);
+    "/realtor/agente-web", "/realtor/resultados", "/realtor/property-intel"]) expect(routes).toContain(must);
 });
 
 it("acceso: expone los roles sin cambiar el estado; sin roles legibles, vacío", async () => {

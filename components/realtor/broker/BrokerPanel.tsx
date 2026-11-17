@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
-import { leerItem, leerItems, leerMesa, leerResumen, type Leida } from "@/lib/realtor/broker/client";
+import { decidir, leerItem, leerItems, leerMesa, leerResumen, type Decision, type Leida, type MotivoFallo } from "@/lib/realtor/broker/client";
 import { AGENT_LABEL, BROKERAGE_LABEL, COPY, KIND_LABEL, STATUS_LABEL, type Lang } from "@/lib/realtor/broker/copy";
 import { DEMO_DESK, DEMO_ITEMS, DEMO_SUMMARY } from "@/lib/realtor/broker/demo";
 import { AGENT_STATUSES, ITEM_KINDS, ITEM_STATUSES, type Desk, type DeskItem, type ItemKind, type ItemStatus, type Summary } from "@/lib/realtor/broker/types";
@@ -9,6 +9,8 @@ import { BROKER_ROLE } from "@/lib/realtor/menu";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
+import { QaDesk } from "./QaDesk";
+import { qaEsRevisor } from "./qa-client";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const H2: CSSProperties = { margin: "0 0 14px", fontFamily: FONT_DISPLAY, fontSize: 24 };
@@ -20,13 +22,30 @@ const fecha = (iso: string | null | undefined, lang: Lang) => {
   return d && !Number.isNaN(d.getTime()) ? d.toLocaleDateString(lang === "es" ? "es" : "en", { timeZone: "UTC" }) : "—";
 };
 
-/** Fail-closed: solo con interruptor, 200 de /acceso y el rol broker_supervisor se monta la bandeja (y se pide algo al backend). */
+/**
+ * Fail-closed: solo con interruptor y 200 de /acceso. broker_supervisor -> bandeja legal de siempre. Si no, el panel
+ * QA solo con qa_reviewer=true de /acceso (regla del servidor; no es un rol); cualquier otra cosa -> sin-acceso.
+ */
 export function BrokerPanel() {
   const { state, roles, demoActive } = useRealtorAccessInfo();
   if (state !== "ok") return <RealtorNotice reason={state} />;
-  if (!roles.includes(BROKER_ROLE)) return <RealtorNotice reason="sin-acceso" />;
-  return <BrokerDesk demoOk={demoActive} />;
+  if (roles.includes(BROKER_ROLE)) return <BrokerDesk demoOk={demoActive} />;
+  return <QaOSinAcceso />;
 }
+
+function QaOSinAcceso() {
+  const [qa, setQa] = useState<boolean | null>(null);
+  useEffect(() => {
+    let vivo = true;
+    qaEsRevisor().then((r) => { if (vivo) setQa(r); });
+    return () => { vivo = false; };
+  }, []);
+  if (qa === null) return <RealtorNotice reason="comprobando" />;
+  return qa ? <QaDesk /> : <RealtorNotice reason="sin-acceso" />;
+}
+
+const AVISO_ID = { razon: "decision-reason-required", conflicto: "decision-conflict", prohibido: "decision-forbidden", invalido: "decision-invalid", "no-existe": "decision-error", error: "decision-error" } as const;
+const AVISO_TXT = { razon: "reasonRequired", conflicto: "conflict", prohibido: "forbidden", invalido: "invalid", "no-existe": "decideError", error: "decideError" } as const;
 
 type Carga = { fase: "cargando" } | { fase: "listo"; mesa: Leida<Desk>; resumen: Leida<Summary> };
 
@@ -61,8 +80,27 @@ function BrokerDesk({ demoOk }: { demoOk: boolean }) {
 
   useEffect(() => { setLista("cargando"); void cargarItems(); }, [cargarItems]);
 
+  const [razon, setRazon] = useState("");
+  const [aviso, setAviso] = useState<"razon" | MotivoFallo | null>(null);
+  const [enviando, setEnviando] = useState(false);
+
+  const decidirItem = async (id: string, d: Decision) => {
+    if (!razon.trim()) { setAviso("razon"); return; }
+    setEnviando(true);
+    setAviso(null);
+    const r = await decidir(id, d, razon);
+    setEnviando(false);
+    if (r.estado !== "ok") { setAviso(r.motivo); return; }
+    const nuevo = r.datos;
+    setItems((prev) => prev.map((i) => (i.id === id ? nuevo : i)));
+    setAbierto((a) => (a && a.id === id ? { id, item: { estado: "ok", datos: nuevo } } : a));
+    setRazon("");
+  };
+
   const abrir = async (id: string) => {
     setAbierto({ id, item: null });
+    setRazon("");
+    setAviso(null);
     const muestra = demo ? DEMO_ITEMS.find((i) => i.id === id) : undefined;
     if (muestra) {
       setAbierto({ id, item: { estado: "ok", datos: muestra } });
@@ -84,7 +122,7 @@ function BrokerDesk({ demoOk }: { demoOk: boolean }) {
 
   return (
     <section data-testid="broker-panel" style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
         <div>
           <h1 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, lineHeight: 1.15 }}>{t.title}</h1>
           <p style={{ margin: "14px 0 0", maxWidth: 780, fontSize: 16, lineHeight: 1.45, color: RT.muted }}>{t.intro}</p>
@@ -190,6 +228,24 @@ function BrokerDesk({ demoOk }: { demoOk: boolean }) {
                   <dt>{t.reason}</dt><dd style={{ margin: 0 }}>{abierto.item.datos.decision_reason || "—"}</dd>
                 </dl>
               )}
+              {!demo && abierto.item?.estado === "ok" && abierto.item.datos.status === "pending" ? (
+                <div data-testid="decision-box" style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <label style={{ fontSize: 13, display: "flex", flexDirection: "column", gap: 6 }}>{t.decisionReason}
+                    <textarea data-testid="decision-reason" rows={3} value={razon} disabled={enviando} maxLength={500}
+                      onChange={(e) => { setRazon(e.target.value); if (aviso === "razon") setAviso(null); }}
+                      style={{ borderRadius: 8, border: `1px solid ${RT.lineStrong}`, padding: 10, fontFamily: "inherit" }} />
+                  </label>
+                  {aviso ? (
+                    <p role="alert" data-testid={AVISO_ID[aviso]} style={{ margin: 0, fontSize: 13 }}>{t[AVISO_TXT[aviso]]}</p>
+                  ) : null}
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <button type="button" data-testid="decision-approve" disabled={enviando} onClick={() => void decidirItem(abierto.id, "approved")}
+                      style={{ minHeight: 40, padding: "0 16px", borderRadius: 8, border: `1px solid ${RT.ink}`, background: RT.ink, color: RT.white, cursor: "pointer", fontFamily: "inherit", fontWeight: 700 }}>{enviando ? t.sending : t.approve}</button>
+                    <button type="button" data-testid="decision-reject" disabled={enviando} onClick={() => void decidirItem(abierto.id, "rejected")}
+                      style={{ minHeight: 40, padding: "0 16px", borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, cursor: "pointer", fontFamily: "inherit", fontWeight: 700 }}>{t.reject}</button>
+                  </div>
+                </div>
+              ) : null}
               <button type="button" data-testid="detail-close" onClick={() => setAbierto(null)}
                 style={{ marginTop: 14, minHeight: 36, padding: "0 14px", borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, cursor: "pointer", fontFamily: "inherit", fontWeight: 700 }}>{t.close}</button>
             </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { COPY, type CareerCopy, type Lang } from "@/lib/realtor/career-director/copy";
 import { fetchCareer, type CareerSummary } from "@/lib/realtor/career-director/api";
@@ -22,8 +23,9 @@ function Row({ k, v, testid }: { k: string; v: string; testid?: string }) {
 
 function NoDisponible({ t, id }: { t: CareerCopy; id: string }) {
   return (
-    <p data-testid={`no-disponible-${id}`} style={{ margin: 0, fontSize: 13, color: RT.muted }}>
-      <strong>{t.unavailable}</strong> · {t.unavailableHint}
+    <p data-testid={`no-disponible-${id}`} data-quality="NO_DISPONIBLE" style={{ margin: 0, fontSize: 14, color: RT.muted }}>
+      <strong>{t.unavailable}</strong> · {t.unavailableHint}{" "}
+      <Link href="/realtor/operaciones" style={{ color: RT.teal, fontWeight: 700 }}>{t.unavailableCta}</Link>
     </p>
   );
 }
@@ -65,7 +67,7 @@ function DemoCards({ t, lang }: { t: CareerCopy; lang: Lang }) {
         {sinFuente.map((m) => (
           <div key={m.id} style={{ fontSize: 14 }}>
             <div style={{ color: RT.navMuted }}>{metric(m.id).label[lang]}</div>
-            <p data-testid={`no-disponible-${m.id}`} style={{ margin: "2px 0 0", fontSize: 13 }}><strong>{t.unavailable}</strong> · {t.unavailableHint}</p>
+            <p data-testid={`no-disponible-${m.id}`} data-quality="NO_DISPONIBLE" style={{ margin: "2px 0 0", fontSize: 14 }}><strong>{t.unavailable}</strong> · {t.unavailableHint}{" "}<Link href="/realtor/operaciones" style={{ color: RT.cyan, fontWeight: 700 }}>{t.unavailableCta}</Link></p>
           </div>
         ))}
       </article>

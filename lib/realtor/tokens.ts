@@ -6,6 +6,8 @@ export const RT = {
   muted: "#4A5A68",
   line: "#DCE2E8",
   lineStrong: "#B8C4CE",
+  /** Borde de campos y botones secundarios: 4.36:1 sobre white y 3.99:1 sobre page (WCAG 1.4.11 pide 3:1; lineStrong da 1.78/1.62). */
+  control: "#6B7B89",
   page: "#F3F5F7",
   white: "#FFFFFF",
   teal: "#0B6E78",

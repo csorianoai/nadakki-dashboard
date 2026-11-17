@@ -6,6 +6,7 @@ import { ProtectedRoute } from "@/components/forge/auth/ProtectedRoute";
 import { isAutosConsumerPublicPath, isDealerChromePath } from "@/lib/autos-portal/routes";
 import { ContableChrome } from "@/components/dealer/ContableChrome";
 import { DealerSuiteGate, isDealerReachableSuitePath } from "@/components/dealer/DealerSuiteGate";
+import { MarcoRealtor } from "@/components/nav/MarcoRealtor";
 import { MarcoSuite } from "@/components/nav/MarcoSuite";
 import { InicioSuite } from "@/components/shell/InicioSuite";
 import { ModuleShell } from "@/components/shell/ModuleShell";
@@ -77,7 +78,7 @@ export default function AppGate({ children }: { children: React.ReactNode }) {
   // Calendar), que pinta app/realtor/layout.tsx. Dentro del GlobalForgeAppShell se apilaba sobre el
   // menú genérico de la Suite (decisión de César, 2026-10-12, tarea RE-SHELL).
   if (pathname === "/realtor" || pathname.startsWith("/realtor/")) {
-    return <ProtectedRoute><MarcoSuite>{children}</MarcoSuite></ProtectedRoute>;
+    return <ProtectedRoute><MarcoRealtor>{children}</MarcoRealtor></ProtectedRoute>;
   }
 
   // Armazón común de módulos (PR 6a): Marketing, Legal, Proyectos, Administración, Crédito (Credit Hub, PS-9-CARCASAS-1) y Concesionarios

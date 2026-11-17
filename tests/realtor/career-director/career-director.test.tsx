@@ -30,7 +30,11 @@ describe("Career Director", () => {
     expect(screen.getByTestId("license-state")).toHaveTextContent("Por vencer");
     expect(screen.getByTestId("license-days")).toHaveTextContent("Faltan 48 días");
     expect(screen.getAllByTestId("goal")).toHaveLength(DEMO_GOALS.length);
-    METRICS.filter((m) => !m.source).forEach((m) => expect(screen.getByTestId(`no-disponible-${m.id}`)).toHaveTextContent("NO_DISPONIBLE"));
+    METRICS.filter((m) => !m.source).forEach((m) => {
+      const el = screen.getByTestId(`no-disponible-${m.id}`);
+      expect(el).toHaveAttribute("data-quality", "NO_DISPONIBLE");
+      expect(el).toHaveTextContent("Sin datos todavía");
+    });
     METRICS.filter((m) => m.source).forEach((m) => expect(screen.queryByTestId(`no-disponible-${m.id}`)).toBeNull());
   });
 

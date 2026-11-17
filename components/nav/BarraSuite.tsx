@@ -58,8 +58,18 @@ function useHistorial(pathname: string | null) {
   return estado;
 }
 
+const FOCO = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400";
 const BOTON =
-  "inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-amber-400 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent";
+  `inline-flex h-7 shrink-0 items-center gap-1.5 rounded-md px-2 text-xs font-medium text-zinc-300 hover:bg-zinc-800 hover:text-white ${FOCO} disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent`;
+/** «Inicio»: icono desde sm y texto desde lg (como «Nadakki»). Por debajo de sm queda el logotipo, que lleva al mismo Inicio: medido,
+ * a 390 px la última miga quedaba en 2 px y a 768 px en 8 px visibles. */
+const BOTON_INICIO = `${BOTON.replace("inline-flex", "hidden sm:inline-flex").replace("px-2", "w-7 justify-center px-0")} lg:w-auto lg:px-2`;
+/**
+ * Atrás/Adelante: borde zinc-500 (#71717a) sobre la barra zinc-950 (#09090b) ≈ 4,2:1 (WCAG 1.4.11 pide ≥3:1). Deshabilitado:
+ * borde discontinuo y atenuado, distinto del activo sin depender solo del color. Solo desde md: a 390 px, con el mínimo de
+ * 44 px por botón de app/globals.css, no caben junto a las acciones (en móvil queda el gesto «atrás» del sistema).
+ */
+const BOTON_HISTORIAL = `${BOTON.replace("inline-flex", "hidden md:inline-flex").replace("px-2", "w-7 justify-center px-0")} border border-zinc-500 disabled:border-dashed disabled:border-zinc-700`;
 
 export type BarraSuiteProps = {
   /** Antes del logotipo (botón del menú en móvil). */
@@ -74,6 +84,9 @@ export type BarraSuiteProps = {
  * Barra fija de la Suite, encima de TODAS las carcasas (Suite, Credit Hub, Dealer OS, Realtor OS, Cockpit,
  * Contabilidad, Crédito): logotipo, «Inicio» y la primera miga llevan al aterrizaje del rol (login), Atrás y Adelante usan el
  * historial del navegador y las migas muestran Inicio › Módulo › Sección › Pantalla con enlace en cada nivel.
+ * Estrecho (ROP-UX-NAV-MOVIL-BARRA): por debajo de sm, el logotipo sin «Inicio»; por debajo de lg, solo la última miga y sin los
+ * textos «Nadakki» e «Inicio». Los controles no encogen (mínimo de 44 px de app/globals.css);
+ * las migas son lo único que cede ancho y van centradas en el alto de la barra.
  */
 export function BarraSuite({ antes, despues, derecha }: BarraSuiteProps = {}) {
   const pathname = usePathname();
@@ -85,36 +98,37 @@ export function BarraSuite({ antes, despues, derecha }: BarraSuiteProps = {}) {
       aria-label="Barra de la Suite"
       data-testid="barra-suite"
       style={{ height: ALTO_BARRA_SUITE }}
-      className="relative z-[60] flex shrink-0 items-center gap-1 border-b border-zinc-800 bg-zinc-950 px-2 text-zinc-100 sm:px-3"
+      className="relative z-[60] flex w-full min-w-0 max-w-full shrink-0 items-center gap-0.5 border-b border-zinc-800 bg-zinc-950 px-2 text-zinc-100 sm:gap-1 sm:px-3"
     >
       {antes}
-      <Link href={inicio} data-testid="barra-suite-logo" aria-label="Nadakki: ir a mi Inicio" className="mr-1 inline-flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-zinc-800">
+      <Link href={inicio} data-testid="barra-suite-logo" aria-label="Nadakki: ir a mi Inicio" className={`inline-flex shrink-0 items-center gap-2 rounded-md px-1 py-1 hover:bg-zinc-800 sm:mr-1 sm:px-1.5 ${FOCO}`}>
         <span aria-hidden className="grid h-6 w-6 place-items-center rounded bg-amber-500 text-[13px] font-bold text-zinc-950">N</span>
-        <span className="hidden text-sm font-semibold tracking-tight sm:inline">Nadakki</span>
+        <span className="hidden text-sm font-semibold tracking-tight lg:inline">Nadakki</span>
       </Link>
-      <Link href={inicio} data-testid="barra-suite-inicio" className={BOTON}>
+      <Link href={inicio} data-testid="barra-suite-inicio" aria-label="Inicio" className={BOTON_INICIO}>
         <Home aria-hidden className="h-4 w-4" />
-        <span>Inicio</span>
+        <span className="hidden lg:inline">Inicio</span>
       </Link>
-      <button type="button" data-testid="barra-suite-atras" aria-label="Atrás" title="Atrás" disabled={!atras} onClick={() => window.history.back()} className={BOTON}>
+      <button type="button" data-testid="barra-suite-atras" aria-label="Atrás" title="Atrás" disabled={!atras} onClick={() => window.history.back()} className={BOTON_HISTORIAL}>
         <ArrowLeft aria-hidden className="h-4 w-4" />
       </button>
-      <button type="button" data-testid="barra-suite-adelante" aria-label="Adelante" title="Adelante" disabled={!adelante} onClick={() => window.history.forward()} className={BOTON}>
+      <button type="button" data-testid="barra-suite-adelante" aria-label="Adelante" title="Adelante" disabled={!adelante} onClick={() => window.history.forward()} className={BOTON_HISTORIAL}>
         <ArrowRight aria-hidden className="h-4 w-4" />
       </button>
       {despues}
-      <ol aria-label="Estás en" data-testid="barra-suite-migas" className="ml-2 flex min-w-0 flex-1 items-center gap-1 overflow-hidden text-xs text-zinc-400">
+      <ol aria-label="Estás en" data-testid="barra-suite-migas" className="ml-1 flex min-w-0 flex-1 items-center gap-1 self-stretch overflow-hidden text-xs text-zinc-400 sm:ml-2">
         {migas.map((m, i) => {
           const ultima = i === migas.length - 1;
           return (
-            <li key={`${m.href}-${i}`} className={`flex min-w-0 items-center gap-1 ${!ultima && i > 0 ? "hidden md:flex" : ""}`}>
-              {i > 0 ? <ChevronRight aria-hidden className="h-3.5 w-3.5 shrink-0 text-zinc-600" /> : null}
+            <li key={`${m.href}-${i}`} className={`h-full min-w-0 items-center gap-1 ${ultima ? "flex" : "hidden lg:flex"}`}>
+              {i > 0 ? <ChevronRight aria-hidden className={`h-3.5 w-3.5 shrink-0 text-zinc-600 ${ultima ? "hidden lg:block" : ""}`} /> : null}
               <Link
                 href={i === 0 ? inicio : m.href}
                 aria-current={ultima ? "page" : undefined}
-                className={`truncate rounded px-1 py-0.5 hover:bg-zinc-800 hover:text-white ${ultima ? "font-medium text-zinc-100" : ""}`}
+                className={`flex min-w-0 items-center rounded px-1 py-0.5 hover:bg-zinc-800 hover:text-white ${FOCO} ${ultima ? "font-medium text-zinc-100" : ""}`}
               >
-                {m.label}
+                {/* El enlace mide 44 px (mínimo de app/globals.css) en una barra de 40: centra el texto en vez de dejarlo arriba. */}
+                <span className="truncate leading-5">{m.label}</span>
               </Link>
             </li>
           );

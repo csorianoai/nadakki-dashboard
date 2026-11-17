@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { COPY, KIND_LABEL, STAGE_LABEL, type Lang } from "@/lib/realtor/operaciones/copy";
 import { DEMO_FINANCE, DEMO_OPERATIONS } from "@/lib/realtor/operaciones/demo";
 import { fetchOperations } from "@/lib/realtor/operaciones/api";
@@ -8,7 +9,9 @@ import { applyFilters, countByStage, inStage, opportunities, unstaged } from "@/
 import { KINDS, NO_FILTERS, STAGES, type OpFilters, type Operation, type StageId } from "@/lib/realtor/operaciones/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
 import { RealtorNotice } from "../RealtorNotice";
+import { OperacionGestion } from "./OperacionGestion";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
+import { DosColumnas } from "@/components/realtor/layout/DosColumnas";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const SELECT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
@@ -33,12 +36,22 @@ function FinCard({ id, label, value, hint }: { id: string; label: string; value:
   );
 }
 
+// useSearchParams exige Suspense en el App Router; vive aquí para que page.tsx no cambie.
 export function OperacionesPanel() {
+  return (
+    <Suspense fallback={null}>
+      <OperacionesContenido />
+    </Suspense>
+  );
+}
+
+function OperacionesContenido() {
   const { state: access, demoActive } = useRealtorAccessInfo();
   const [lang, setLang] = useState<Lang>("es");
   const [filters, setFilters] = useState<OpFilters>(NO_FILTERS);
   const [stage, setStage] = useState<StageId>("propiedad");
   const demo = demoActive;
+  const query = useSearchParams();
   const t = COPY[lang];
 
   // Fuera de DEMO se lee C-RE-OLA3; sin datos (404, 503, lista vacía) queda «Sin datos todavía», sin cifras inventadas.
@@ -60,7 +73,7 @@ export function OperacionesPanel() {
 
   return (
     <section data-testid="operaciones-panel" style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
         <div>
           <h1 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, lineHeight: 1.15 }}>{t.title}</h1>
           <p style={{ margin: "14px 0 0", maxWidth: 820, fontSize: 16, lineHeight: 1.45, color: RT.muted }}>{t.intro}</p>
@@ -78,6 +91,8 @@ export function OperacionesPanel() {
       {demo ? (
         <p role="note" data-testid="demo-banner" style={{ margin: 0, background: RT.demoBg, color: RT.demoText, borderRadius: 8, padding: "8px 12px", fontSize: 13, fontWeight: 600 }}>{t.demo}</p>
       ) : null}
+
+      {!demo ? <OperacionGestion ops={real} initialPropertyId={query?.get("property_id") ?? ""} initialContactId={query?.get("contact_id") ?? ""} /> : null}
 
       {ops.length === 0 ? (
         <div data-testid="operaciones-empty" style={CARD}>
@@ -106,7 +121,7 @@ export function OperacionesPanel() {
               </li>
             ))}
           </ol>
-          <div style={{ display: "grid", gap: 20, gridTemplateColumns: "minmax(320px, 3fr) minmax(280px, 2fr)", alignItems: "start" }}>
+          <DosColumnas testId="operaciones-columnas" columnas={[{ peso: 3, minimo: 320 }, { peso: 2, minimo: 280 }]}>
             <div data-testid="stage-panel" style={CARD}>
               <h2 style={{ margin: "0 0 14px", fontFamily: FONT_DISPLAY, fontSize: 22 }}>{STAGE_LABEL[lang][stage]} · {t.listTitle}</h2>
               {inCurrent.length === 0 ? <p data-testid="stage-empty" style={{ margin: 0, color: RT.muted }}>{t.noneInStage}</p> : (
@@ -132,7 +147,7 @@ export function OperacionesPanel() {
               </ul>
             </div>
             </div>
-          </div>
+          </DosColumnas>
           {demo ? (
           <section data-testid="fin-section" aria-label={t.finTitle} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
             <h2 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 24 }}>{t.finTitle}</h2>
