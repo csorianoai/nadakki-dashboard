@@ -5,7 +5,7 @@ import { CoreError } from '@/core/client';
 import type { Lang, Manifest } from '@/core/types';
 import { BlockError } from '@/blocks/model';
 import { LegalError, withLegal } from './legal';
-import { getTemplate } from '@/templates';
+import { getTemplate, type EntityLists } from '@/templates';
 
 export type Route = Manifest['routes'][number];
 export type Resolved = { lang: Lang; route: Route } | null;
@@ -47,6 +47,31 @@ async function readData(c: CoreClient, id: string, r: Route): Promise<unknown> {
   }
 }
 
+export const LIST_BLOCK = 'baylara.entity_list';
+export const LIST_MAX = 60;
+const LIST_DEFAULT = 12;
+
+/** Lee del core (siempre con el site_id de la URL) las listas que piden los bloques de la pagina. Datos invalidos: se omiten y el bloque falla cerrado. */
+async function readLists(c: CoreClient, id: string, page: unknown): Promise<EntityLists> {
+  const out: EntityLists = {};
+  const body = (page as { body?: unknown })?.body;
+  if (!Array.isArray(body)) return out;
+  for (const b of body) {
+    if (!b || b.type !== LIST_BLOCK || typeof b.block_id !== 'string') continue;
+    const d = (b.data ?? {}) as { source?: unknown; limit?: unknown; featured_only?: unknown };
+    const limit = Number.isInteger(d.limit) && (d.limit as number) >= 1 && (d.limit as number) <= LIST_MAX ? (d.limit as number) : LIST_DEFAULT;
+    const q = { limit };
+    switch (d.source) {
+      case 'listings': out[b.block_id] = { source: 'listings', items: (await c.listListings(id, d.featured_only === true ? { ...q, featured: true } : q)).items }; break;
+      case 'developments': out[b.block_id] = { source: 'developments', items: (await c.listDevelopments(id, q)).items }; break;
+      case 'zones': out[b.block_id] = { source: 'zones', items: (await c.listZones(id, q)).items }; break;
+      case 'buildings': out[b.block_id] = { source: 'buildings', items: (await c.listBuildings(id, q)).items }; break;
+      default: break;
+    }
+  }
+  return out;
+}
+
 const CLOSED = new Set(['NOT_FOUND', 'VALIDATION_ERROR', 'SITE_UNPUBLISHED', 'HOST_NOT_FOUND']);
 
 export async function loadManifest(c: CoreClient, siteId: string): Promise<Manifest | null> {
@@ -68,7 +93,8 @@ export async function renderSite(c: CoreClient, siteId: string, segments: string
   if (!template) return { kind: 'error' };
   try {
     const data = await readData(c, siteId, hit.route);
-    return { kind: 'ok', manifest, ...hit, element: withLegal(manifest, hit.lang, template({ manifest, lang: hit.lang, route: hit.route, data })) };
+    const lists = hit.route.kind === 'page' ? await readLists(c, siteId, data) : undefined;
+    return { kind: 'ok', manifest, ...hit, element: withLegal(manifest, hit.lang, template({ manifest, lang: hit.lang, route: hit.route, data, lists })) };
   } catch (e) {
     if (e instanceof BlockError || e instanceof LegalError) return { kind: 'error' };
     if (e instanceof CoreError && CLOSED.has(e.code)) return { kind: 'not_found' };

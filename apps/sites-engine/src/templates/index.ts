@@ -5,7 +5,9 @@ import type { Manifest, Lang } from '@/core/types';
 import { minimalTemplate } from './minimal';
 import { baylaraTemplate } from './baylara';
 
-export interface RenderInput { manifest: Manifest; lang: Lang; route: { kind: string; key: string }; data: unknown }
+/** Listas pre-leidas del core para los bloques `baylara.entity_list` (clave: block_id). La plantilla es sincrona: no pide datos. */
+export type EntityLists = Record<string, { source: string; items: unknown[] }>;
+export interface RenderInput { manifest: Manifest; lang: Lang; route: { kind: string; key: string }; data: unknown; lists?: EntityLists }
 export type Template = (input: RenderInput) => ReactElement;
 
 const REGISTRY = new Map<string, Template>([['realestate-agent-v1@1', minimalTemplate], ['baylara@1', baylaraTemplate]]);

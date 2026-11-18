@@ -23,7 +23,7 @@ function ficha(kind: string, data: unknown, c: { lang: 'es' | 'en'; hosts: strin
 }
 
 export function makeBaylaraTemplate(hosts: () => string[]): Template {
-  return function baylaraTemplate({ manifest, lang, route, data }: RenderInput): ReactElement {
+  return function baylaraTemplate({ manifest, lang, route, data, lists }: RenderInput): ReactElement {
     const d = (data ?? {}) as Partial<PublicPage> & { title?: I18nText; name?: string | I18nText; media?: PublicMedia[]; photo?: PublicMedia | null };
     const blocks: Block[] = route.kind === 'page' ? validateBlocks(d.body ?? []).filter((b) => b.type !== PROFILE_TYPE) : [];
     const title = typeof d.name === 'string' ? d.name : tx(d.title ?? (d.name as I18nText | undefined), lang);
@@ -33,7 +33,7 @@ export function makeBaylaraTemplate(hosts: () => string[]): Template {
     return h(Shell, { manifest, lang, route: full },
       hero ? h(Media, { m: hero, lang, hosts: hosts(), priority: true }) : null,
       h('h1', null, title),
-      ...renderBlocks(blocks, { manifest, lang }),
+      ...renderBlocks(blocks, { manifest, lang, hosts: hosts(), lists }),
       ficha(route.kind, data, { lang, hosts: hosts() }));
   };
 }

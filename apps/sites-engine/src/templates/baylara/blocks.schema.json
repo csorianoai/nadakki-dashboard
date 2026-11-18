@@ -278,6 +278,36 @@
           }
         }
       }
+    },
+    "block_baylara_entity_list": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source"
+      ],
+      "description": "Listado de entidades del core (propiedades, desarrollos, zonas, edificios) como tarjetas con enlace a su ficha. Solo se enlazan las que tienen ruta en el manifiesto.",
+      "properties": {
+        "source": {
+          "enum": [
+            "listings",
+            "developments",
+            "zones",
+            "buildings"
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/i18n"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "featured_only": {
+          "type": "boolean",
+          "description": "solo source=listings"
+        }
+      }
     }
   }
 }

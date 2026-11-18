@@ -7,10 +7,12 @@ import type { Block, I18nText, Lang, Manifest } from '@/core/types';
 import { BlockError } from '@/blocks/model';
 import { pathFor } from '@/render/site';
 import { LeadForm, type LeadFormData } from './lead-form';
+import { entityList } from './lists';
+import type { EntityLists } from '../index';
 import schema from './blocks.schema.json';
 
-export interface BlockCtx { manifest: Manifest; lang: Lang }
-type Render = (data: Record<string, unknown>, ctx: BlockCtx) => ReactElement;
+export interface BlockCtx { manifest: Manifest; lang: Lang; hosts?: string[]; lists?: EntityLists }
+type Render = (data: Record<string, unknown>, ctx: BlockCtx, blockId: string) => ReactElement;
 
 const tx = (t: I18nText | undefined, lang: Lang): string => (t ? (lang === 'en' ? t.en ?? t.es : t.es) : '');
 
@@ -61,6 +63,10 @@ const REGISTRY: Record<string, { def: string; render: Render }> = {
       return h(LeadForm, { data: d as unknown as LeadFormData, lang: ctx.lang, privacyHref });
     },
   },
+  'baylara.entity_list': {
+    def: 'block_baylara_entity_list',
+    render: (d, ctx, id) => entityList(d as unknown as Parameters<typeof entityList>[0], { manifest: ctx.manifest, lang: ctx.lang, hosts: ctx.hosts ?? [], list: ctx.lists?.[id] }),
+  },
 };
 
 export const BLOCK_TYPES = Object.keys(REGISTRY);
@@ -75,7 +81,7 @@ export function renderBlock(b: Block, ctx: BlockCtx): ReactElement {
   if (!entry) throw new BlockError('shape');
   const data = b.data ?? (b.i18n?.text ? { text: tx(b.i18n.text, ctx.lang) } : {}); // 'text' admite el formato i18n heredado
   if (!validators.get(b.type)!(data)) throw new BlockError('shape');
-  return h('div', { key: b.block_id, 'data-block': b.type }, entry.render(data as Record<string, unknown>, ctx));
+  return h('div', { key: b.block_id, 'data-block': b.type }, entry.render(data as Record<string, unknown>, ctx, b.block_id));
 }
 
 /** Renderiza TODOS o ninguno: la primera falla aborta antes de devolver nada. */
