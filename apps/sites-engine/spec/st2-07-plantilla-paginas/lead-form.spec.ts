@@ -4,7 +4,7 @@ import Ajv2020 from 'ajv/dist/2020';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import { createCoreClient } from '@/core/client';
-import { SITE_A, SITE_B, createFakeCore } from '@/core/fixtures';
+import { SITE_A, createFakeCore } from '@/core/fixtures';
 import { handleLead } from '@/leads/handler';
 import { TEXT_VERSIONS } from '@/leads/consent';
 import { renderSite } from '@/render/site';
@@ -60,8 +60,6 @@ describe('ST2-07 LeadForm (baylara.lead_form)', () => {
     const { signFormCookie, FORM_COOKIE } = await import('@/leads/antispam');
     const now = Date.now();
     const body = new URLSearchParams({ intent: 'buyer', lang: 'es', form_rendered_at: '', company_website: '', name: 'Ana Synth', email: 'ana@synth.invalid', consent: 'on' }).toString();
-    const store = new Map<string, unknown>();
-    void store;
     const outbox = { enqueue: async () => ({ id: '1', key: 'k', status: 'pending' }), markSent: async () => {}, release: async () => {} } as never;
     const res = await handleLead(new Request('https://www.synth-realty.example/api/lead', { method: 'POST', body, headers: { 'content-type': 'application/x-www-form-urlencoded', host: 'www.synth-realty.example', cookie: `${FORM_COOKIE}=${signFormCookie('s3cret', SITE_A.id, now - 10_000)}` } }), SITE_A.id,
       { fetch, baseUrl: 'https://core.test/api/v1/sites', secret: 's3cret', outbox, now: () => now });
