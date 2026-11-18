@@ -29,7 +29,8 @@ const RAIZ = path.resolve(__dirname, "..", "..");
  * 58: autorizado por César el 17-nov-2026 («autorizado a subir el tope de páginas») para /mi-web/contactos
  * (ST5A-06, Nadakki Sites), pendiente-revision como las otras 7 páginas de Mi web; baja cuando Mi web entre al menú.
  */
-const MAXIMO_PENDIENTES = 58;
+// 50 (18-nov-2026): las 8 páginas /mi-web dejan pendiente-revision al entrar «Mi web» en la barra de Realtor OS (dashboard#1279).
+const MAXIMO_PENDIENTES = 50;
 
 // ── Utilidades ────────────────────────────────────────────────────────────────────────────────────
 
