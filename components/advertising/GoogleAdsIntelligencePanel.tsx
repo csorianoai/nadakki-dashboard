@@ -2,11 +2,9 @@
 
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { ChevronDown, ChevronRight, Loader2, Sparkles } from "lucide-react";
-import { TenantLabel, hideUuids } from "@/components/ui/TenantLabel";
+import { useAuth } from "@/contexts/AuthContext";
 import { useTenant } from "@/contexts/TenantContext";
 import { apiFetch } from "@/lib/api/fetch-client";
-
-const FALLBACK_TENANT = "sf-rentals-nadaki-excursions";
 
 function unwrap(json: unknown): unknown {
   if (!json || typeof json !== "object") return json;
@@ -15,7 +13,7 @@ function unwrap(json: unknown): unknown {
   return json;
 }
 
-type ModuleRow = { id: string; title: string; status: string };
+type ModuleRow = { id: string; title: string; status: string; reason: string | null; deps: string[] };
 
 function normalizeModuleItem(x: unknown): ModuleRow {
   if (x && typeof x === "object") {
@@ -23,9 +21,12 @@ function normalizeModuleItem(x: unknown): ModuleRow {
     const id = String(r.id ?? r.module_id ?? r.code ?? "?").toLowerCase();
     const title = String(r.title ?? r.name ?? r.label ?? id.toUpperCase());
     const status = String(r.status ?? r.state ?? "unknown");
-    return { id, title, status };
+    const rs = r.blocked_reason ?? r.reason;
+    const reason = typeof rs === "string" && rs.trim() ? rs.trim() : null;
+    const deps = Array.isArray(r.dependencies) ? r.dependencies.map((d) => String(d).toLowerCase()) : [];
+    return { id, title, status, reason, deps };
   }
-  return { id: "?", title: "", status: "unknown" };
+  return { id: "?", title: "", status: "unknown", reason: null, deps: [] };
 }
 
 function extractModules(raw: unknown): ModuleRow[] {
@@ -61,54 +62,93 @@ function statusPillClass(s: string) {
 }
 
 function readinessFromModules(rows: ModuleRow[]) {
-  if (!rows.length) return { pct: null as number | null, label: "No module data" };
+  if (!rows.length) return { pct: null as number | null, label: "Sin datos de módulos" };
   const completed = rows.filter((r) => r.status.toLowerCase() === "completed").length;
   const ready = rows.filter((r) => r.status.toLowerCase() === "ready").length;
   const blocked = rows.filter((r) => r.status.toLowerCase() === "blocked").length;
   const pct = Math.round(((completed * 2 + ready) / (rows.length * 2)) * 100);
   return {
     pct,
-    label: `${completed} completed · ${ready} ready · ${blocked} blocked · ${rows.length} modules`,
+    label: `${completed} completados · ${ready} listos · ${blocked} bloqueados · ${rows.length} módulos`,
   };
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function statusText(s: string) {
+  const v = s.toLowerCase();
+  if (v === "completed") return "Completado";
+  if (v === "ready") return "Listo";
+  if (v === "blocked") return "Bloqueado";
+  if (v === "in_progress" || v === "running") return "En curso";
+  if (v === "not_ready") return "No listo";
+  return s.replace(/_/g, " ");
+}
+
+function blockedText(m: ModuleRow, rows: ModuleRow[]) {
+  const names = m.deps
+    .filter((d) => rows.find((r) => r.id === d && r.status.toLowerCase() !== "completed"))
+    .map((d) => rows.find((r) => r.id === d)!.title);
+  const parts: string[] = [];
+  if (names.length) parts.push(`Requiere completar: ${names.join(", ")}`);
+  if (m.reason) parts.push(m.reason);
+  return parts.length ? parts.join(" · ") : "Motivo no informado";
+}
+
+function trackingSentence(rows: ModuleRow[], fit: Record<string, unknown> | null): string | null {
+  const flag = fit && typeof fit.tracking_ready === "boolean" ? fit.tracking_ready : null;
+  const m13 = rows.find((r) => r.id === "m13" || /conversion tracking/i.test(r.title));
+  const ok = flag ?? (m13 ? ["completed", "ready"].includes(m13.status.toLowerCase()) : null);
+  if (ok === null) return null;
+  return ok
+    ? "Medición de conversiones: activa. Podemos leer tus conversiones de Google Analytics y Google Ads."
+    : "Medición de conversiones: pendiente. Aún no podemos medir tus conversiones; completa Conversion Tracking.";
 }
 
 export default function GoogleAdsIntelligencePanel() {
   const { tenantId } = useTenant();
-  const effectiveTenant = tenantId?.trim() || FALLBACK_TENANT;
+  const { tenantName } = useAuth();
+  const sessionTenant = tenantId?.trim() || "";
+  const name = tenantName?.trim();
+  const tenantShown = name && name !== "—" && !UUID_RE.test(name) ? name : sessionTenant.slice(0, 8);
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [modulesPayload, setModulesPayload] = useState<unknown>(null);
   const [fitPayload, setFitPayload] = useState<unknown>(null);
-  const [err, setErr] = useState<string | null>(null);
+  const [modErr, setModErr] = useState(false);
+  const [fitErr, setFitErr] = useState(false);
 
   const load = useCallback(async () => {
+    if (!sessionTenant) return;
     setLoading(true);
-    setErr(null);
-    try {
-      const headers = { Accept: "application/json", "X-Tenant-ID": effectiveTenant };
-      const [modRes, fitRes] = await Promise.all([
-        apiFetch("/api/v1/google-ads/modules/status", { cache: "no-store", headers }),
-        apiFetch("/api/v1/google-ads/fundamentals/evaluate-fit", {
-          method: "POST",
-          cache: "no-store",
-          headers: { ...headers, "Content-Type": "application/json" },
-          body: JSON.stringify({ tenant_id: effectiveTenant }),
-        }),
-      ]);
-      if (modRes.ok) setModulesPayload(await modRes.json());
-      else setModulesPayload({ error: `modules/status HTTP ${modRes.status}` });
-      if (fitRes.ok) setFitPayload(await fitRes.json());
-      else setFitPayload({ error: `evaluate-fit HTTP ${fitRes.status}` });
-    } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
-    } finally {
-      setLoading(false);
-    }
-  }, [effectiveTenant]);
+    const headers = { Accept: "application/json", "X-Tenant-ID": sessionTenant };
+    const call = async (url: string, init: RequestInit): Promise<{ ok: boolean; data: unknown }> => {
+      try {
+        const res = await apiFetch(url, { cache: "no-store", headers, ...init });
+        if (!res.ok) return { ok: false, data: null };
+        return { ok: true, data: await res.json() };
+      } catch {
+        return { ok: false, data: null };
+      }
+    };
+    const [mod, fit] = await Promise.all([
+      call("/api/v1/google-ads/modules/status", {}),
+      call("/api/v1/google-ads/fundamentals/evaluate-fit", {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: JSON.stringify({ tenant_id: sessionTenant }),
+      }),
+    ]);
+    setModulesPayload(mod.data);
+    setModErr(!mod.ok);
+    setFitPayload(fit.data);
+    setFitErr(!fit.ok);
+    setLoading(false);
+  }, [sessionTenant]);
 
   useEffect(() => {
-    if (open) void load();
-  }, [open, load]);
+    if (open && sessionTenant) void load();
+  }, [open, sessionTenant, load]);
 
   const moduleRows = useMemo(() => extractModules(modulesPayload), [modulesPayload]);
   const readiness = useMemo(() => readinessFromModules(moduleRows), [moduleRows]);
@@ -117,6 +157,7 @@ export default function GoogleAdsIntelligencePanel() {
     fitPayload && typeof fitPayload === "object" && !Array.isArray(fitPayload)
       ? (unwrap(fitPayload) as Record<string, unknown>)
       : null;
+  const tracking = trackingSentence(moduleRows, fitObj);
   const fitSummary =
     fitObj && typeof fitObj === "object"
       ? {
@@ -142,7 +183,7 @@ export default function GoogleAdsIntelligencePanel() {
           <div>
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Google Ads Intelligence</h2>
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              Module progress (M01–M15), evaluate-fit, readiness — live API
+              Progreso de módulos, aptitud y medición de conversiones
             </p>
           </div>
         </div>
@@ -154,98 +195,85 @@ export default function GoogleAdsIntelligencePanel() {
       </button>
       {open && (
         <div className="px-4 pb-4 space-y-4 border-t border-violet-200/50 dark:border-slate-700/50 pt-4">
-          <p className="text-xs text-slate-500 font-mono"><TenantLabel prefix="Tenant: " id={effectiveTenant} /></p>
-          {loading && (
-            <div className="flex items-center gap-2 text-slate-500 text-sm">
-              <Loader2 className="w-4 h-4 animate-spin" /> Loading intelligence…
-            </div>
-          )}
-          {err && <p className="text-sm text-rose-500">{err}</p>}
-          {!loading && (
+          {!sessionTenant ? (
+            <p className="text-sm text-slate-400">Inicia sesión para ver el estado</p>
+          ) : (
             <>
-              <div
-                className="rounded-lg border border-slate-700/50 p-3"
-                style={{ backgroundColor: "rgba(15,20,40,0.75)" }}
-              >
-                <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Quick readiness</p>
-                <div className="flex flex-wrap items-baseline gap-3">
-                  {readiness.pct != null && (
-                    <span className="text-2xl font-bold text-slate-100">{readiness.pct}%</span>
-                  )}
-                  <span className="text-sm text-slate-400">{readiness.label}</span>
-                </div>
-                {fitSummary && (fitSummary.score != null || fitSummary.status || fitSummary.headline) && (
-                  <div className="mt-3 pt-3 border-t border-slate-700/40 text-sm text-slate-300 space-y-1">
-                    {fitSummary.score != null && (
-                      <p>
-                        Evaluate-fit score:{" "}
-                        <strong className="text-violet-300">{fitSummary.score}</strong>
-                      </p>
-                    )}
-                    {fitSummary.eligible != null && (
-                      <p>
-                        Eligible:{" "}
-                        <strong className={fitSummary.eligible ? "text-emerald-400" : "text-amber-400"}>
-                          {fitSummary.eligible ? "yes" : "no"}
-                        </strong>
-                      </p>
-                    )}
-                    {fitSummary.status && <p className="text-slate-400">Status: {fitSummary.status}</p>}
-                    {fitSummary.headline && <p className="text-slate-400">{fitSummary.headline}</p>}
-                  </div>
-                )}
-              </div>
-
-              {moduleRows.length > 0 && (
-                <div>
-                  <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                    Modules (live)
-                  </h3>
-                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 max-h-64 overflow-y-auto pr-1">
-                    {moduleRows.map((m) => (
-                      <div
-                        key={m.id}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-slate-700/40 px-2 py-1.5 text-xs"
-                        style={{ backgroundColor: "rgba(15,20,40,0.6)" }}
-                      >
-                        <span className="font-mono text-slate-200 shrink-0">{m.id.toUpperCase()}</span>
-                        <span
-                          className={`px-2 py-0.5 rounded-full border text-[10px] font-medium capitalize ${statusPillClass(m.status)}`}
-                        >
-                          {m.status.replace(/_/g, " ")}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+              <p className="text-xs text-slate-500">Tenant: {tenantShown}</p>
+              {loading && (
+                <div className="flex items-center gap-2 text-slate-500 text-sm">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Cargando…
                 </div>
               )}
+              {!loading && (
+                <>
+                  {tracking && (
+                    <p className="text-sm text-slate-200 rounded-lg border border-violet-500/30 p-3" data-testid="tracking-status">
+                      {tracking}
+                    </p>
+                  )}
+                  <div className="rounded-lg border border-slate-700/50 p-3" style={{ backgroundColor: "rgba(15,20,40,0.75)" }}>
+                    <p className="text-xs text-slate-500 uppercase tracking-wider mb-1">Estado de módulos</p>
+                    {modErr ? (
+                      <p className="text-sm text-amber-400">No pudimos cargar esta parte</p>
+                    ) : (
+                      <div className="flex flex-wrap items-baseline gap-3">
+                        {readiness.pct != null && <span className="text-2xl font-bold text-slate-100">{readiness.pct}%</span>}
+                        <span className="text-sm text-slate-400">{readiness.label}</span>
+                      </div>
+                    )}
+                    {!fitErr && fitSummary && (fitSummary.score != null || fitSummary.status || fitSummary.headline) && (
+                      <div className="mt-3 pt-3 border-t border-slate-700/40 text-sm text-slate-300 space-y-1">
+                        {fitSummary.score != null && (
+                          <p>Puntaje de aptitud: <strong className="text-violet-300">{fitSummary.score}</strong></p>
+                        )}
+                        {fitSummary.eligible != null && (
+                          <p>
+                            Elegible:{" "}
+                            <strong className={fitSummary.eligible ? "text-emerald-400" : "text-amber-400"}>
+                              {fitSummary.eligible ? "sí" : "no"}
+                            </strong>
+                          </p>
+                        )}
+                        {fitSummary.headline && <p className="text-slate-400">{fitSummary.headline}</p>}
+                      </div>
+                    )}
+                    {fitErr && <p className="mt-3 text-sm text-amber-400">No pudimos cargar esta parte</p>}
+                  </div>
 
-              <div>
-                <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                  Raw: modules/status
-                </h3>
-                <pre className="text-xs bg-slate-900/80 text-slate-300 p-3 rounded-lg overflow-auto max-h-40 border border-slate-700/50">
-                  {JSON.stringify(modulesPayload, hideUuids, 2)}
-                </pre>
-              </div>
-              <div>
-                <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
-                  Raw: evaluate-fit
-                </h3>
-                <pre className="text-xs bg-slate-900/80 text-slate-300 p-3 rounded-lg overflow-auto max-h-40 border border-slate-700/50">
-                  {JSON.stringify(fitPayload, hideUuids, 2)}
-                </pre>
-              </div>
+                  {!modErr && moduleRows.length > 0 && (
+                    <ul className="grid gap-2 sm:grid-cols-2 max-h-80 overflow-y-auto pr-1">
+                      {moduleRows.map((m) => (
+                        <li
+                          key={m.id}
+                          className="rounded-lg border border-slate-700/40 px-2 py-1.5 text-xs"
+                          style={{ backgroundColor: "rgba(15,20,40,0.6)" }}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-slate-200">{m.title}</span>
+                            <span className={`px-2 py-0.5 rounded-full border text-[10px] font-medium ${statusPillClass(m.status)}`}>
+                              {statusText(m.status)}
+                            </span>
+                          </div>
+                          {m.status.toLowerCase() === "blocked" && (
+                            <p className="mt-1 text-slate-400">{blockedText(m, moduleRows)}</p>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => void load()}
+                disabled={loading}
+                className="text-sm px-3 py-1.5 rounded-lg bg-violet-600 text-white hover:bg-violet-500 disabled:opacity-50"
+              >
+                Actualizar
+              </button>
             </>
           )}
-          <button
-            type="button"
-            onClick={() => void load()}
-            disabled={loading}
-            className="text-sm px-3 py-1.5 rounded-lg bg-violet-600 text-white hover:bg-violet-500 disabled:opacity-50"
-          >
-            Refresh data
-          </button>
         </div>
       )}
     </section>
