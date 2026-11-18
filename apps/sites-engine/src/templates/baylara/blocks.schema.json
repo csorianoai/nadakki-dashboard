@@ -308,6 +308,97 @@
           "description": "solo source=listings"
         }
       }
+    },
+    "block_baylara_section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "eyebrow": {
+          "$ref": "#/$defs/i18n"
+        },
+        "title": {
+          "$ref": "#/$defs/i18n"
+        },
+        "paragraphs": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "$ref": "#/$defs/i18n"
+          }
+        }
+      }
+    },
+    "block_baylara_steps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "title",
+              "body"
+            ],
+            "properties": {
+              "title": {
+                "$ref": "#/$defs/i18n"
+              },
+              "body": {
+                "$ref": "#/$defs/i18n"
+              }
+            }
+          }
+        }
+      }
+    },
+    "block_baylara_stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "label"
+            ],
+            "properties": {
+              "value": {
+                "type": "string",
+                "maxLength": 60
+              },
+              "label": {
+                "$ref": "#/$defs/i18n"
+              },
+              "source": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "date": {
+                "type": "string",
+                "maxLength": 40
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

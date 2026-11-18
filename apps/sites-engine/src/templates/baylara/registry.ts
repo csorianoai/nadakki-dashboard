@@ -8,6 +8,7 @@ import { BlockError } from '@/blocks/model';
 import { pathFor } from '@/render/site';
 import { LeadForm, type LeadFormData } from './lead-form';
 import { entityList } from './lists';
+import { section, stats, steps } from './sections';
 import type { EntityLists } from '../index';
 import schema from './blocks.schema.json';
 
@@ -63,6 +64,9 @@ const REGISTRY: Record<string, { def: string; render: Render }> = {
       return h(LeadForm, { data: d as unknown as LeadFormData, lang: ctx.lang, privacyHref });
     },
   },
+  'baylara.section': { def: 'block_baylara_section', render: (d, ctx) => section(d as unknown as Parameters<typeof section>[0], ctx.lang) },
+  'baylara.steps': { def: 'block_baylara_steps', render: (d, ctx) => steps(d as unknown as Parameters<typeof steps>[0], ctx.lang) },
+  'baylara.stats': { def: 'block_baylara_stats', render: (d, ctx) => stats(d as unknown as Parameters<typeof stats>[0], ctx.lang) },
   'baylara.entity_list': {
     def: 'block_baylara_entity_list',
     render: (d, ctx, id) => entityList(d as unknown as Parameters<typeof entityList>[0], { manifest: ctx.manifest, lang: ctx.lang, hosts: ctx.hosts ?? [], list: ctx.lists?.[id] }),
