@@ -1,0 +1,29 @@
+{
+  "meta": {
+    "title": { "es": "Guía de edificios frente al agua", "en": "Waterfront building guide" },
+    "description": { "es": "Directorio de condominios frente al agua con cuotas, reglas de alquiler y mascotas, seguridad estructural y ventas recientes, cada dato con su fuente.", "en": "Directory of waterfront condos with fees, rental and pet rules, structural safety and recent sales, each fact with its source." }
+  },
+  "eyebrow": { "es": "Guía de edificios", "en": "Building guide" },
+  "title": { "es": "Edificios frente al agua, con sus reglas y sus números", "en": "Waterfront buildings, with their rules and their numbers" },
+  "lead": { "es": "Cada ficha indica la fuente y la fecha de cada dato. Si un dato no está confirmado, no se muestra.", "en": "Every page states the source and date of each fact. If a fact is not confirmed, it is not shown." },
+  "searchPh": { "es": "Buscar por nombre", "en": "Search by name" },
+  "empty": { "es": "Ningún edificio coincide con estos filtros.", "en": "No buildings match these filters." },
+  "none": { "es": "La guía se publica edificio por edificio, a medida que cada ficha tiene sus datos verificados.", "en": "The guide is published building by building, as each page has its facts verified." },
+  "mapNote": { "es": "Mapa esquemático: posición aproximada según las coordenadas del edificio.", "en": "Schematic map: approximate position from each building’s coordinates." },
+  "blocks": {
+    "summary": { "es": "Resumen", "en": "Overview" },
+    "hoa": { "es": "Cuota de mantenimiento", "en": "HOA fees" },
+    "rules": { "es": "Reglas de alquiler y mascotas", "en": "Rental and pet rules" },
+    "structural": { "es": "Seguridad estructural", "en": "Structural safety" },
+    "amenities": { "es": "Amenidades", "en": "Amenities" },
+    "lines": { "es": "Vistas y orientación por línea", "en": "Views and orientation by line" },
+    "sales": { "es": "Ventas recientes", "en": "Recent sales" },
+    "available": { "es": "Unidades disponibles", "en": "Available units" },
+    "faq": { "es": "Preguntas frecuentes", "en": "Frequent questions" }
+  },
+  "structuralNote": { "es": "La ley de condominios de Florida exige inspecciones estructurales periódicas (milestone inspection) y un estudio de reservas para la integridad estructural (SIRS) en edificios de tres o más pisos. Pide siempre las actas y los informes completos a la asociación.", "en": "Florida condominium law requires periodic structural milestone inspections and a Structural Integrity Reserve Study (SIRS) for buildings of three or more stories. Always request the full reports and minutes from the association." },
+  "alertsTitle": { "es": "Recibe alertas de este edificio", "en": "Get alerts for this building" },
+  "alertsText": { "es": "Te aviso cuando salga una unidad a la venta o en alquiler, o cambie algo relevante.", "en": "I’ll let you know when a unit is listed for sale or rent, or something relevant changes." },
+  "waMsg": { "es": "Hola, me interesa el edificio {b}. ¿Me puedes dar más información?", "en": "Hi, I’m interested in {b}. Could you send me more information?" },
+  "incomplete": { "es": "Vista previa: faltan bloques obligatorios ({x}). En producción esta página no existiría.", "en": "Preview: required blocks missing ({x}). In production this page would not exist." }
+}

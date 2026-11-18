@@ -1,0 +1,78 @@
+{
+  "slug": "surf-row",
+  "sample": false,
+  "authorized": true,
+  "order": 17,
+  "sourceId": "1452",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/1452/surf-row",
+  "name": "Surf Row",
+  "area": "Surfside",
+  "zone": null,
+  "address": "8800 Collins Ave, Surfside, FL 33154",
+  "devType": "residential",
+  "status": "preconstruction",
+  "deliveryYear": 2027,
+  "delivery": {
+    "es": "Entrega estimada: 2027",
+    "en": "Estimated delivery: 2027"
+  },
+  "priceFrom": 1375000,
+  "beds": {
+    "es": "3 y 5",
+    "en": "3 and 5"
+  },
+  "units": 24,
+  "floors": 3,
+  "sqft": "888 – 2,004",
+  "developer": null,
+  "architect": "RGA",
+  "interiorDesigner": null,
+  "landscape": null,
+  "description": {
+    "es": [
+      "Surf Row es un proyecto residencial en preconstrucción en Surfside, en 8800 Collins Ave, Surfside, FL 33154. Contempla 24 residencias en 3 pisos, de 3 y 5 habitaciones y de 888 – 2,004 sq ft.",
+      "Equipo: arquitectura de RGA. Entrega estimada: 2027. Precios desde $1,375,000."
+    ],
+    "en": [
+      "Surf Row is a residential project in pre-construction in Surfside, at 8800 Collins Ave, Surfside, FL 33154. It comprises 24 residences over 3 floors, with 3 and 5 bedrooms and of 888 – 2,004 sq ft.",
+      "Team: architecture by RGA. Estimated delivery: 2027. Prices from $1,375,000."
+    ]
+  },
+  "interior": null,
+  "amenities": {
+    "es": [
+      "Conserjería",
+      "Jardín privado",
+      "Espacio de oficina",
+      "Glorieta",
+      "Biblioteca"
+    ],
+    "en": [
+      "Concierge",
+      "Private garden",
+      "Office space",
+      "Gazebo",
+      "Library"
+    ]
+  },
+  "images": [
+    "dev-surf-row-01",
+    "dev-surf-row-02",
+    "dev-surf-row-03",
+    "dev-surf-row-04",
+    "dev-surf-row-05",
+    "dev-surf-row-06",
+    "dev-surf-row-07",
+    "dev-surf-row-08",
+    "dev-surf-row-09",
+    "dev-surf-row-10",
+    "dev-surf-row-11"
+  ],
+  "heroImages": [
+    "dev-surf-row-01"
+  ],
+  "geo": {
+    "lat": 25.8733961,
+    "lng": -80.1215646
+  }
+}

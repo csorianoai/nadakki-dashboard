@@ -1,0 +1,63 @@
+{
+  "slug": "hq-residences-miami",
+  "sample": false,
+  "authorized": true,
+  "order": 1,
+  "sourceId": "2229",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/2229/hq-residences-miami",
+  "name": "HQ Residences Miami",
+  "area": "Edgewater",
+  "zone": null,
+  "address": "422 NE 29th St, Miami, FL 33137",
+  "devType": "condo",
+  "status": "preconstruction",
+  "deliveryYear": 2029,
+  "delivery": {
+    "es": "Entrega estimada: 2029",
+    "en": "Estimated delivery: 2029"
+  },
+  "priceFrom": 850000,
+  "beds": "1 – 3",
+  "units": 229,
+  "floors": 35,
+  "sqft": "721 – 2,074",
+  "developer": "Black Salmon",
+  "architect": "Arquitectonica",
+  "interiorDesigner": "DesignAgency & Craft",
+  "landscape": "Enzo Enea",
+  "description": {
+    "es": [
+      "HQ Residences Miami es un condominio en preconstrucción en Edgewater, en 422 NE 29th St, Miami, FL 33137. Contempla 229 residencias en 35 pisos, de 1 – 3 habitaciones y de 721 – 2,074 sq ft.",
+      "Equipo: arquitectura de Arquitectonica; interiorismo de DesignAgency & Craft; paisajismo de Enzo Enea; desarrollo de Black Salmon. Entrega estimada: 2029. Precios desde $850,000."
+    ],
+    "en": [
+      "HQ Residences Miami is a condominium in pre-construction in Edgewater, at 422 NE 29th St, Miami, FL 33137. It comprises 229 residences over 35 floors, with 1 – 3 bedrooms and of 721 – 2,074 sq ft.",
+      "Team: architecture by Arquitectonica; interiors by DesignAgency & Craft; landscape design by Enzo Enea; developed by Black Salmon. Estimated delivery: 2029. Prices from $850,000."
+    ]
+  },
+  "interior": null,
+  "amenities": {
+    "es": [
+      "Paisajismo de Enzo Enea",
+      "Programa de hospitalidad y estilo de vida asociado a sbe"
+    ],
+    "en": [
+      "Landscape design by Enzo Enea",
+      "Hospitality and lifestyle programming associated with sbe"
+    ]
+  },
+  "images": [
+    "dev-hq-residences-miami-01",
+    "dev-hq-residences-miami-02",
+    "dev-hq-residences-miami-03",
+    "dev-hq-residences-miami-04",
+    "dev-hq-residences-miami-05"
+  ],
+  "heroImages": [
+    "dev-hq-residences-miami-01"
+  ],
+  "geo": {
+    "lat": 25.8040579,
+    "lng": -80.1880178
+  }
+}

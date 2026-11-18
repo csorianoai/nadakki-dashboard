@@ -1,0 +1,404 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nadakki.invalid/sites/templates/baylara/blocks.schema.json",
+  "title": "baylara.profile",
+  "description": "INTERFAZ de importacion de Baylara al core: bloque `baylara.profile` de la pagina `home`. Lleva los campos de site.json que el manifiesto aun no trae (se retira cuando S1 amplie el manifiesto).",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "title": {
+          "$ref": "#/$defs/i18n"
+        },
+        "photo": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "id de PublicMedia"
+        }
+      }
+    },
+    "brokerage_address": {
+      "type": "string",
+      "maxLength": 300
+    },
+    "mls_disclaimer": {
+      "$ref": "#/$defs/i18n"
+    },
+    "dr_partner_brokerage": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "response_time": {
+      "$ref": "#/$defs/i18n"
+    },
+    "valuation_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60
+    },
+    "testimonials": {
+      "type": "array",
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "quote",
+          "author"
+        ],
+        "properties": {
+          "quote": {
+            "$ref": "#/$defs/i18n"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "role": {
+            "type": "string",
+            "maxLength": 120
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "i18n": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "es"
+      ],
+      "properties": {
+        "es": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "en": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      }
+    },
+    "cta_link": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "route"
+      ],
+      "properties": {
+        "label": {
+          "$ref": "#/$defs/i18n"
+        },
+        "route": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "clave de pagina del manifiesto (about, contact, ...)"
+        }
+      }
+    },
+    "block_text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 20000
+        }
+      }
+    },
+    "block_baylara_hero": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/i18n"
+        },
+        "subtitle": {
+          "$ref": "#/$defs/i18n"
+        },
+        "cta": {
+          "$ref": "#/$defs/cta_link"
+        }
+      }
+    },
+    "block_baylara_cta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "button"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/i18n"
+        },
+        "body": {
+          "$ref": "#/$defs/i18n"
+        },
+        "button": {
+          "$ref": "#/$defs/cta_link"
+        }
+      }
+    },
+    "block_baylara_lead_form": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intent",
+        "fields",
+        "submit"
+      ],
+      "properties": {
+        "intent": {
+          "enum": [
+            "buyer",
+            "seller",
+            "tenant",
+            "consult",
+            "property",
+            "alerts",
+            "market",
+            "saved"
+          ]
+        },
+        "fields": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "label"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9]{0,29}$",
+                "not": {
+                  "enum": [
+                    "intent",
+                    "lang",
+                    "form_rendered_at",
+                    "company_website",
+                    "website",
+                    "consent",
+                    "consent_email",
+                    "tenant_id",
+                    "site_id",
+                    "listing",
+                    "development",
+                    "building"
+                  ]
+                }
+              },
+              "label": {
+                "$ref": "#/$defs/i18n"
+              },
+              "type": {
+                "enum": [
+                  "text",
+                  "email",
+                  "tel",
+                  "date",
+                  "month",
+                  "textarea",
+                  "select"
+                ]
+              },
+              "options": {
+                "type": "array",
+                "maxItems": 40,
+                "items": {
+                  "type": "string",
+                  "maxLength": 120
+                }
+              },
+              "full": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "submit": {
+          "$ref": "#/$defs/i18n"
+        },
+        "note": {
+          "$ref": "#/$defs/i18n"
+        },
+        "consent_phone": {
+          "$ref": "#/$defs/i18n"
+        },
+        "consent_email": {
+          "$ref": "#/$defs/i18n"
+        },
+        "privacy_route": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "clave de pagina del manifiesto (privacy)"
+        },
+        "privacy_label": {
+          "$ref": "#/$defs/i18n"
+        },
+        "interest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "slug"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "listing",
+                "development",
+                "building"
+              ]
+            },
+            "slug": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+              "maxLength": 96
+            }
+          }
+        }
+      }
+    },
+    "block_baylara_entity_list": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source"
+      ],
+      "description": "Listado de entidades del core (propiedades, desarrollos, zonas, edificios) como tarjetas con enlace a su ficha. Solo se enlazan las que tienen ruta en el manifiesto.",
+      "properties": {
+        "source": {
+          "enum": [
+            "listings",
+            "developments",
+            "zones",
+            "buildings"
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/i18n"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "featured_only": {
+          "type": "boolean",
+          "description": "solo source=listings"
+        }
+      }
+    },
+    "block_baylara_section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "eyebrow": {
+          "$ref": "#/$defs/i18n"
+        },
+        "title": {
+          "$ref": "#/$defs/i18n"
+        },
+        "paragraphs": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "$ref": "#/$defs/i18n"
+          }
+        }
+      }
+    },
+    "block_baylara_steps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "title",
+              "body"
+            ],
+            "properties": {
+              "title": {
+                "$ref": "#/$defs/i18n"
+              },
+              "body": {
+                "$ref": "#/$defs/i18n"
+              }
+            }
+          }
+        }
+      }
+    },
+    "block_baylara_stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items"
+      ],
+      "properties": {
+        "items": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "label"
+            ],
+            "properties": {
+              "value": {
+                "type": "string",
+                "maxLength": 60
+              },
+              "label": {
+                "$ref": "#/$defs/i18n"
+              },
+              "source": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "date": {
+                "type": "string",
+                "maxLength": 40
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

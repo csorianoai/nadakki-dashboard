@@ -1,0 +1,75 @@
+{
+  "slug": "ocean-terrace-residences",
+  "sample": false,
+  "authorized": true,
+  "order": 9,
+  "sourceId": "2022",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/2022/ocean-terrace-residences",
+  "name": "Ocean Terrace Residences",
+  "area": "Miami Beach",
+  "zone": "miami-beach",
+  "address": "740 Ocean Terrace, Miami Beach, FL 33141",
+  "devType": "condo",
+  "status": "preconstruction",
+  "deliveryYear": 2029,
+  "delivery": {
+    "es": "Entrega estimada: 2029",
+    "en": "Estimated delivery: 2029"
+  },
+  "priceFrom": 4100000,
+  "beds": "2 – 4",
+  "units": 52,
+  "floors": 20,
+  "sqft": "1,461 – 4,588",
+  "developer": null,
+  "architect": "Robert A.M. Stern Architects (RAMSA)",
+  "interiorDesigner": null,
+  "landscape": null,
+  "description": {
+    "es": [
+      "Ocean Terrace Residences es un condominio en preconstrucción en Miami Beach, en 740 Ocean Terrace, Miami Beach, FL 33141. Contempla 52 residencias en 20 pisos, de 2 – 4 habitaciones y de 1,461 – 4,588 sq ft.",
+      "Equipo: arquitectura de Robert A.M. Stern Architects (RAMSA). Entrega estimada: 2029. Precios desde $4,100,000."
+    ],
+    "en": [
+      "Ocean Terrace Residences is a condominium in pre-construction in Miami Beach, at 740 Ocean Terrace, Miami Beach, FL 33141. It comprises 52 residences over 20 floors, with 2 – 4 bedrooms and of 1,461 – 4,588 sq ft.",
+      "Team: architecture by Robert A.M. Stern Architects (RAMSA). Estimated delivery: 2029. Prices from $4,100,000."
+    ]
+  },
+  "interior": {
+    "es": [
+      "Salón, comedor y zona social de concepto abierto",
+      "Vestíbulos privados de ascensor",
+      "Puertas de vidrio de piso a techo hacia terrazas amplias",
+      "Carpintería a medida diseñada por RAMSA",
+      "Plantas pensadas para aprovechar las vistas al mar y la luz natural"
+    ],
+    "en": [
+      "Open-plan living, dining and entertaining areas",
+      "Private elevator foyers",
+      "Floor-to-ceiling glass doors to large terraces",
+      "Custom millwork designed by RAMSA",
+      "Layouts planned around ocean views and daylight"
+    ]
+  },
+  "amenities": null,
+  "images": [
+    "dev-ocean-terrace-residences-01",
+    "dev-ocean-terrace-residences-02",
+    "dev-ocean-terrace-residences-03",
+    "dev-ocean-terrace-residences-04",
+    "dev-ocean-terrace-residences-05",
+    "dev-ocean-terrace-residences-06",
+    "dev-ocean-terrace-residences-07",
+    "dev-ocean-terrace-residences-08",
+    "dev-ocean-terrace-residences-09",
+    "dev-ocean-terrace-residences-10",
+    "dev-ocean-terrace-residences-11"
+  ],
+  "heroImages": [
+    "dev-ocean-terrace-residences-01"
+  ],
+  "geo": {
+    "lat": 25.8596207,
+    "lng": -80.1197676
+  }
+}
