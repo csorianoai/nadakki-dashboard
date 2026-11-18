@@ -58,3 +58,9 @@ Origin/Sec-Fetch-Site ajeno -> 403; cuerpo > 16 KiB -> 413; `tenant_id` en el cu
 - **`baylara.profile`** (bloque de la pagina `home`): esquema en `templates/baylara/blocks.schema.json`; es la INTERFAZ de importacion al core. Campos de site.json que el manifiesto no lleva (agent, brokerage.address, mlsDisclaimer, drPartnerBrokerage, responseTime, valuationDays, testimonials). Discrepancia a S1: ampliar el manifiesto y retirarlo.
 - **Medios** (`media.ts`): `<picture>` avif+webp, solo https de `SITES_MEDIA_HOSTS`, alt ES/EN obligatorio; el credito solo con `credit` explicito. Video del hero de Baylara: `PublicMedia.mime_type` solo admite image/*, se pinta el poster (discrepancia).
 - Las plantillas son `.ts` con `createElement`: vitest no transpila `.tsx` con el tsconfig `jsx: preserve`.
+
+## Puertas de calidad, comparador de capturas 1/2 (ST2-08)
+`node scripts/compare-captures.mjs --site-id S --reference URL --candidate URL` toma capturas full-page de `quality/routes.json` (12 rutas) a 1440x900 y 390x844 (animaciones off, `Date` y `Math.random` fijos, fuentes cargadas, red inactiva) y compara con pixelmatch: falla (exit 1) si >0,1 % de pixeles (`--threshold`) o si el ALTO de pagina difiere. Informe `test-results/captures/<site_id>/report.json` + PNG de diferencias.
+- La linea base va por sitio (`quality/baseline/<site_id>/`); `--reference-dir` solo se acepta si su carpeta se llama como el `--site-id`. `--update-baseline` con `CI=true` -> exit 2.
+- La linea base de 24 capturas NO esta versionada: se regenera desde el snapshot de referencia con las mismas banderas de entorno que el candidato (las muestras de `content.js:12-14` solo aparecen fuera de produccion). Paso real referencia-vs-motor: humano/otra instancia.
+- Pendiente en 2/2: axe (wcag2a/aa/21a/21aa, allowlist en `quality/axe-allowlist.json`), Lighthouse movil (mediana de 3 >= 85) y verificacion CSP por ruta x idioma.
