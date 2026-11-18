@@ -5,6 +5,7 @@ const isProd = process.env.VERCEL_ENV === 'production' || (!process.env.VERCEL_E
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  outputFileTracingIncludes: { '/s/[siteId]/fonts/[file]': ['./src/templates/baylara/fonts/*.woff2'] },
   async headers() {
     const base = [
       { key: 'X-Content-Type-Options', value: 'nosniff' },
