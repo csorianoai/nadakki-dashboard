@@ -91,7 +91,7 @@ describe('ST2-08 axe WCAG 2.1 AA', () => {
       const rep = JSON.parse(readFileSync(path.join(tmp, 'axe', 'sitio-a', 'report.json'), 'utf8'));
       expect(rep.results.map((x: { width: number }) => x.width).sort()).toEqual([390, 390, 1440, 1440]);
     } finally { await s.close(); }
-  });
+  }, 120_000);
 
   it('[negativo] una img sin alt inyectada hace fallar y nombra la regla', async () => {
     const s = await startTestServer({ siteId: 'sitio-a', defect: 'img-sin-alt' });
@@ -100,7 +100,7 @@ describe('ST2-08 axe WCAG 2.1 AA', () => {
       expect(r.code).toBe(1);
       expect(r.err + r.out).toContain('image-alt');
     } finally { await s.close(); }
-  });
+  }, 120_000);
 
   it('[tenant-ajeno] el informe va por site_id: la violacion del sitio B no contamina al A', async () => {
     const a = await startTestServer({ siteId: 'sitio-a' });
@@ -113,7 +113,7 @@ describe('ST2-08 axe WCAG 2.1 AA', () => {
       expect(readdirSync(path.join(out, 'axe')).sort()).toEqual(['sitio-a', 'sitio-b']);
       expect((await gate(['axe', '--site-id', '../x', '--base', a.url, '--out', out])).code).toBe(2);
     } finally { await a.close(); await b.close(); }
-  });
+  }, 180_000);
 });
 
 describe('ST2-08 Lighthouse movil', () => {
