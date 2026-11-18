@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "title": { "es": "Alquileres frente al agua", "en": "Waterfront rentals" },
+    "description": { "es": "Alquileres anuales y de temporada frente al océano y al Intracoastal. Servicio de búsqueda gratuito para el inquilino.", "en": "Annual and seasonal waterfront leases. Free search service for tenants." }
+  },
+  "eyebrow": { "es": "Alquilar", "en": "Rent" },
+  "title": { "es": "Alquileres frente al agua", "en": "Waterfront rentals" },
+  "lead": { "es": "Contratos anuales y de temporada en edificios frente al océano y al Intracoastal, amueblados o sin amueblar.", "en": "Annual and seasonal leases in oceanfront and Intracoastal buildings, furnished or unfurnished." },
+  "helpBtn": { "es": "Ayúdame a encontrar alquiler", "en": "Help me find a rental" },
+  "note": { "es": "Muchas asociaciones exigen solicitud y aprobación antes de la mudanza; los plazos mínimos de alquiler varían según el edificio. La disponibilidad y los precios cambian con frecuencia.", "en": "Many associations require an application and approval before move-in; minimum lease terms vary by building. Availability and prices change frequently." },
+  "freeTag": { "es": "Servicio gratuito para el inquilino", "en": "Free service for tenants" },
+  "formTitle": { "es": "Te ayudo a encontrar tu alquiler", "en": "Let me help you find your rental" },
+  "formText": { "es": "Dime la zona, el presupuesto y las fechas. Busco en el mercado, incluidas propiedades que no aparecen aquí, y organizo las visitas. Como inquilino no tienes ningún costo.", "en": "Tell me the area, budget and dates. I search the market, including properties not shown here, and arrange the visits. There is no cost to you as a tenant." },
+  "steps": {
+    "es": ["Cuéntame qué necesitas: zona, presupuesto, fechas e imprescindibles.", "Te envío una selección y agendo visitas, en persona o por video.", "Te acompaño en la solicitud, la aprobación de la asociación y la firma del contrato."],
+    "en": ["Tell me what you need: area, budget, dates and must-haves.", "I send a shortlist and schedule visits, in person or by video.", "I guide the application, association approval and lease signing."]
+  }
+}

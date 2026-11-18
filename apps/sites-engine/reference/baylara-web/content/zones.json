@@ -1,0 +1,214 @@
+{
+  "_comment": "Zonas. Cada bloque con datos lleva source y date. null = el bloque se oculta.",
+  "items": [
+    {
+      "slug": "sunny-isles-beach",
+      "name": "Sunny Isles Beach",
+      "lead": {
+        "es": "Una isla estrecha entre el Atlántico y el Intracoastal, con torres frente al océano.",
+        "en": "A narrow barrier island between the Atlantic and the Intracoastal, lined with oceanfront towers."
+      },
+      "body": {
+        "es": "La mayoría de las residencias están sobre la arena, con vistas al océano por el este y al Intracoastal por el oeste. Los edificios suelen ofrecer servicios completos, y Collins Avenue conecta la zona con Bal Harbour al sur y Hallandale Beach al norte.",
+        "en": "Most residences sit directly on the sand, with views over the ocean to the east and the Intracoastal and the mainland to the west. Buildings typically offer full-service amenities, and Collins Avenue connects the area with Bal Harbour to the south and Hallandale Beach to the north."
+      },
+      "short": {
+        "es": "Torres frente al océano, entre el Atlántico y el Intracoastal.",
+        "en": "Oceanfront towers between the Atlantic and the Intracoastal."
+      },
+      "places": {
+        "es": [
+          "Playa a lo largo de toda la ciudad",
+          "Muelle Newport Fishing Pier",
+          "Heritage Park y el Intracoastal",
+          "Cerca de Aventura y Bal Harbour"
+        ],
+        "en": [
+          "Oceanfront beach along the whole city",
+          "Newport Fishing Pier",
+          "Heritage Park and the Intracoastal",
+          "Close to Aventura and Bal Harbour"
+        ]
+      },
+      "photo": null,
+      "priceRange": null,
+      "schools": null,
+      "distances": null
+    },
+    {
+      "slug": "bal-harbour",
+      "name": "Bal Harbour y Bay Harbor Islands",
+      "lead": {
+        "es": "Una pequeña villa costera en el extremo norte de la isla de Miami Beach.",
+        "en": "A small seaside village at the north tip of Miami Beach’s barrier island."
+      },
+      "body": {
+        "es": "Bal Harbour combina un tramo corto de residencias frente al océano con una zona residencial del lado de la bahía. Al oeste, cruzando el puente, Bay Harbor Islands reúne edificios de menor altura y calles caminables junto al agua.",
+        "en": "Bal Harbour combines a short stretch of oceanfront residences with a residential section on the bay side. Across the bridge to the west, Bay Harbor Islands has lower-rise buildings and walkable waterfront streets."
+      },
+      "short": {
+        "es": "Una villa costera junto a Bal Harbour Shops y las islas residenciales de Bay Harbor.",
+        "en": "A seaside village by Bal Harbour Shops and the residential islands of Bay Harbor."
+      },
+      "places": {
+        "es": [
+          "Bal Harbour Shops",
+          "Sendero frente a la playa",
+          "Bay Harbor Islands y su paseo junto al agua",
+          "Haulover Inlet y su marina"
+        ],
+        "en": [
+          "Bal Harbour Shops",
+          "Oceanfront beach path",
+          "Bay Harbor Islands waterfront",
+          "Haulover Inlet and marina"
+        ]
+      },
+      "photo": null,
+      "priceRange": null,
+      "schools": null,
+      "distances": null,
+      "nameEn": "Bal Harbour & Bay Harbor Islands"
+    },
+    {
+      "slug": "aventura",
+      "name": "Aventura",
+      "lead": {
+        "es": "Vida en el Intracoastal, golf y marinas en tierra firme.",
+        "en": "Intracoastal living, golf and marinas on the mainland side."
+      },
+      "body": {
+        "es": "Aventura está en tierra firme, frente al Intracoastal, con torres de condominios, comunidades en islas privadas y casas frente al agua con muelle. Está a minutos de las playas de Sunny Isles.",
+        "en": "Aventura sits on the mainland facing the Intracoastal Waterway, with condominium towers, private island communities and waterfront homes with docks. The area is minutes from the beaches of Sunny Isles."
+      },
+      "short": {
+        "es": "Marinas en el Intracoastal, golf y Aventura Mall cerca.",
+        "en": "Intracoastal marinas, golf and Aventura Mall nearby."
+      },
+      "places": {
+        "es": [
+          "Aventura Mall",
+          "Campos de golf y la zona de Turnberry",
+          "Marinas en el Intracoastal",
+          "Senderos frente al agua para caminar y pedalear"
+        ],
+        "en": [
+          "Aventura Mall",
+          "Golf courses and the Turnberry area",
+          "Intracoastal marinas",
+          "Waterfront walking and cycling paths"
+        ]
+      },
+      "photo": null,
+      "priceRange": null,
+      "schools": null,
+      "distances": null
+    },
+    {
+      "slug": "miami-beach",
+      "name": "Miami Beach",
+      "lead": {
+        "es": "Del distrito Art Deco de South Beach a la tranquilidad de Mid-Beach y North Beach.",
+        "en": "From the Art Deco district of South Beach to quieter Mid-Beach and North Beach."
+      },
+      "body": {
+        "es": "Miami Beach ofrece condominios frente al océano, casas frente a la bahía en islas residenciales y edificios históricos en el distrito Art Deco. Cada barrio tiene su ritmo, desde la actividad de South Beach hasta las calles residenciales de Mid-Beach.",
+        "en": "Miami Beach offers oceanfront condominiums, bayfront homes on residential islands and historic buildings in the Art Deco district. Each neighborhood has its own pace, from the activity of South Beach to the residential streets of Mid-Beach."
+      },
+      "short": {
+        "es": "Del Art Deco de South Beach a la tranquilidad de Mid-Beach.",
+        "en": "From Art Deco South Beach to quieter Mid-Beach."
+      },
+      "places": {
+        "es": [
+          "Distrito histórico Art Deco",
+          "Lincoln Road",
+          "Paseo peatonal frente al océano",
+          "Islas residenciales en la bahía de Biscayne"
+        ],
+        "en": [
+          "Art Deco Historic District",
+          "Lincoln Road",
+          "Beachwalk along the ocean",
+          "Residential islands on Biscayne Bay"
+        ]
+      },
+      "photo": null,
+      "priceRange": null,
+      "schools": null,
+      "distances": null
+    },
+    {
+      "slug": "fort-lauderdale",
+      "name": "Fort Lauderdale",
+      "lead": {
+        "es": "Canales navegables, muelles de aguas profundas y Las Olas Boulevard.",
+        "en": "Navigable canals, deep-water docks and Las Olas Boulevard."
+      },
+      "body": {
+        "es": "Fort Lauderdale se define por sus canales: casas unifamiliares sobre canales con salida directa al mar, condominios frente a la playa y un centro caminable alrededor de Las Olas Boulevard.",
+        "en": "Fort Lauderdale is defined by its waterways: single-family homes on canals with direct ocean access, oceanfront condominiums along the beach and a walkable downtown around Las Olas Boulevard."
+      },
+      "short": {
+        "es": "Canales, Las Olas Boulevard y muelles de aguas profundas.",
+        "en": "Canals, Las Olas Boulevard and deep-water docks."
+      },
+      "places": {
+        "es": [
+          "Las Olas Boulevard",
+          "Canales con salida al mar",
+          "Playa de Fort Lauderdale",
+          "Port Everglades cerca"
+        ],
+        "en": [
+          "Las Olas Boulevard",
+          "Canals with ocean access",
+          "Fort Lauderdale Beach",
+          "Port Everglades nearby"
+        ]
+      },
+      "photo": null,
+      "priceRange": null,
+      "schools": null,
+      "distances": null
+    }
+  ],
+  "_template": {
+    "priceRange": {
+      "value": {
+        "es": "$700.000 – $6.000.000",
+        "en": "$700,000 – $6,000,000"
+      },
+      "source": "MLS",
+      "date": "AAAA-MM-DD"
+    },
+    "schools": {
+      "rows": [
+        {
+          "name": "Nombre del colegio",
+          "type": {
+            "es": "Público",
+            "en": "Public"
+          },
+          "grades": "K-8",
+          "distance": "1.2 mi"
+        }
+      ],
+      "source": "Distrito escolar",
+      "date": "AAAA-MM-DD"
+    },
+    "distances": {
+      "rows": [
+        {
+          "to": {
+            "es": "Aeropuerto de Miami (MIA)",
+            "en": "Miami Airport (MIA)"
+          },
+          "time": "35 min"
+        }
+      ],
+      "source": "Google Maps, hora valle",
+      "date": "AAAA-MM-DD"
+    }
+  }
+}

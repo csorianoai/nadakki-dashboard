@@ -1,0 +1,55 @@
+{
+  "slug": "9900-west",
+  "sample": false,
+  "authorized": true,
+  "order": 20,
+  "sourceId": "134",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/134/9900-west",
+  "name": "9900 West",
+  "area": "Bay Harbor Islands",
+  "zone": "bal-harbour",
+  "address": "9900 E Bay Harbor Dr, Bay Harbor Islands, FL 33154",
+  "devType": "townhome",
+  "status": null,
+  "deliveryYear": 2026,
+  "delivery": {
+    "es": "Entrega estimada: 2026",
+    "en": "Estimated delivery: 2026"
+  },
+  "priceFrom": 1990000,
+  "beds": "2 – 4",
+  "units": 23,
+  "floors": 7,
+  "sqft": "2,290 – 2,874",
+  "developer": null,
+  "architect": "Frankel Benayoun",
+  "interiorDesigner": "Steven G",
+  "landscape": null,
+  "description": {
+    "es": [
+      "9900 West es un proyecto de townhouses en Bay Harbor Islands, en 9900 E Bay Harbor Dr, Bay Harbor Islands, FL 33154. Contempla 23 residencias en 7 pisos, de 2 – 4 habitaciones y de 2,290 – 2,874 sq ft.",
+      "Equipo: arquitectura de Frankel Benayoun; interiorismo de Steven G. Entrega estimada: 2026. Precios desde $1,990,000."
+    ],
+    "en": [
+      "9900 West is a townhome project in Bay Harbor Islands, at 9900 E Bay Harbor Dr, Bay Harbor Islands, FL 33154. It comprises 23 residences over 7 floors, with 2 – 4 bedrooms and of 2,290 – 2,874 sq ft.",
+      "Team: architecture by Frankel Benayoun; interiors by Steven G. Estimated delivery: 2026. Prices from $1,990,000."
+    ]
+  },
+  "interior": null,
+  "amenities": null,
+  "images": [
+    "dev-9900-west-01",
+    "dev-9900-west-02",
+    "dev-9900-west-03",
+    "dev-9900-west-04",
+    "dev-9900-west-05",
+    "dev-9900-west-06"
+  ],
+  "heroImages": [
+    "dev-9900-west-01"
+  ],
+  "geo": {
+    "lat": 25.8898449,
+    "lng": -80.1310431
+  }
+}

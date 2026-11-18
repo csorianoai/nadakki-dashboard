@@ -1,0 +1,14 @@
+{
+  "_comment": "Plantilla. Debe revisarla un abogado con licencia en Florida antes de publicar a producción.",
+  "title": { "es": "Términos de uso", "en": "Terms of Use" },
+  "updated": "2026-11-05",
+  "sections": [
+    { "h": { "es": "Uso del sitio", "en": "Use of the site" }, "p": { "es": "Este sitio ofrece información inmobiliaria general. Usarlo no crea una relación de representación; esta requiere un acuerdo por escrito.", "en": "This site provides general real estate information. Using it does not create an agency relationship; representation requires a written agreement." } },
+    { "h": { "es": "Información de propiedades", "en": "Listing information" }, "p": { "es": "La información de propiedades se considera fiable pero no garantizada y puede cambiar sin aviso.", "en": "Listing data is deemed reliable but not guaranteed and may change without notice." } },
+    { "h": { "es": "Sin asesoría legal ni fiscal", "en": "No legal or tax advice" }, "p": { "es": "El contenido sobre procesos de compra, financiamiento, impuestos o República Dominicana es información general. Consulta con profesionales habilitados.", "en": "Content about purchase processes, financing, taxes or the Dominican Republic is general information. Consult licensed professionals." } },
+    { "h": { "es": "Valoraciones", "en": "Valuations" }, "p": { "es": "Las valoraciones de mercado son opiniones de valor basadas en datos disponibles, no tasaciones.", "en": "Market valuations are opinions of value based on available data, not appraisals." } },
+    { "h": { "es": "Vivienda justa", "en": "Fair housing" }, "p": { "es": "Cumplimos las leyes federales, estatales y locales de vivienda justa y no discriminamos por ningún motivo protegido.", "en": "We comply with federal, state and local fair housing laws and do not discriminate on any protected basis." } },
+    { "h": { "es": "Propiedad intelectual", "en": "Intellectual property" }, "p": { "es": "Los textos, fotos y diseño de este sitio pertenecen a Baylara o se usan con permiso.", "en": "Texts, photos and design on this site belong to Baylara or are used with permission." } },
+    { "h": { "es": "Ley aplicable", "en": "Governing law" }, "p": { "es": "Estos términos se rigen por las leyes del Estado de Florida.", "en": "These terms are governed by the laws of the State of Florida." } }
+  ]
+}

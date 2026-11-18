@@ -1,0 +1,58 @@
+{
+  "slug": "nobe-parc",
+  "sample": false,
+  "authorized": true,
+  "order": 8,
+  "sourceId": "2172",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/2172/nobe-parc",
+  "name": "NoBe Parc",
+  "area": "Miami Beach",
+  "zone": "miami-beach",
+  "address": "7140 Abbott Ave, Miami Beach, FL 33141",
+  "devType": "condo",
+  "status": "preconstruction",
+  "deliveryYear": 2029,
+  "delivery": {
+    "es": "Entrega estimada: 2029",
+    "en": "Estimated delivery: 2029"
+  },
+  "priceFrom": 555000,
+  "beds": null,
+  "units": 232,
+  "floors": 15,
+  "sqft": "375 – 1,131",
+  "developer": "Robert Finvarb Companies",
+  "architect": "Arquitectonica",
+  "interiorDesigner": null,
+  "landscape": null,
+  "description": {
+    "es": [
+      "NoBe Parc es un condominio en preconstrucción en Miami Beach, en 7140 Abbott Ave, Miami Beach, FL 33141. Contempla 232 residencias en 15 pisos, de 375 – 1,131 sq ft.",
+      "Equipo: arquitectura de Arquitectonica; desarrollo de Robert Finvarb Companies. Entrega estimada: 2029. Precios desde $555,000."
+    ],
+    "en": [
+      "NoBe Parc is a condominium in pre-construction in Miami Beach, at 7140 Abbott Ave, Miami Beach, FL 33141. It comprises 232 residences over 15 floors, of 375 – 1,131 sq ft.",
+      "Team: architecture by Arquitectonica; developed by Robert Finvarb Companies. Estimated delivery: 2029. Prices from $555,000."
+    ]
+  },
+  "interior": null,
+  "amenities": null,
+  "images": [
+    "dev-nobe-parc-01",
+    "dev-nobe-parc-02",
+    "dev-nobe-parc-03",
+    "dev-nobe-parc-04",
+    "dev-nobe-parc-05",
+    "dev-nobe-parc-06",
+    "dev-nobe-parc-07",
+    "dev-nobe-parc-08",
+    "dev-nobe-parc-09"
+  ],
+  "heroImages": [
+    "dev-nobe-parc-01"
+  ],
+  "geo": {
+    "lat": 25.8569341,
+    "lng": -80.1226133
+  }
+}
