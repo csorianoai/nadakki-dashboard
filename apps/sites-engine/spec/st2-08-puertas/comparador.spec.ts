@@ -1,8 +1,9 @@
-import { spawnSync } from 'node:child_process';
+import { execFile, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
+import { promisify } from 'node:util';
 import path from 'node:path';
 import { PNG } from 'pngjs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -34,7 +35,7 @@ function dirs(site: string, ref: Buffer, cand: Buffer, name = 'es-1440.png') {
   return { root, r, c };
 }
 function run(args: string[], env: Record<string, string> = {}) {
-  const e = { ...process.env, ...env } as Record<string, string | undefined>;
+  const e = { ...process.env, ...env } as NodeJS.ProcessEnv;
   if (!('CI' in env)) delete e.CI;
   return spawnSync('node', [CLI, ...args], { encoding: 'utf8', env: e });
 }
@@ -105,6 +106,13 @@ describe('ST2-08 comparador de capturas', () => {
 });
 
 // Captura real con Chromium de Playwright contra dos servidores locales (0 red externa).
+// spawnSync bloquearia el bucle de eventos y los servidores de esta misma prueba no responderian.
+const execP = promisify(execFile);
+async function runAsync(args: string[], env: NodeJS.ProcessEnv) {
+  try { const r = await execP('node', [CLI, ...args], { env }); return { status: 0, out: r.stdout + r.stderr }; }
+  catch (e) { const x = e as { code: number; stdout: string; stderr: string }; return { status: x.code, out: x.stdout + x.stderr }; }
+}
+
 describe('ST2-08 captura full-page', () => {
   const servers: Server[] = [];
   const serve = (body: string) => new Promise<string>((res) => {
@@ -118,12 +126,12 @@ describe('ST2-08 captura full-page', () => {
     const ref = await serve(same); const cand = await serve(same); const other = await serve('<h1>SYNTH</h1><div style="height:900px;background:#000"></div>');
     const routes = path.join(tmp, 'routes1.json'); writeFileSync(routes, JSON.stringify(['/es']));
     const out = path.join(tmp, 'out-real');
-    const env = { ...process.env } as Record<string, string | undefined>; delete env.CI;
-    const ok = spawnSync('node', [CLI, '--site-id', 'sitio-a', '--reference', ref, '--candidate', cand, '--routes', routes, '--out', out], { encoding: 'utf8', env });
-    expect(ok.status, ok.stderr + ok.stdout).toBe(0);
+    const env = { ...process.env } as NodeJS.ProcessEnv; delete env.CI;
+    const ok = await runAsync(['--site-id', 'sitio-a', '--reference', ref, '--candidate', cand, '--routes', routes, '--out', out], env);
+    expect(ok.status, ok.out).toBe(0);
     const rep = JSON.parse(readFileSync(path.join(out, 'sitio-a', 'report.json'), 'utf8'));
-    expect(rep.results.map((r: { width: number }) => r.width).sort()).toEqual([390, 1440]);
-    const bad = spawnSync('node', [CLI, '--site-id', 'sitio-a', '--reference', ref, '--candidate', other, '--routes', routes, '--out', out], { encoding: 'utf8', env });
+    expect(rep.results.map((r: { width: number }) => r.width).sort((a: number, b: number) => a - b)).toEqual([390, 1440]);
+    const bad = await runAsync(['--site-id', 'sitio-a', '--reference', ref, '--candidate', other, '--routes', routes, '--out', out], env);
     expect(bad.status).toBe(1);
   }, 120_000);
 });
