@@ -6,6 +6,7 @@ import Ajv2020, { type ValidateFunction } from 'ajv/dist/2020';
 import type { Block, I18nText, Lang, Manifest } from '@/core/types';
 import { BlockError } from '@/blocks/model';
 import { pathFor } from '@/render/site';
+import { LeadForm, type LeadFormData } from './lead-form';
 import schema from './blocks.schema.json';
 
 export interface BlockCtx { manifest: Manifest; lang: Lang }
@@ -45,6 +46,19 @@ const REGISTRY: Record<string, { def: string; render: Render }> = {
         h('h2', null, tx(d.title as I18nText, ctx.lang)),
         d.body ? h('p', null, tx(d.body as I18nText, ctx.lang)) : null,
         link(ctx, b.route, b.label, 'btn btn-primary')));
+    },
+  },
+  'baylara.lead_form': {
+    def: 'block_baylara_lead_form',
+    render: (d, ctx) => {
+      const route = d.privacy_route as string | undefined;
+      let privacyHref: string | undefined;
+      if (route) {
+        const r = ctx.manifest.routes.find((x) => x.kind === 'page' && x.key === route);
+        if (!r) throw new BlockError('shape');
+        privacyHref = pathFor(ctx.manifest, ctx.lang, r);
+      }
+      return h(LeadForm, { data: d as unknown as LeadFormData, lang: ctx.lang, privacyHref });
     },
   },
 };
