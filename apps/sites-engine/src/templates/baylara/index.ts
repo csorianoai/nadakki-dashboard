@@ -6,6 +6,7 @@ import { mediaHostsFromEnv } from '../../lib/csp';
 import type { RenderInput, Template } from '../index';
 import { Media } from './media';
 import { PROFILE_TYPE } from './profile';
+import { renderBlocks } from './registry';
 import { Shell } from './shell';
 
 const tx = (t: I18nText | undefined, lang: 'es' | 'en') => (t ? (lang === 'en' ? t.en ?? t.es : t.es) : '');
@@ -21,7 +22,7 @@ export function makeBaylaraTemplate(hosts: () => string[]): Template {
     return h(Shell, { manifest, lang, route: full },
       hero ? h(Media, { m: hero, lang, hosts: hosts(), priority: true }) : null,
       h('h1', null, title),
-      ...blocks.map((b) => h('p', { key: b.block_id }, tx(b.i18n?.text, lang) || String((b.data as { text?: unknown } | undefined)?.text ?? ''))));
+      ...renderBlocks(blocks, { manifest, lang }));
   };
 }
 
