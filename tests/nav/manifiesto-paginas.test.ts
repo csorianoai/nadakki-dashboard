@@ -27,9 +27,8 @@ const RAIZ = path.resolve(__dirname, "..", "..");
  * Tope de páginas en `pendiente-revision`. Solo puede bajar: si resuelves una, baja la cifra; si necesitas subirla,
  * es una decisión que César ve en el diff.
  */
-// 58: release de Mi web (Nadakki Sites, panel): las 8 páginas /mi-web entran como pendiente-revision (solo las enlaza su
-// propio shell). Tope autorizado por César el 17-nov-2026 («autorizado a subir el tope de páginas»), igual que en staging.
-const MAXIMO_PENDIENTES = 58;
+// 50: las 8 páginas /mi-web dejan pendiente-revision al entrar «Mi web» en la barra de Realtor OS (dashboard#1278, 18-nov-2026).
+const MAXIMO_PENDIENTES = 50;
 
 // ── Utilidades ────────────────────────────────────────────────────────────────────────────────────
 
