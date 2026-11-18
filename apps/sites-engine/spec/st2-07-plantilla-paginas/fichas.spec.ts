@@ -4,9 +4,17 @@ import { createCoreClient } from '@/core/client';
 import { SITE_A, SITE_B, createFakeCore } from '@/core/fixtures';
 import { renderSite } from '@/render/site';
 
+const EXTRA = [['zone', 'synth-district'], ['building', 'synth-building'], ['development', 'synth-tower'],
+  ['zone', 'otro-barrio'], ['building', 'otro-edificio'], ['development', 'otra-torre']] as const;
+// El manifiesto sintetico solo trae paginas y fichas de propiedad: se anaden aqui las rutas de zona/edificio/desarrollo del propio sitio.
+function withEntities(b: Record<string, unknown>) {
+  const own = (b.site_id === SITE_A.id ? EXTRA.slice(0, 3) : EXTRA.slice(3));
+  const routes = [...(b.routes as unknown[]), ...own.map(([kind, key]) => ({ kind, key, slugs: { es: key }, lastmod: '2026-11-07T15:00:00Z' }))];
+  return { ...b, routes, template: { id: 'baylara', version: 1 } };
+}
 function client() {
   const f = createFakeCore();
-  f.mutate('/manifest', (b) => ({ ...b, template: { id: 'baylara', version: 1 } }));
+  f.mutate('/manifest', withEntities);
   return createCoreClient({ baseUrl: 'https://core.test/api/v1/sites', token: 'tok-sintetico', fetch: f.fetch });
 }
 async function html(siteId: string, segs: string[]) {
@@ -28,8 +36,6 @@ describe('ST2-07 fichas de entidades (propiedad, desarrollo, zona, edificio)', (
   });
 
   it('[positivo] ficha de zona y de edificio muestran su fuente y fecha; la de desarrollo su nombre y precio desde', async () => {
-    const m = { ...SITE_A.manifest };
-    expect(m.routes.some((r) => r.kind === 'zone')).toBe(true);
     const z = await html(SITE_A.id, ['synth-district']);
     expect(z).toContain('data-ficha="zone"');
     expect(z).toContain('SYNTH Census');
@@ -41,13 +47,13 @@ describe('ST2-07 fichas de entidades (propiedad, desarrollo, zona, edificio)', (
     expect(d).toContain('380');
   });
 
-  it('[negativo] slug de ficha inexistente -> 404 y una ficha sin "es" en el titulo se rechaza', async () => {
+  it('[negativo] slug de ficha inexistente -> 404 y una ficha sin "es" en el titulo se rechaza (contrato)', async () => {
     expect((await renderSite(client(), SITE_A.id, ['no-existe'])).kind).toBe('not_found');
     const f = createFakeCore();
-    f.mutate('/manifest', (b) => ({ ...b, template: { id: 'baylara', version: 1 } }));
+    f.mutate('/manifest', withEntities);
     f.mutate('/listings/synth-condo-01', (b) => ({ ...b, title: { en: 'Only en' } }));
     const c = createCoreClient({ baseUrl: 'https://core.test/api/v1/sites', token: 'tok-sintetico', fetch: f.fetch });
-    expect((await renderSite(c, SITE_A.id, ['synth-condo-01'])).kind).toBe('error');
+    await expect(renderSite(c, SITE_A.id, ['synth-condo-01'])).rejects.toMatchObject({ code: 'CONTRACT_VIOLATION' });
   });
 
   it('[tenant-ajeno] zona, edificio y desarrollo del sitio B no se resuelven desde el sitio A', async () => {
