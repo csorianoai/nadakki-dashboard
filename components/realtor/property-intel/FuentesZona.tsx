@@ -45,7 +45,9 @@ type Nueva = { scopes: string[]; count: number; top_by_cost: Record<string, unkn
 /** Permisos: reparto por ScopeofWork y obra nueva por coste, solo si vienen en el sobre. */
 function Permisos({ v }: { v: Record<string, unknown> }) {
   const escala = Array.isArray(v.scope_of_work) ? (v.scope_of_work as Escala[]) : [];
-  const nueva = v.new_construction && typeof v.new_construction === "object" ? (v.new_construction as Nueva) : null;
+  // Obra nueva mal formada (sin listas) no se pinta: un sobre incoherente no se muestra como dato ni tumba la ficha.
+  const nc = v.new_construction as Partial<Nueva> | null | undefined;
+  const nueva = nc && typeof nc === "object" && Array.isArray(nc.scopes) && Array.isArray(nc.top_by_cost) ? (nc as Nueva) : null;
   return (
     <>
       {escala.length ? <ul style={{ margin: "8px 0 0", paddingLeft: 18 }}>{escala.map((e, i) => <li key={i} data-testid="pi-src-scope">{String(e.scope ?? "—")} · {n(e.count) ?? "—"}</li>)}</ul> : null}

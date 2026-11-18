@@ -72,6 +72,19 @@ it("permisos sin filtro de obra nueva: lo dice, sin inventar la lista", async ()
   expect(within(perm).queryByTestId("pi-src-new-row")).toBeNull();
 });
 
+it("obra nueva mal formada (sin scopes ni top_by_cost en lista): no se pinta y la ficha no se cae", async () => {
+  const live = { ...PERM, provider_status: "configured", data_status: "LIVE", unavailable_reason: null, detail: null,
+    geo: { area: "Edgewater" }, provenance: { attribution: "City of Miami (CC BY 4.0)" },
+    values: { permits_issued: 10, new_construction: { count: 1 } } };
+  api({ [`${B}/acs`]: res(200, ACS), [`${B}/miami-permits`]: res(200, live), [`${B}/dor`]: res(200, DOR) });
+  render(<FuentesZona propertyId={P} />);
+  const perm = await screen.findByTestId("pi-src-city_of_miami_building_permits");
+  expect(perm).toHaveTextContent("Permisos emitidos (12 meses)");
+  expect(within(perm).queryByTestId("pi-src-new-count")).toBeNull();
+  expect(within(perm).queryByTestId("pi-src-new-row")).toBeNull();
+  expect(screen.getByTestId("pi-src-florida_dor_nal_sdf")).toBeInTheDocument();
+});
+
 it("respuesta sin sobre válido o error HTTP → no se inventa nada; 404 oculta; sin sesión no llama", async () => {
   api({ [`${B}/acs`]: res(200, { data_status: "LIVE" }), [`${B}/miami-permits`]: res(503), [`${B}/dor`]: res(404) });
   const { unmount } = render(<FuentesZona propertyId={P} />);
