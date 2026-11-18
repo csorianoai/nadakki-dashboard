@@ -1,0 +1,1234 @@
+{
+  "nav_listings": {
+    "es": "Propiedades",
+    "en": "Properties"
+  },
+  "nav_rentals": {
+    "es": "Alquilar",
+    "en": "Rent"
+  },
+  "nav_sell": {
+    "es": "Vender",
+    "en": "Sell"
+  },
+  "nav_areas": {
+    "es": "Zonas",
+    "en": "Areas"
+  },
+  "nav_international": {
+    "es": "Compradores internacionales",
+    "en": "International buyers"
+  },
+  "nav_puntacana": {
+    "es": "Punta Cana",
+    "en": "Punta Cana"
+  },
+  "nav_about": {
+    "es": "Sobre mí",
+    "en": "About"
+  },
+  "nav_contact": {
+    "es": "Contacto",
+    "en": "Contact"
+  },
+  "nav_privacy": {
+    "es": "Política de privacidad",
+    "en": "Privacy Policy"
+  },
+  "nav_terms": {
+    "es": "Términos de uso",
+    "en": "Terms of Use"
+  },
+  "main_nav": {
+    "es": "Navegación principal",
+    "en": "Main navigation"
+  },
+  "menu": {
+    "es": "Menú",
+    "en": "Menu"
+  },
+  "switch_lang": {
+    "es": "English",
+    "en": "Español"
+  },
+  "switch_lang_short": {
+    "es": "EN",
+    "en": "ES"
+  },
+  "cta_consult": {
+    "es": "Agenda una consulta",
+    "en": "Book a consultation"
+  },
+  "cta_value": {
+    "es": "¿Cuánto vale mi propiedad?",
+    "en": "What is my property worth?"
+  },
+  "call": {
+    "es": "Llamar",
+    "en": "Call"
+  },
+  "whatsapp": {
+    "es": "WhatsApp",
+    "en": "WhatsApp"
+  },
+  "view_all": {
+    "es": "Ver todas las propiedades",
+    "en": "View all properties"
+  },
+  "sample": {
+    "es": "EJEMPLO",
+    "en": "SAMPLE"
+  },
+  "for_sale": {
+    "es": "En venta",
+    "en": "For sale"
+  },
+  "for_rent": {
+    "es": "En alquiler",
+    "en": "For rent"
+  },
+  "preconstruction": {
+    "es": "Preventa",
+    "en": "Pre-construction"
+  },
+  "beds": {
+    "es": "hab.",
+    "en": "bd"
+  },
+  "baths": {
+    "es": "baños",
+    "en": "ba"
+  },
+  "courtesy": {
+    "es": "Cortesía de",
+    "en": "Listing courtesy of"
+  },
+  "no_results": {
+    "es": "Ninguna propiedad coincide con estos filtros. Ajústalos o escríbeme lo que estás buscando.",
+    "en": "No properties match these filters. Adjust them, or write to me about what you are looking for."
+  },
+  "no_listings": {
+    "es": "Las propiedades se publicarán aquí en cuanto se conecte el listado. Mientras tanto, cuéntame qué buscas.",
+    "en": "Properties will appear here as soon as the listing feed is connected. Meanwhile, tell me what you are looking for."
+  },
+  "results": {
+    "es": "propiedades",
+    "en": "properties"
+  },
+  "f_zone": {
+    "es": "Zona",
+    "en": "Area"
+  },
+  "f_type": {
+    "es": "Tipo",
+    "en": "Type"
+  },
+  "f_price": {
+    "es": "Precio",
+    "en": "Price"
+  },
+  "f_beds": {
+    "es": "Habitaciones",
+    "en": "Bedrooms"
+  },
+  "f_sort": {
+    "es": "Ordenar por",
+    "en": "Sort by"
+  },
+  "any_zone": {
+    "es": "Todas las zonas",
+    "en": "All areas"
+  },
+  "any_type": {
+    "es": "Cualquier tipo",
+    "en": "Any type"
+  },
+  "any_price": {
+    "es": "Cualquier precio",
+    "en": "Any price"
+  },
+  "any": {
+    "es": "Cualquiera",
+    "en": "Any"
+  },
+  "sort_new": {
+    "es": "Más recientes",
+    "en": "Newest"
+  },
+  "sort_asc": {
+    "es": "Precio: menor a mayor",
+    "en": "Price: low to high"
+  },
+  "sort_desc": {
+    "es": "Precio: mayor a menor",
+    "en": "Price: high to low"
+  },
+  "type_condo": {
+    "es": "Apartamento",
+    "en": "Condo"
+  },
+  "type_house": {
+    "es": "Casa",
+    "en": "House"
+  },
+  "type_penthouse": {
+    "es": "Penthouse",
+    "en": "Penthouse"
+  },
+  "type_villa": {
+    "es": "Villa",
+    "en": "Villa"
+  },
+  "search": {
+    "es": "Buscar",
+    "en": "Search"
+  },
+  "f_bedrooms": {
+    "es": "Habitaciones",
+    "en": "Bedrooms"
+  },
+  "f_bathrooms": {
+    "es": "Baños",
+    "en": "Bathrooms"
+  },
+  "f_interior": {
+    "es": "Interior",
+    "en": "Interior"
+  },
+  "f_terrace": {
+    "es": "Terraza",
+    "en": "Terrace"
+  },
+  "f_year": {
+    "es": "Año de construcción",
+    "en": "Year built"
+  },
+  "f_parking": {
+    "es": "Estacionamiento",
+    "en": "Parking"
+  },
+  "f_hoa": {
+    "es": "Mantenimiento / mes",
+    "en": "HOA / month"
+  },
+  "f_view": {
+    "es": "Vista",
+    "en": "View"
+  },
+  "about_property": {
+    "es": "Sobre esta propiedad",
+    "en": "About this property"
+  },
+  "features": {
+    "es": "Características",
+    "en": "Features"
+  },
+  "virtual_tour": {
+    "es": "Visita virtual",
+    "en": "Virtual tour"
+  },
+  "start_tour": {
+    "es": "Iniciar recorrido 3D",
+    "en": "Start 3D tour"
+  },
+  "location": {
+    "es": "Ubicación",
+    "en": "Location"
+  },
+  "open_map": {
+    "es": "Ver en el mapa",
+    "en": "Open map"
+  },
+  "similar": {
+    "es": "Propiedades similares",
+    "en": "Similar properties"
+  },
+  "request_info": {
+    "es": "Solicita información o una visita privada",
+    "en": "Request information or a private showing"
+  },
+  "reliable": {
+    "es": "Información considerada fiable pero no garantizada. Superficies y medidas aproximadas.",
+    "en": "Information deemed reliable but not guaranteed. Square footage and dimensions are approximate."
+  },
+  "sample_note": {
+    "es": "Ficha de ejemplo para revisar el diseño. Solo visible en vista previa.",
+    "en": "Sample listing for design review. Visible in preview only."
+  },
+  "photos": {
+    "es": "Fotos",
+    "en": "Photos"
+  },
+  "breadcrumbs": {
+    "es": "Ruta de navegación",
+    "en": "Breadcrumb"
+  },
+  "form_iam": {
+    "es": "Soy",
+    "en": "I am"
+  },
+  "intent_buyer": {
+    "es": "Comprador",
+    "en": "Buying"
+  },
+  "intent_seller": {
+    "es": "Vendedor o propietario",
+    "en": "Seller or owner"
+  },
+  "intent_tenant": {
+    "es": "Inquilino",
+    "en": "Looking to rent"
+  },
+  "f_name": {
+    "es": "Nombre completo",
+    "en": "Full name"
+  },
+  "f_email": {
+    "es": "Email",
+    "en": "Email"
+  },
+  "f_phone": {
+    "es": "Teléfono (con código de país)",
+    "en": "Phone (with country code)"
+  },
+  "f_pref": {
+    "es": "Contacto preferido",
+    "en": "Preferred contact"
+  },
+  "pref_whatsapp": {
+    "es": "WhatsApp",
+    "en": "WhatsApp"
+  },
+  "pref_call": {
+    "es": "Llamada",
+    "en": "Phone call"
+  },
+  "pref_sms": {
+    "es": "SMS",
+    "en": "SMS"
+  },
+  "pref_email": {
+    "es": "Email",
+    "en": "Email"
+  },
+  "f_area": {
+    "es": "Zona de interés",
+    "en": "Area of interest"
+  },
+  "f_budget": {
+    "es": "Rango de precio",
+    "en": "Price range"
+  },
+  "f_address": {
+    "es": "Dirección de la propiedad",
+    "en": "Property address"
+  },
+  "f_ptype": {
+    "es": "Tipo de propiedad",
+    "en": "Property type"
+  },
+  "f_goal": {
+    "es": "Me interesa",
+    "en": "I would like to"
+  },
+  "goal_sell": {
+    "es": "Vender",
+    "en": "Sell"
+  },
+  "goal_rent": {
+    "es": "Alquilarla",
+    "en": "Rent it out"
+  },
+  "goal_both": {
+    "es": "Comparar ambas opciones",
+    "en": "Compare both"
+  },
+  "goal_value": {
+    "es": "Solo una valoración",
+    "en": "Only a valuation"
+  },
+  "f_rent": {
+    "es": "Presupuesto mensual",
+    "en": "Monthly budget"
+  },
+  "f_move": {
+    "es": "Fecha de mudanza",
+    "en": "Move-in date"
+  },
+  "f_msg": {
+    "es": "Mensaje (opcional)",
+    "en": "Message (optional)"
+  },
+  "not_sure": {
+    "es": "Aún no lo sé",
+    "en": "Not sure yet"
+  },
+  "other": {
+    "es": "Otro",
+    "en": "Other"
+  },
+  "consent": {
+    "es": "Acepto que Baylara y su agente me contacten por llamada, SMS o WhatsApp al número indicado, incluidos mensajes enviados con tecnología automatizada, sobre mi consulta. El consentimiento no es condición para ninguna compra o servicio. Pueden aplicar tarifas de mensajes y datos. Responde STOP para darte de baja.",
+    "en": "I agree that Baylara and its agent may contact me by phone call, SMS or WhatsApp at the number provided, including messages sent with automated technology, about my inquiry. Consent is not a condition of any purchase or service. Message and data rates may apply. Reply STOP to opt out."
+  },
+  "form_note": {
+    "es": "Tus datos se usan solo para responder a tu solicitud. Nunca se venden ni se comparten con terceros para su publicidad.",
+    "en": "Your information is used only to answer your request. It is never sold or shared with third parties for their marketing."
+  },
+  "submit_buyer": {
+    "es": "Enviar mi solicitud",
+    "en": "Send my request"
+  },
+  "submit_seller": {
+    "es": "Solicitar valoración gratuita",
+    "en": "Request free valuation"
+  },
+  "submit_tenant": {
+    "es": "Encontrar mi alquiler",
+    "en": "Find my rental"
+  },
+  "sending": {
+    "es": "Enviando…",
+    "en": "Sending…"
+  },
+  "need_contact": {
+    "es": "Escribe tu nombre y un email o teléfono.",
+    "en": "Please enter your name and an email or phone."
+  },
+  "send_error": {
+    "es": "No pudimos enviar tu solicitud. Inténtalo de nuevo o escríbenos por WhatsApp.",
+    "en": "We could not send your request. Please try again or write to us on WhatsApp."
+  },
+  "thanks": {
+    "es": "Gracias. Hemos recibido tu solicitud.",
+    "en": "Thank you. Your request has been received."
+  },
+  "thanks_text": {
+    "es": "Te responderemos por el canal que elegiste.",
+    "en": "We will reply by the channel you chose."
+  },
+  "write_whatsapp": {
+    "es": "Escribir por WhatsApp",
+    "en": "Write on WhatsApp"
+  },
+  "footer_tag": {
+    "es": "Propiedades de alto nivel frente al agua en el Sur de Florida y Punta Cana. Español e inglés.",
+    "en": "High-end waterfront real estate in South Florida and Punta Cana. English and Spanish."
+  },
+  "explore": {
+    "es": "Explorar",
+    "en": "Explore"
+  },
+  "legal": {
+    "es": "Legal",
+    "en": "Legal"
+  },
+  "phone": {
+    "es": "Teléfono",
+    "en": "Phone"
+  },
+  "agent_label": {
+    "es": "Agente",
+    "en": "Agent"
+  },
+  "license": {
+    "es": "Licencia n.º",
+    "en": "License No."
+  },
+  "brokerage": {
+    "es": "Correduría",
+    "en": "Brokerage"
+  },
+  "eho_text": {
+    "es": "Igualdad de oportunidades en la vivienda. Nos comprometemos con la letra y el espíritu de la política de EE. UU. para lograr la igualdad de oportunidades de vivienda en todo el país. Apoyamos un programa de publicidad y mercadeo sin barreras para obtener vivienda por motivos de raza, color, religión, sexo, discapacidad, situación familiar u origen nacional.",
+    "en": "Equal Housing Opportunity. We are pledged to the letter and spirit of U.S. policy for the achievement of equal housing opportunity throughout the Nation. We encourage and support an affirmative advertising and marketing program in which there are no barriers to obtaining housing because of race, color, religion, sex, handicap, familial status, or national origin."
+  },
+  "listing_disclaimer": {
+    "es": "La información de los listados se considera fiable pero no está garantizada.",
+    "en": "Listing information is deemed reliable but not guaranteed."
+  },
+  "pc_partner": {
+    "es": "Las propiedades en Punta Cana se ofrecen en colaboración con",
+    "en": "Punta Cana properties are offered in collaboration with"
+  },
+  "preview_banner": {
+    "es": "Vista previa: los datos marcados como Pendiente y las fichas de ejemplo no aparecen en producción.",
+    "en": "Preview: items marked Pending and sample listings do not appear in production."
+  },
+  "not_found": {
+    "es": "No encontramos esta página.",
+    "en": "We could not find this page."
+  },
+  "go_home": {
+    "es": "Ir a la portada",
+    "en": "Go to the home page"
+  },
+  "nav_buildings": {
+    "es": "Edificios",
+    "en": "Buildings"
+  },
+  "nav_market": {
+    "es": "Mercado",
+    "en": "Market"
+  },
+  "nav_accessibility": {
+    "es": "Accesibilidad",
+    "en": "Accessibility"
+  },
+  "nav_international_short": {
+    "es": "Internacional",
+    "en": "International"
+  },
+  "lic_fl": {
+    "es": "Licencia FL",
+    "en": "FL License"
+  },
+  "wa_default": {
+    "es": "Hola, vi tu sitio Baylara y me gustaría hablar contigo.",
+    "en": "Hi, I found your Baylara site and would like to talk."
+  },
+  "wa_listing": {
+    "es": "Hola, me interesa la propiedad {p}. ¿Podemos hablar?",
+    "en": "Hi, I’m interested in the property {p}. Can we talk?"
+  },
+  "wa_zone": {
+    "es": "Hola, estoy mirando propiedades en {z}.",
+    "en": "Hi, I’m looking at properties in {z}."
+  },
+  "source": {
+    "es": "Fuente",
+    "en": "Source"
+  },
+  "as_of": {
+    "es": "fecha",
+    "en": "as of"
+  },
+  "f_timeline": {
+    "es": "¿Para cuándo?",
+    "en": "Timeline"
+  },
+  "tl_now": {
+    "es": "En los próximos 3 meses",
+    "en": "Within 3 months"
+  },
+  "tl_6": {
+    "es": "En 3 a 6 meses",
+    "en": "In 3 to 6 months"
+  },
+  "tl_12": {
+    "es": "En 6 a 12 meses",
+    "en": "In 6 to 12 months"
+  },
+  "tl_explore": {
+    "es": "Solo explorando",
+    "en": "Just exploring"
+  },
+  "f_payment": {
+    "es": "Forma de pago",
+    "en": "Payment"
+  },
+  "pay_cash": {
+    "es": "Contado",
+    "en": "Cash"
+  },
+  "pay_foreign": {
+    "es": "Financiación para extranjeros",
+    "en": "Foreign national financing"
+  },
+  "pay_local": {
+    "es": "Financiación en EE. UU.",
+    "en": "U.S. financing"
+  },
+  "f_country": {
+    "es": "País de residencia",
+    "en": "Country of residence"
+  },
+  "f_contact": {
+    "es": "Email o WhatsApp",
+    "en": "Email or WhatsApp"
+  },
+  "intent_consult": {
+    "es": "Consulta",
+    "en": "Consultation"
+  },
+  "f_date": {
+    "es": "Día",
+    "en": "Day"
+  },
+  "f_time": {
+    "es": "Hora (Miami)",
+    "en": "Time (Miami)"
+  },
+  "f_topic": {
+    "es": "Tema",
+    "en": "Topic"
+  },
+  "submit_consult": {
+    "es": "Solicitar la consulta",
+    "en": "Request the consultation"
+  },
+  "submit_alerts": {
+    "es": "Activar alertas",
+    "en": "Turn on alerts"
+  },
+  "submit_market": {
+    "es": "Suscribirme",
+    "en": "Subscribe"
+  },
+  "submit_saved": {
+    "es": "Guardar mi búsqueda",
+    "en": "Save my search"
+  },
+  "f_channel": {
+    "es": "Recibir por",
+    "en": "Receive by"
+  },
+  "next": {
+    "es": "Siguiente",
+    "en": "Next"
+  },
+  "back": {
+    "es": "Atrás",
+    "en": "Back"
+  },
+  "step": {
+    "es": "Paso",
+    "en": "Step"
+  },
+  "of": {
+    "es": "de",
+    "en": "of"
+  },
+  "step_property": {
+    "es": "Tu propiedad",
+    "en": "Your property"
+  },
+  "step_goal": {
+    "es": "Tu objetivo",
+    "en": "Your goal"
+  },
+  "step_contact": {
+    "es": "Tus datos",
+    "en": "Your details"
+  },
+  "f_building": {
+    "es": "Edificio (si aplica)",
+    "en": "Building (if any)"
+  },
+  "book_title": {
+    "es": "Agenda una consulta",
+    "en": "Book a consultation"
+  },
+  "book_text": {
+    "es": "Elige día y hora; te confirmo por el canal que prefieras.",
+    "en": "Pick a day and time; I will confirm by your preferred channel."
+  },
+  "or_form": {
+    "es": "o déjame tus datos",
+    "en": "or leave your details"
+  },
+  "schedule_visit": {
+    "es": "Agendar visita",
+    "en": "Schedule a showing"
+  },
+  "calc_title": {
+    "es": "Costos mensuales estimados",
+    "en": "Estimated monthly costs"
+  },
+  "calc_hoa": {
+    "es": "Cuota de mantenimiento",
+    "en": "HOA fee"
+  },
+  "calc_tax": {
+    "es": "Impuesto a la propiedad (anual)",
+    "en": "Property tax (annual)"
+  },
+  "calc_ins": {
+    "es": "Seguro de la unidad (anual, estimado)",
+    "en": "Unit insurance (annual, estimate)"
+  },
+  "calc_total": {
+    "es": "Total mensual",
+    "en": "Monthly total"
+  },
+  "calc_note": {
+    "es": "Cálculo orientativo con los valores que ves arriba. No incluye hipoteca ni servicios. Confirma cada cifra antes de ofertar.",
+    "en": "Indicative calculation with the values above. Excludes mortgage and utilities. Confirm every figure before making an offer."
+  },
+  "calc_empty": {
+    "es": "Completa los valores para ver el total.",
+    "en": "Fill in the values to see the total."
+  },
+  "building_link": {
+    "es": "Ver la guía del edificio",
+    "en": "See the building guide"
+  },
+  "saved_title": {
+    "es": "¿Guardamos esta búsqueda?",
+    "en": "Shall we save this search?"
+  },
+  "saved_text": {
+    "es": "Te aviso por email o WhatsApp cuando salga algo parecido.",
+    "en": "I’ll alert you by email or WhatsApp when something similar comes up."
+  },
+  "dismiss": {
+    "es": "Ahora no",
+    "en": "Not now"
+  },
+  "rent_min_30d": {
+    "es": "Alquiler mín. 30 días",
+    "en": "Min. rental 30 days"
+  },
+  "rent_min_6m": {
+    "es": "Alquiler mín. 6 meses",
+    "en": "Min. rental 6 months"
+  },
+  "rent_min_1y": {
+    "es": "Alquiler mín. 1 año",
+    "en": "Min. rental 1 year"
+  },
+  "rent_min_none": {
+    "es": "Sin alquiler",
+    "en": "No rentals"
+  },
+  "oceanfront": {
+    "es": "Frente al mar",
+    "en": "Oceanfront"
+  },
+  "pets_yes": {
+    "es": "Admite mascotas",
+    "en": "Pets allowed"
+  },
+  "pets_no": {
+    "es": "Sin mascotas",
+    "en": "No pets"
+  },
+  "f_rental": {
+    "es": "Política de alquiler",
+    "en": "Rental policy"
+  },
+  "f_pets": {
+    "es": "Mascotas",
+    "en": "Pets"
+  },
+  "f_hoa_range": {
+    "es": "Cuota por ft²/mes",
+    "en": "Fee per sq ft/mo"
+  },
+  "f_front": {
+    "es": "Ubicación",
+    "en": "Location"
+  },
+  "any_front": {
+    "es": "Cualquiera",
+    "en": "Any"
+  },
+  "view_list": {
+    "es": "Lista",
+    "en": "List"
+  },
+  "view_map": {
+    "es": "Mapa",
+    "en": "Map"
+  },
+  "buildings_count": {
+    "es": "edificios",
+    "en": "buildings"
+  },
+  "y_old": {
+    "es": "Antes de 2000",
+    "en": "Before 2000"
+  },
+  "y_mid": {
+    "es": "2000–2015",
+    "en": "2000–2015"
+  },
+  "y_new": {
+    "es": "2016 o después",
+    "en": "2016 or later"
+  },
+  "h_low": {
+    "es": "Menos de $1,00",
+    "en": "Under $1.00"
+  },
+  "h_mid": {
+    "es": "$1,00 – $1,50",
+    "en": "$1.00 – $1.50"
+  },
+  "h_high": {
+    "es": "Más de $1,50",
+    "en": "Over $1.50"
+  },
+  "year_built": {
+    "es": "Año",
+    "en": "Year built"
+  },
+  "floors": {
+    "es": "Pisos",
+    "en": "Floors"
+  },
+  "units": {
+    "es": "Unidades",
+    "en": "Units"
+  },
+  "architect": {
+    "es": "Arquitecto",
+    "en": "Architect"
+  },
+  "developer": {
+    "es": "Promotora",
+    "en": "Developer"
+  },
+  "unit_size": {
+    "es": "Unidad",
+    "en": "Unit"
+  },
+  "monthly": {
+    "es": "Cuota mensual",
+    "en": "Monthly fee"
+  },
+  "includes": {
+    "es": "Incluye",
+    "en": "Includes"
+  },
+  "min_term": {
+    "es": "Plazo mínimo de alquiler",
+    "en": "Minimum lease term"
+  },
+  "times_year": {
+    "es": "Veces por año",
+    "en": "Times per year"
+  },
+  "approval": {
+    "es": "Aprobación de la asociación",
+    "en": "Association approval"
+  },
+  "yes": {
+    "es": "Sí",
+    "en": "Yes"
+  },
+  "no": {
+    "es": "No",
+    "en": "No"
+  },
+  "pets": {
+    "es": "Mascotas",
+    "en": "Pets"
+  },
+  "milestone": {
+    "es": "Inspección estructural obligatoria (milestone)",
+    "en": "Structural milestone inspection"
+  },
+  "sirs": {
+    "es": "Estudio de reservas para integridad estructural (SIRS)",
+    "en": "Structural Integrity Reserve Study (SIRS)"
+  },
+  "special_assessment": {
+    "es": "Derrama aprobada",
+    "en": "Approved special assessment"
+  },
+  "st_completed": {
+    "es": "Completada",
+    "en": "Completed"
+  },
+  "st_in_progress": {
+    "es": "En curso",
+    "en": "In progress"
+  },
+  "st_pending": {
+    "es": "Pendiente",
+    "en": "Pending"
+  },
+  "st_not_required_yet": {
+    "es": "Aún no exigida",
+    "en": "Not yet required"
+  },
+  "on": {
+    "es": "el",
+    "en": "on"
+  },
+  "line": {
+    "es": "Línea",
+    "en": "Line"
+  },
+  "orientation": {
+    "es": "Orientación",
+    "en": "Orientation"
+  },
+  "views": {
+    "es": "Vistas",
+    "en": "Views"
+  },
+  "month": {
+    "es": "Mes",
+    "en": "Month"
+  },
+  "price_psf": {
+    "es": "Precio/ft²",
+    "en": "Price/sq ft"
+  },
+  "median_psf": {
+    "es": "Mediana precio/ft²",
+    "en": "Median price/sq ft"
+  },
+  "ind_medianPrice": {
+    "es": "Precio mediano",
+    "en": "Median price"
+  },
+  "ind_pricePerSqft": {
+    "es": "Precio por ft²",
+    "en": "Price per sq ft"
+  },
+  "ind_daysOnMarket": {
+    "es": "Días en el mercado",
+    "en": "Days on market"
+  },
+  "ind_closedSales": {
+    "es": "Ventas cerradas",
+    "en": "Closed sales"
+  },
+  "ind_activeListings": {
+    "es": "En venta",
+    "en": "Active listings"
+  },
+  "price_range": {
+    "es": "Rango de precios",
+    "en": "Price range"
+  },
+  "schools": {
+    "es": "Colegios cercanos",
+    "en": "Nearby schools"
+  },
+  "distances": {
+    "es": "Distancias",
+    "en": "Distances"
+  },
+  "buildings_in": {
+    "es": "Edificios en",
+    "en": "Buildings in"
+  },
+  "report_month": {
+    "es": "Informe del mes",
+    "en": "This month’s report"
+  },
+  "sample_block": {
+    "es": "EJEMPLO",
+    "en": "SAMPLE"
+  },
+  "mls_attr": {
+    "es": "Selección del MLS. Cortesía de la correduría que lista cada propiedad.",
+    "en": "MLS selection. Courtesy of each property’s listing brokerage."
+  },
+  "download": {
+    "es": "Descargar",
+    "en": "Download"
+  },
+  "view_details": {
+    "es": "Ver detalles",
+    "en": "View details"
+  },
+  "price_from": {
+    "es": "Desde",
+    "en": "From"
+  },
+  "price_on_request": {
+    "es": "Consultar precio",
+    "en": "Price upon request"
+  },
+  "new_development": {
+    "es": "Nuevo desarrollo",
+    "en": "New development"
+  },
+  "dev_status_preconstruction": {
+    "es": "Preventa",
+    "en": "Pre-construction"
+  },
+  "dev_status_construction": {
+    "es": "En construcción",
+    "en": "Under construction"
+  },
+  "dev_status_completed": {
+    "es": "Terminado",
+    "en": "Completed"
+  },
+  "nav_developments": {
+    "es": "Nuevos desarrollos",
+    "en": "New developments"
+  },
+  "nav_developments_short": {
+    "es": "Desarrollos",
+    "en": "Developments"
+  },
+  "gallery": {
+    "es": "Galería",
+    "en": "Gallery"
+  },
+  "request_info_btn": {
+    "es": "Solicitar información",
+    "en": "Request information"
+  },
+  "listing_number": {
+    "es": "N.º de listado",
+    "en": "Listing No."
+  },
+  "f_sqft": {
+    "es": "Superficie",
+    "en": "Living area"
+  },
+  "sec_main": {
+    "es": "Características principales",
+    "en": "Key features"
+  },
+  "sec_interior": {
+    "es": "Interior",
+    "en": "Interior"
+  },
+  "sec_exterior": {
+    "es": "Exterior",
+    "en": "Exterior"
+  },
+  "sec_project": {
+    "es": "El proyecto",
+    "en": "The project"
+  },
+  "sec_units": {
+    "es": "Tipos de residencia",
+    "en": "Residence types"
+  },
+  "sec_amenities": {
+    "es": "Amenidades",
+    "en": "Amenities"
+  },
+  "sec_costs": {
+    "es": "Costos mensuales estimados",
+    "en": "Estimated monthly costs"
+  },
+  "dev_status": {
+    "es": "Estado",
+    "en": "Status"
+  },
+  "delivery": {
+    "es": "Entrega",
+    "en": "Delivery"
+  },
+  "units_total": {
+    "es": "Residencias",
+    "en": "Residences"
+  },
+  "interest_title": {
+    "es": "¿Te interesa esta propiedad?",
+    "en": "Interested in this property?"
+  },
+  "interest_dev_title": {
+    "es": "¿Te interesa este proyecto?",
+    "en": "Interested in this project?"
+  },
+  "interest_text": {
+    "es": "Déjame tus datos y te envío fotos, planos, costos y disponibilidad. Te respondo por el canal que prefieras.",
+    "en": "Leave your details and I will send photos, floor plans, costs and availability, through the channel you prefer."
+  },
+  "submit_property": {
+    "es": "Solicitar información",
+    "en": "Request information"
+  },
+  "f_message": {
+    "es": "Mensaje (opcional)",
+    "en": "Message (optional)"
+  },
+  "share": {
+    "es": "Compartir",
+    "en": "Share"
+  },
+  "copy_link": {
+    "es": "Copiar enlace",
+    "en": "Copy link"
+  },
+  "copied": {
+    "es": "Enlace copiado",
+    "en": "Link copied"
+  },
+  "office": {
+    "es": "Oficina",
+    "en": "Office"
+  },
+  "your_agent": {
+    "es": "Tu agente",
+    "en": "Your agent"
+  },
+  "directions": {
+    "es": "Cómo llegar",
+    "en": "Get directions"
+  },
+  "dev_disclaimer_title": {
+    "es": "Aviso legal · preconstrucción",
+    "en": "Legal notice · pre-construction"
+  },
+  "close": {
+    "es": "Cerrar",
+    "en": "Close"
+  },
+  "prev": {
+    "es": "Anterior",
+    "en": "Previous"
+  },
+  "next_img": {
+    "es": "Siguiente",
+    "en": "Next"
+  },
+  "of_n": {
+    "es": "de",
+    "en": "of"
+  },
+  "type_development": {
+    "es": "Nuevo desarrollo",
+    "en": "New development"
+  },
+  "view_photos": {
+    "es": "Ver fotos",
+    "en": "View photos"
+  },
+  "intent_property": {
+    "es": "Interés en una propiedad",
+    "en": "Property inquiry"
+  },
+  "tag_for_sale": {
+    "es": "En venta",
+    "en": "For sale"
+  },
+  "tag_for_rent": {
+    "es": "En alquiler",
+    "en": "For rent"
+  },
+  "tag_sold": {
+    "es": "Vendido",
+    "en": "Sold"
+  },
+  "tag_preconstruction": {
+    "es": "Preconstrucción",
+    "en": "Pre-construction"
+  },
+  "tag_construction": {
+    "es": "En construcción",
+    "en": "Under construction"
+  },
+  "tag_completed": {
+    "es": "Terminado",
+    "en": "Completed"
+  },
+  "tag_delivery": {
+    "es": "Entrega estimada {y}",
+    "en": "Estimated delivery {y}"
+  },
+  "sec_ext_amen": {
+    "es": "Exterior y amenidades",
+    "en": "Exterior & amenities"
+  },
+  "interior_design": {
+    "es": "Interiorismo",
+    "en": "Interior design"
+  },
+  "delivery_year": {
+    "es": "Entrega estimada",
+    "en": "Estimated delivery"
+  },
+  "f_units": {
+    "es": "Unidades",
+    "en": "Units"
+  },
+  "f_floors": {
+    "es": "Pisos",
+    "en": "Floors"
+  },
+  "f_delivery": {
+    "es": "Entrega estimada",
+    "en": "Estimated delivery"
+  },
+  "interested": {
+    "es": "Te interesa",
+    "en": "Interested in"
+  },
+  "view_profile": {
+    "es": "Ver perfil",
+    "en": "View profile"
+  },
+  "renders_credit": {
+    "es": "Renders: cortesía de la promotora",
+    "en": "Renderings courtesy of the developer"
+  },
+  "price_notice": {
+    "es": "Precios, disponibilidad, características y fechas de entrega sujetos a cambios sin previo aviso. Información proporcionada por la promotora, considerada fiable pero no garantizada.",
+    "en": "Pricing, availability, features and delivery dates are subject to change without notice. Information provided by the developer, deemed reliable but not guaranteed."
+  },
+  "f_first": {
+    "es": "Nombre",
+    "en": "First name"
+  },
+  "f_lastname": {
+    "es": "Apellido",
+    "en": "Last name"
+  },
+  "share_on": {
+    "es": "Compartir en {n}",
+    "en": "Share on {n}"
+  },
+  "photo_n": {
+    "es": "Foto {i} de {n}",
+    "en": "Photo {i} of {n}"
+  },
+  "dev_disclaimer_generic": {
+    "es": "Los renders e imágenes son ilustrativos y pueden no reflejar el producto final. Precios, disponibilidad, características y fechas de entrega son estimados y están sujetos a cambios sin previo aviso. Las declaraciones orales no pueden tomarse como ciertas ni como declaraciones de la promotora; para conocer las declaraciones correctas, consulte el folleto y los documentos que la promotora debe entregar al comprador, incluidos los exigidos por la sección 718.503 de los Estatutos de Florida. Esta información no constituye una oferta de venta en ningún estado donde la ley lo prohíba.",
+    "en": "Renderings and images are illustrative and may not reflect the final product. Pricing, availability, features and delivery dates are estimates and subject to change without notice. Oral representations cannot be relied upon as correctly stating the representations of the developer; for correct representations, refer to the brochure and to the documents the developer is required to furnish to a buyer, including those required by section 718.503, Florida Statutes. This is not an offer to sell in any state where prohibited by law."
+  },
+  "type_hotel": {
+    "es": "Hotel",
+    "en": "Hotel"
+  },
+  "type_townhome": {
+    "es": "Townhouses",
+    "en": "Townhomes"
+  },
+  "type_residential": {
+    "es": "Residencial",
+    "en": "Residential"
+  },
+  "type_boutique": {
+    "es": "Condominio boutique",
+    "en": "Boutique condominium"
+  },
+  "type_condo_dev": {
+    "es": "Condominio",
+    "en": "Condominium"
+  },
+  "landscape": {
+    "es": "Paisajismo",
+    "en": "Landscape design"
+  },
+  "msg_sent_title": {
+    "es": "Hemos recibido tu mensaje",
+    "en": "We have received your message"
+  },
+  "msg_sent_text": {
+    "es": "Gracias. Te responderé por el canal que indicaste. Si es urgente, escríbeme por WhatsApp.",
+    "en": "Thank you. I will reply through the channel you chose. If it is urgent, message me on WhatsApp."
+  },
+  "msg_fail_title": {
+    "es": "No pudimos enviar tu mensaje",
+    "en": "We could not send your message"
+  },
+  "msg_fail_text": {
+    "es": "Si el problema continúa, escríbeme directamente por WhatsApp, teléfono o correo.",
+    "en": "If the problem continues, contact me directly by WhatsApp, phone or email."
+  },
+  "msg_fail_missing": {
+    "es": "Revisa que hayas escrito tu nombre y un correo o teléfono válidos.",
+    "en": "Please check that you entered your name and a valid email or phone number."
+  },
+  "go_back": {
+    "es": "Volver a contacto",
+    "en": "Back to contact"
+  },
+  "back_home": {
+    "es": "Ir al inicio",
+    "en": "Go to the home page"
+  }
+}

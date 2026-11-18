@@ -145,12 +145,6 @@ Forge **does not ship a JavaScript animation library**. Runtime uses **`lib/moti
 
 Forge **does not use tooltips**. Prefer visible labels, helper text, `aria-describedby`, and inline descriptions. Tooltips fail on touch-first workflows and add cognitive load. If a surface seems to need a tooltip, the information probably belongs **visible** in the layout.
 
-## GlobalForgeAppShell
-
-**File:** `components/forge/layout/GlobalForgeAppShell.tsx`
-
-Root authenticated shell: loads Inter / mono / display fonts, renders `ForgeAppShell` with `ForgeGlobalCoresSidebar` + `ForgeGlobalTopbar`. Tenant attribute `data-tenant` from `forgeAppDataTenantAttribute()` for test overrides.
-
 ## ForgeGlobalCoresSidebar
 
 **File:** `components/forge/layout/ForgeGlobalCoresSidebar.tsx`
@@ -1514,66 +1508,6 @@ import { ForgeCommandPaletteContext } from "@/components/forge";
 
 ---
 
-## ForgeCreditHubAppShell
-
-**File:** `components/forge/layout/ForgeCreditHubAppShell.tsx`
-
-**Purpose:** Credit Hub shell ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â `PersonaProvider`, `CHTenantGuard`, `ForgeCommandPaletteProvider`, and **`ForgeAppShell`** with **`ForgeCreditHubSidebar`** + **`ForgeCreditHubTopbar`**. Use this for **`/credit-hub/*`** only. For nonÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“Credit Hub modules (e.g. Legal under **`/legal`**), use **`ForgeAppShell`** + **`ForgeAppSidebar`** directly in that routeÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s layout (no `PersonaProvider`, no command palette in v1).
-
-**Props:** `{ children: ReactNode }`
-
-### When to use which shell
-
-| Shell | Route | Persona | Command palette |
-|-------|-------|---------|-----------------|
-| **`ForgeCreditHubAppShell`** | `/credit-hub/*` | Yes (`bank` / `dealer`) | Yes (Ctrl/Cmd-K) |
-| **`ForgeAppShell`** + **`ForgeAppSidebar`** | e.g. `/legal/*` | No | Not mounted (Legal v1) |
-
-### Minimal example (Legal layout pattern)
-
-```tsx
-import { ForgeAppShell } from "@/components/forge/layout/ForgeAppShell";
-import { ForgeAppSidebar } from "@/components/forge/layout/ForgeAppSidebar";
-import { ForgeAppTopbar } from "@/components/forge/layout/ForgeAppTopbar";
-
-<ForgeAppShell sidebar={<ForgeAppSidebar />} topbar={<ForgeAppTopbar module="legal" />}>
-  {children}
-</ForgeAppShell>
-```
-
-### Variants & states (preview)
-
-Captured from [`/credit-hub/preview`](../preview) ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â regenerate via `npm run docs:components`.
-
-_No dedicated capture slice yet ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â use full preview section or add capture mapping in `generate-component-catalog.mjs`._
-
-### DO / DON'T (from Phase 5 polish)
-
-- **DO:** compose with tokens from [`TOKENS.md`](./TOKENS.md); meet focus-ring / target-size patterns in this fileÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢s earlier sections.
-- **DON'T:** add tooltips; ship `framer-motion` on new surfaces; hardcode tenant marketing strings in primitives.
-
-### Accessibility
-
-- Keyboard: focus order follows DOM; interactive cells use native controls or `role` + key handlers where applicable.
-- See **Lighthouse accessibility** section above for gate hygiene.
-
-### Minimal example
-
-```tsx
-import { ForgeCreditHubAppShell } from "@/components/forge";
-```
-
-### Related
-
-- [`POLISH.md`](./POLISH.md) Phase 5 Items 2ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“5 Ãƒâ€šÃ‚Â· [`MIGRATION.md`](./MIGRATION.md)
-
-### Compose vs extend
-
-- **Compose** in page/feature modules under `components/forge/credit-hub/**`.
-- **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
-
----
-
 ## ForgeCreditHubCommandPalette
 
 **File:** `components/forge/layout/ForgeCreditHubCommandPalette.tsx` Ãƒâ€šÃ‚Â· **Lines:** 273
@@ -1694,27 +1628,6 @@ import { ForgeCreditHubTopbar } from "@/components/forge";
 
 - **Compose** in page/feature modules under `components/forge/credit-hub/**`.
 - **Extend** the primitive only when a new variant is reusable across personas (then update preview + this doc).
-
----
-
-## ForgeAppShell
-
-**File:** `components/forge/layout/ForgeAppShell.tsx`
-
-**Purpose:** Agnostic two-column layout: **sidebar** + **topbar** + **`<main id="main-content">`**. Optional **`beforeContent`** (e.g. Credit Hub token debug span). Does **not** mount command palette ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Credit Hub wraps this tree with **`ForgeCommandPaletteProvider`**.
-
-**Primary props interface:** `ForgeAppShellProps`
-
-```ts
-sidebar: ReactNode;
-topbar: ReactNode;
-children: ReactNode;
-beforeContent?: ReactNode;
-```
-
-### Related
-
-- **`ForgeCreditHubAppShell`** Ãƒâ€šÃ‚Â· **`ForgeAppSidebar`** Ãƒâ€šÃ‚Â· **`ForgeAppTopbar`**
 
 ---
 

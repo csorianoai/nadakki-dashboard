@@ -8,8 +8,13 @@ import { DEMO_CONTACTS, DEMO_JOURNEYS, DEMO_OWNERS } from "@/lib/realtor/cliente
 import { applyFilters, countByStatus, inKind, maskEmail, maskPhone, showsOwners } from "@/lib/realtor/clientes/logic";
 import { KINDS, LEAD_STATUSES, NO_FILTERS, ORIGINS, ROLES, type ClientFilters, type Contact, type ContactKind } from "@/lib/realtor/clientes/types";
 import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
+import { AsignacionPanel } from "./AsignacionPanel";
+import { ContactForm } from "./ContactForm";
+import { FORM_COPY } from "./contact-copy";
+import { TextoRecortado } from "../TextoRecortado";
 import { RealtorNotice } from "../RealtorNotice";
 import { useRealtorAccessInfo } from "../useRealtorAccess";
+import { DosColumnas } from "@/components/realtor/layout/DosColumnas";
 
 const CARD: CSSProperties = { background: RT.white, border: `1px solid ${RT.line}`, borderRadius: 12, padding: 22 };
 const SELECT: CSSProperties = { minHeight: 40, borderRadius: 8, border: `1px solid ${RT.lineStrong}`, background: RT.white, color: RT.ink, fontFamily: "inherit", fontSize: 14, padding: "0 10px" };
@@ -71,12 +76,16 @@ export function ClientesPanel() {
 
   // Fuera de DEMO se leen los clientes reales del contrato C-RE-OLA2; sin datos (404/503, vacío) la lista queda vacía.
   const [real, setReal] = useState<readonly Contact[]>([]);
+  const [reload, setReload] = useState(0);
+  // Formulario de contacto (solo datos reales): "new" = alta, "edit" = edición del contacto elegido.
+  const [form, setForm] = useState<"new" | "edit" | null>(null);
+  const [saved, setSaved] = useState(false);
   useEffect(() => {
     if (demo || access !== "ok") return;
     let alive = true;
     fetchClients().then((list) => { if (alive) setReal(list); });
     return () => { alive = false; };
-  }, [demo, access]);
+  }, [demo, access, reload]);
   const contacts: readonly Contact[] = demo ? DEMO_CONTACTS : real;
   const owners = demo ? DEMO_OWNERS : [];
   const inTab = useMemo(() => contacts.filter((c) => inKind(c, kind)), [contacts, kind]);
@@ -88,10 +97,12 @@ export function ClientesPanel() {
 
   if (access !== "ok") return <RealtorNotice reason={access} />;
 
+  const ft = FORM_COPY[lang];
+  const btn: CSSProperties = { ...SELECT, minHeight: 44, padding: "0 18px", fontWeight: 700, cursor: "pointer" };
   const set = (patch: Partial<ClientFilters>) => setFilters((f) => ({ ...f, ...patch }));
   return (
     <section data-testid="clientes-panel" style={{ display: "flex", flexDirection: "column", gap: 18, padding: "28px 40px 40px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", gap: 16, alignItems: "flex-start" }}>
         <div>
           <h1 style={{ margin: 0, fontFamily: FONT_DISPLAY, fontSize: 38, fontWeight: 700, lineHeight: 1.15 }}>{t.title}</h1>
           <p style={{ margin: "14px 0 0", maxWidth: 780, fontSize: 16, lineHeight: 1.45, color: RT.muted }}>{t.intro}</p>
@@ -108,6 +119,17 @@ export function ClientesPanel() {
       </div>
       {demo ? (
         <p role="note" data-testid="demo-banner" style={{ margin: 0, background: RT.demoBg, color: RT.demoText, borderRadius: 8, padding: "8px 12px", fontSize: 13, fontWeight: 600 }}>{t.demo}</p>
+      ) : null}
+
+      {!demo ? (
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <button type="button" data-testid="contact-new" style={btn} onClick={() => { setSaved(false); setForm("new"); }}>{ft.newContact}</button>
+          {saved ? <p role="status" data-testid="contact-saved" style={{ margin: 0, fontSize: 14, fontWeight: 700, color: RT.chipUpText }}>{ft.saved}</p> : null}
+        </div>
+      ) : null}
+      {form && !demo && (form === "new" || current) ? (
+        <ContactForm key={form === "edit" ? current?.id : "new"} contact={form === "edit" ? current : undefined} lang={lang} onCancel={() => setForm(null)}
+          onSaved={() => { setForm(null); setSaved(true); setReload((n) => n + 1); }} />
       ) : null}
 
       <div role="group" aria-label={t.kindLabel} style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -142,7 +164,7 @@ export function ClientesPanel() {
               </span>
             ))}
           </div>}
-          <div style={{ display: "grid", gap: 20, gridTemplateColumns: "minmax(300px, 4fr) minmax(360px, 7fr)", alignItems: "start" }}>
+          <DosColumnas testId="clientes-columnas" columnas={[{ peso: 4, minimo: 300 }, { peso: 7, minimo: 360 }]}>
             <div style={CARD}>
               <h2 style={{ margin: "0 0 10px", fontFamily: FONT_DISPLAY, fontSize: 24 }}>{t.listTitle}</h2>
               <p style={{ margin: "0 0 14px", fontSize: 15, lineHeight: 1.45, color: RT.muted }}>{t.listHint}</p>
@@ -153,7 +175,7 @@ export function ClientesPanel() {
                     <button type="button" data-testid="contact-row" aria-pressed={current?.id === c.id} onClick={() => setSelected(c.id)}
                       style={{ width: "100%", textAlign: "left", cursor: "pointer", fontFamily: "inherit", color: RT.ink, background: RT.white, borderRadius: 10, padding: 14,
                         border: `${current?.id === c.id ? 2 : 1}px solid ${current?.id === c.id ? RT.teal : RT.line}` }}>
-                      <strong style={{ display: "block", fontSize: 14 }}>{c.name}</strong>
+                      <TextoRecortado texto={c.name} style={{ fontSize: 14, fontWeight: 700 }} />
                       <span style={{ display: "block", fontSize: 13, color: RT.muted, margin: "4px 0 8px" }}>{c.summary[lang]}</span>
                       <span style={{ fontSize: 12, fontWeight: 700, background: RT.chipUpBg, color: RT.chipUpText, borderRadius: 999, padding: "3px 10px" }}>
                         {c.leadStatus ? STATUS_LABEL[lang][c.leadStatus] : t.none}
@@ -165,7 +187,7 @@ export function ClientesPanel() {
                   <li key={o.id}>
                     <Link href="/realtor/propietarios" data-testid="owner-row" aria-label={`${t.ownerRow}: ${o.name}`}
                       style={{ display: "block", textDecoration: "none", color: RT.ink, background: RT.white, borderRadius: 10, padding: 14, border: `1px solid ${RT.line}` }}>
-                      <strong style={{ display: "block", fontSize: 14 }}>{o.name}</strong>
+                      <TextoRecortado texto={o.name} style={{ fontSize: 14, fontWeight: 700 }} />
                       <span style={{ display: "block", fontSize: 13, color: RT.muted, margin: "4px 0 8px" }}>
                         {OWNER_ROLE_LABEL[lang][o.ownerRole]} · {o.mandates.length} {t.mandates}
                       </span>
@@ -188,10 +210,13 @@ export function ClientesPanel() {
                   <div><dt style={{ fontSize: 12, color: RT.muted }}>{t.status}</dt><dd style={{ margin: 0, fontWeight: 700 }}>{current.leadStatus ? STATUS_LABEL[lang][current.leadStatus] : t.none}</dd></div>
                 </dl>
               ) : <p style={{ color: RT.muted }}>{t.pickOne}</p>}
+              {current && !demo ? <button type="button" data-testid="contact-edit" style={{ ...btn, marginTop: 14 }} onClick={() => { setSaved(false); setForm("edit"); }}>{ft.edit}</button> : null}
+              {current && !demo ? <Link href={`/realtor/operaciones?contact_id=${encodeURIComponent(current.id)}`} data-testid="contact-abrir-operacion" style={{ ...btn, marginTop: 14, marginLeft: 10, display: "inline-flex", alignItems: "center", textDecoration: "none" }}>Abrir operación</Link> : null}
+              {current && !demo ? <AsignacionPanel contactId={current.id} lang={lang} /> : null}
               {current && DEMO_JOURNEYS[current.id] ? <Journey id={current.id} lang={lang} /> : null}
               <p style={{ margin: "16px 0 0", fontSize: 12, color: RT.muted }}>{t.masked}</p>
             </div>
-          </div>
+          </DosColumnas>
         </>
       )}
       <p role="note" style={{ margin: 0, fontSize: 12, color: RT.muted }}>{t.fairHousing}</p>

@@ -51,6 +51,8 @@ function allowBatch() {
           limit: null,
           current_usage: null,
         },
+        // La ficha pinta costos y margen solo con esta capacidad (F4C-6).
+        "autos.costs.view": { allowed: true, reason_code: "ALLOWED", limit: null, current_usage: null },
       },
     },
     200,

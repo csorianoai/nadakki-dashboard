@@ -16,7 +16,7 @@ it("(a) la página índice renderiza pi-index", () => {
 
 it("(b) UUID válido navega, a propiedad y a unidad", () => {
   render(<PropertyIntelIndexPage />);
-  fireEvent.change(screen.getByLabelText("Identificador"), { target: { value: ID } });
+  fireEvent.change(screen.getByLabelText("Identificador de la propiedad o unidad"), { target: { value: ID } });
   fireEvent.click(screen.getByRole("button", { name: "Buscar propiedad" }));
   expect(push).toHaveBeenCalledWith(`/realtor/property-intel/${ID}`);
   fireEvent.click(screen.getByRole("button", { name: "Buscar unidad" }));
@@ -25,7 +25,7 @@ it("(b) UUID válido navega, a propiedad y a unidad", () => {
 
 it("(b) id no UUID: «Identificador no válido», sin navegar ni llamar a la API", () => {
   render(<PropertyIntelIndexPage />);
-  fireEvent.change(screen.getByLabelText("Identificador"), { target: { value: "abc" } });
+  fireEvent.change(screen.getByLabelText("Identificador de la propiedad o unidad"), { target: { value: "abc" } });
   fireEvent.click(screen.getByRole("button", { name: "Buscar propiedad" }));
   expect(screen.getByText("Identificador no válido")).toBeInTheDocument();
   expect(push).not.toHaveBeenCalled();

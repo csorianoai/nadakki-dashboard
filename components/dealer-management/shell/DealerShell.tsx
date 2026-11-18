@@ -20,6 +20,7 @@ import { DEALER_NAV_CAPABILITY_KEYS, visibleDealerNavGroups } from "./dealer-nav
 import { useDentroDeModuleShell } from "@/components/shell/ModuleShell";
 import { DealerAcciones, DealerAvisoAcceso } from "./DealerAcciones";
 import { DealerCommandPalette } from "./DealerCommandPalette";
+import { DealerAsistente } from "./DealerAsistente";
 import { DealerSidebar } from "./DealerSidebar";
 import { DealerTopbar } from "./DealerTopbar";
 import { DetalleTecnico } from "@/app/autos/dealer/inventario/DetalleTecnico";
@@ -338,6 +339,7 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
         <DealerAcciones canPublish={allows("autos.inventory.create")} canSeeNotifications={allows("credit.applications.view")} />
         {unverifiedReason ? <DealerAvisoAcceso reasonCode={unverifiedReason} /> : null}
         {contenido}
+        <DealerAsistente />
       </div>
     );
   }
@@ -377,6 +379,7 @@ function DealerShellChrome({ children }: { children: ReactNode }) {
         </div>
       </div>
 
+      <DealerAsistente />
       <DealerCommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}

@@ -1,0 +1,72 @@
+{
+  "slug": "la-baia-north",
+  "sample": false,
+  "authorized": true,
+  "order": 22,
+  "sourceId": "1373",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/1373/la-baia-north",
+  "name": "La Baia North",
+  "area": "Bay Harbor Islands",
+  "zone": "bal-harbour",
+  "address": "9481 E Bay Harbor Dr, Bay Harbor Islands, FL 33154",
+  "devType": "condo",
+  "status": null,
+  "deliveryYear": 2026,
+  "delivery": {
+    "es": "Entrega estimada: 2026",
+    "en": "Estimated delivery: 2026"
+  },
+  "priceFrom": 1500000,
+  "beds": "2 – 4",
+  "units": 57,
+  "floors": 8,
+  "sqft": "1,432 – 2,111",
+  "developer": null,
+  "architect": null,
+  "interiorDesigner": null,
+  "landscape": null,
+  "description": {
+    "es": [
+      "La Baia North es un condominio en Bay Harbor Islands, en 9481 E Bay Harbor Dr, Bay Harbor Islands, FL 33154. Contempla 57 residencias en 8 pisos, de 2 – 4 habitaciones y de 1,432 – 2,111 sq ft.",
+      "Entrega estimada: 2026. Precios desde $1,500,000."
+    ],
+    "en": [
+      "La Baia North is a condominium in Bay Harbor Islands, at 9481 E Bay Harbor Dr, Bay Harbor Islands, FL 33154. It comprises 57 residences over 8 floors, with 2 – 4 bedrooms and of 1,432 – 2,111 sq ft.",
+      "Estimated delivery: 2026. Prices from $1,500,000."
+    ]
+  },
+  "interior": {
+    "es": [
+      "Techos de 9 pies; 10 pies en los penthouses",
+      "Puertas y ventanas de impacto de piso a techo",
+      "Entrega totalmente terminada",
+      "Suelos de madera europea de lama ancha y mármol en los baños"
+    ],
+    "en": [
+      "9-foot ceilings; 10 feet in the upper penthouses",
+      "Floor-to-ceiling impact-resistant glass",
+      "Delivered fully finished",
+      "Wide-plank European wood floors and marble bathrooms"
+    ]
+  },
+  "amenities": null,
+  "images": [
+    "dev-la-baia-north-01",
+    "dev-la-baia-north-02",
+    "dev-la-baia-north-03",
+    "dev-la-baia-north-04",
+    "dev-la-baia-north-05",
+    "dev-la-baia-north-06",
+    "dev-la-baia-north-07",
+    "dev-la-baia-north-08",
+    "dev-la-baia-north-09",
+    "dev-la-baia-north-10"
+  ],
+  "heroImages": [
+    "dev-la-baia-north-01"
+  ],
+  "geo": {
+    "lat": 25.8855901,
+    "lng": -80.1286382
+  }
+}

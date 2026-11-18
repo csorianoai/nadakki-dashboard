@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useTenant } from '@/contexts/TenantContext';
+import { tokenStorage } from '@/lib/auth/token-storage';
 
 interface Agent {
   id: string;
@@ -13,6 +15,8 @@ interface Agent {
 const API_URL = '';
 
 export default function AgentsPanel() {
+  const { tenantId } = useTenant();
+  const tenant = tenantId?.trim() || '';
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,6 +24,10 @@ export default function AgentsPanel() {
   const [result, setResult] = useState<any>(null);
 
   useEffect(() => {
+    if (!tenant) {
+      setLoading(false);
+      return;
+    }
     const fetchAgents = async () => {
       try {
         const response = await fetch(
@@ -39,9 +47,13 @@ export default function AgentsPanel() {
     };
 
     fetchAgents();
-  }, []);
+  }, [tenant]);
 
   const handleExecuteAgent = async (agentId: string) => {
+    if (!tenant) {
+      setResult({ agent: agentId, status: 'error', error: 'No hay una organización activa en tu sesión' });
+      return;
+    }
     setExecuting(agentId);
     setResult(null);
     
@@ -52,7 +64,10 @@ export default function AgentsPanel() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Tenant-ID': 'demo'
+            'X-Tenant-ID': tenant,
+            ...(tokenStorage.getAccessToken()
+              ? { Authorization: `Bearer ${tokenStorage.getAccessToken()}` }
+              : {})
           },
           body: JSON.stringify({
             payload: {},

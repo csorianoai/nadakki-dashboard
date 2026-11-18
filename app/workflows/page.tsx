@@ -5,7 +5,7 @@ import { motion } from "@/lib/motion-stub";
 import Link from "next/link";
 import { 
   Workflow, Zap, Users, TrendingUp, Mail, BarChart3, Search, 
-  TestTube, Star, ArrowRight, Play, Clock, CheckCircle2, 
+  TestTube, Star, ArrowRight, Play, Clock, 
   AlertCircle, Loader2, RefreshCw, Filter, Layers, Brain,
   Target, Sparkles, Activity
 } from "lucide-react";
@@ -18,12 +18,6 @@ interface WorkflowData {
   tier: string;
   agents: number;
   status: string;
-}
-
-interface WorkflowStats {
-  total_executions: number;
-  success_rate: number;
-  avg_duration_ms: number;
 }
 
 const TIER_CONFIG: Record<string, { color: string; gradient: string; icon: any; label: string }> = {
@@ -78,7 +72,6 @@ export default function WorkflowsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedTier, setSelectedTier] = useState<string | null>(null);
-  const [stats, setStats] = useState<WorkflowStats>({ total_executions: 1247, success_rate: 94.5, avg_duration_ms: 2340 });
 
   useEffect(() => {
     const fetchWorkflows = async () => {
@@ -87,20 +80,12 @@ export default function WorkflowsPage() {
         setWorkflows(data.workflows || []);
         setError(null);
       } catch (err) {
-        setError("No se pudieron cargar los workflows");
-        // Fallback data
-        setWorkflows([
-          { id: "campaign-optimization", name: "Campaign Optimization", version: "1.0.0", tier: "CORE", agents: 5, status: "active" },
-          { id: "customer-acquisition-intelligence", name: "Customer Acquisition Intelligence", version: "1.1.0", tier: "CORE", agents: 7, status: "active" },
-          { id: "customer-lifecycle-revenue", name: "Customer Lifecycle Revenue", version: "1.0.0", tier: "CORE", agents: 6, status: "active" },
-          { id: "content-performance-engine", name: "Content Performance Engine", version: "1.0.0", tier: "EXECUTION", agents: 5, status: "active" },
-          { id: "social-media-intelligence", name: "Social Media Intelligence", version: "1.0.0", tier: "EXECUTION", agents: 4, status: "active" },
-          { id: "email-automation-master", name: "Email Automation Master", version: "1.0.0", tier: "EXECUTION", agents: 4, status: "active" },
-          { id: "multi-channel-attribution", name: "Multi-Channel Attribution", version: "1.0.0", tier: "INTELLIGENCE", agents: 4, status: "active" },
-          { id: "competitive-intelligence-hub", name: "Competitive Intelligence Hub", version: "1.0.0", tier: "INTELLIGENCE", agents: 3, status: "active" },
-          { id: "ab-testing-experimentation", name: "A/B Testing & Experimentation", version: "1.0.0", tier: "INTELLIGENCE", agents: 3, status: "active" },
-          { id: "influencer-partnership-engine", name: "Influencer & Partnership Engine", version: "1.0.0", tier: "INTELLIGENCE", agents: 2, status: "active" },
-        ]);
+        // "/workflows" es una ruta relativa sin reescritura ni ruta de listado en el backend: el servidor
+        // devuelve el HTML de la propia pagina (no JSON) o 404. Eso es "sin flujos", no un fallo.
+        const status = (err as { status?: number } | null)?.status;
+        const sinRuta = err instanceof SyntaxError || status === 404;
+        setError(sinRuta ? null : "No pudimos cargar estos datos");
+        setWorkflows([]);
       } finally {
         setLoading(false);
       }
@@ -135,13 +120,13 @@ export default function WorkflowsPage() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+        <div className="grid grid-cols-2 gap-4 mt-6">
           <div className="rounded-xl border border-purple-500/30 bg-gradient-to-br from-purple-500/10 to-purple-600/5 p-4">
             <div className="flex items-center gap-3">
               <Layers className="w-5 h-5 text-purple-400" />
               <div>
-                <p className="text-2xl font-bold text-white">{workflows.length}</p>
-                <p className="text-xs text-gray-400">Workflows Activos</p>
+                <p className="text-2xl font-bold text-white">{loading || error ? "—" : workflows.length}</p>
+                <p className="text-xs text-gray-400">Workflows</p>
               </div>
             </div>
           </div>
@@ -149,26 +134,8 @@ export default function WorkflowsPage() {
             <div className="flex items-center gap-3">
               <Users className="w-5 h-5 text-cyan-400" />
               <div>
-                <p className="text-2xl font-bold text-white">{totalAgents}</p>
+                <p className="text-2xl font-bold text-white">{loading || error ? "—" : totalAgents}</p>
                 <p className="text-xs text-gray-400">Agentes Integrados</p>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-xl border border-green-500/30 bg-gradient-to-br from-green-500/10 to-green-600/5 p-4">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-400" />
-              <div>
-                <p className="text-2xl font-bold text-white">{stats.success_rate}%</p>
-                <p className="text-xs text-gray-400">Tasa de Éxito</p>
-              </div>
-            </div>
-          </div>
-          <div className="rounded-xl border border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 to-yellow-600/5 p-4">
-            <div className="flex items-center gap-3">
-              <Activity className="w-5 h-5 text-yellow-400" />
-              <div>
-                <p className="text-2xl font-bold text-white">{stats.total_executions.toLocaleString()}</p>
-                <p className="text-xs text-gray-400">Ejecuciones Totales</p>
               </div>
             </div>
           </div>
@@ -185,7 +152,7 @@ export default function WorkflowsPage() {
               : "bg-transparent text-gray-400 border border-transparent hover:bg-white/5"
           }`}
         >
-          Todos ({workflows.length})
+          Todos{loading || error ? "" : ` (${workflows.length})`}
         </button>
         {tiers.map(tier => {
           const config = TIER_CONFIG[tier] || TIER_CONFIG.CORE;
@@ -217,7 +184,15 @@ export default function WorkflowsPage() {
       {error && (
         <div className="mb-6 p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/30 flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-yellow-400" />
-          <p className="text-sm text-yellow-400">{error} - Mostrando datos de respaldo</p>
+          <p className="text-sm text-yellow-400">{error}</p>
+        </div>
+      )}
+
+      {/* Estado vacio honesto */}
+      {!loading && !error && workflows.length === 0 && (
+        <div className="py-16 text-center text-gray-400">
+          <Workflow className="w-10 h-10 mx-auto mb-3 text-gray-600" />
+          <p className="text-sm">Aún no hay flujos en tu cuenta</p>
         </div>
       )}
 
@@ -338,20 +313,20 @@ export default function WorkflowsPage() {
       >
         <h3 className="text-lg font-semibold text-white mb-4">🚀 Acciones Rápidas</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 transition-all text-left">
+          <button disabled title="Aún no disponible" className="p-4 rounded-xl bg-white/5 border border-white/10 text-left opacity-50 cursor-not-allowed">
             <Play className="w-5 h-5 text-green-400 mb-2" />
             <p className="text-sm font-medium text-white">Ejecutar Todos</p>
-            <p className="text-xs text-gray-400">Workflows CORE</p>
+            <p className="text-xs text-gray-400">Workflows CORE · Aún no disponible</p>
           </button>
-          <button className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 transition-all text-left">
+          <button disabled title="Aún no disponible" className="p-4 rounded-xl bg-white/5 border border-white/10 text-left opacity-50 cursor-not-allowed">
             <Clock className="w-5 h-5 text-blue-400 mb-2" />
             <p className="text-sm font-medium text-white">Programar</p>
-            <p className="text-xs text-gray-400">Scheduler</p>
+            <p className="text-xs text-gray-400">Scheduler · Aún no disponible</p>
           </button>
-          <button className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 transition-all text-left">
+          <button disabled title="Aún no disponible" className="p-4 rounded-xl bg-white/5 border border-white/10 text-left opacity-50 cursor-not-allowed">
             <BarChart3 className="w-5 h-5 text-yellow-400 mb-2" />
             <p className="text-sm font-medium text-white">Métricas</p>
-            <p className="text-xs text-gray-400">Ver Analytics</p>
+            <p className="text-xs text-gray-400">Ver Analytics · Aún no disponible</p>
           </button>
           <Link href="/admin/logs" className="p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-purple-500/30 transition-all text-left">
             <Activity className="w-5 h-5 text-purple-400 mb-2" />

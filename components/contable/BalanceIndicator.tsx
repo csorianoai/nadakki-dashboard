@@ -43,13 +43,13 @@ export function BalanceIndicator({
       </div>
       <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-zinc-500">Total debe (base)</p>
+          <p className="text-[10px] uppercase tracking-wide text-zinc-400">Total debe (base)</p>
           <p className="font-mono text-lg font-semibold text-white">
             {totalDebe.toLocaleString("es-DO", { minimumFractionDigits: 2 })}
           </p>
         </div>
         <div>
-          <p className="text-[10px] uppercase tracking-wide text-zinc-500">Total haber (base)</p>
+          <p className="text-[10px] uppercase tracking-wide text-zinc-400">Total haber (base)</p>
           <p className="font-mono text-lg font-semibold text-white">
             {totalHaber.toLocaleString("es-DO", { minimumFractionDigits: 2 })}
           </p>

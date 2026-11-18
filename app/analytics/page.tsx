@@ -5,8 +5,6 @@ import { motion } from "@/lib/motion-stub";
 import { ArrowRight, BarChart3, Bot, DollarSign, FileText, Target, TrendingUp } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
-import StatCard from "@/components/ui/StatCard";
-import StatusBadge from "@/components/ui/StatusBadge";
 
 const ANALYTICS_MODULES = [
   { id: "marketing-analytics", name: "Marketing Analytics", desc: "Vista consolidada de marketing y rendimiento", href: "/marketing/analytics", icon: TrendingUp, color: "#22c55e", badge: "CANONICAL" },
@@ -20,9 +18,7 @@ const ANALYTICS_MODULES = [
 export default function AnalyticsPage() {
   return (
     <div className="ndk-page ndk-fade-in">
-      <NavigationBar backHref="/">
-        <StatusBadge status="active" label="Analytics Hub" size="lg" />
-      </NavigationBar>
+      <NavigationBar backHref="/" />
 
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center gap-4">
@@ -35,13 +31,6 @@ export default function AnalyticsPage() {
           </div>
         </div>
       </motion.div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard value="6" label="Vistas Disponibles" icon={<BarChart3 className="w-6 h-6 text-cyan-400" />} color="#06b6d4" />
-        <StatCard value="1" label="Vista Canonical" icon={<TrendingUp className="w-6 h-6 text-green-400" />} color="#22c55e" />
-        <StatCard value="2" label="Previews" icon={<Target className="w-6 h-6 text-yellow-400" />} color="#f59e0b" />
-        <StatCard value="1" label="Workspace Root" icon={<FileText className="w-6 h-6 text-blue-400" />} color="#3b82f6" />
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         {ANALYTICS_MODULES.map((module, index) => (

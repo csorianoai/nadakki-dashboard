@@ -1,0 +1,98 @@
+{
+  "about": {
+    "meta": {
+      "title": {
+        "es": "Sobre mí",
+        "en": "About"
+      },
+      "description": {
+        "es": "Agente inmobiliario con licencia en Florida especializado en propiedades frente al agua y en compradores internacionales.",
+        "en": "Florida licensed real estate agent focused on waterfront property and international buyers."
+      }
+    },
+    "eyebrow": {
+      "es": "Sobre mí",
+      "en": "About"
+    },
+    "langTitle": {
+      "es": "Idiomas",
+      "en": "Languages"
+    },
+    "zonesTitle": {
+      "es": "Zonas en las que trabajo",
+      "en": "Areas I cover"
+    },
+    "careerTitle": {
+      "es": "Trayectoria",
+      "en": "Background"
+    },
+    "howTitle": {
+      "es": "Cómo trabajo",
+      "en": "How I work"
+    },
+    "values": [
+      {
+        "h": {
+          "es": "Discreción",
+          "en": "Discretion"
+        },
+        "p": {
+          "es": "Visitas privadas, cuidado con tu información y ninguna presión para decidir.",
+          "en": "Private showings, careful handling of your information and no pressure to decide."
+        }
+      },
+      {
+        "h": {
+          "es": "Información clara",
+          "en": "Clear information"
+        },
+        "p": {
+          "es": "Ventas comparables, documentos del edificio y costos explicados antes de comprometerte.",
+          "en": "Comparable sales, building documents and costs explained before you commit."
+        }
+      },
+      {
+        "h": {
+          "es": "Un solo interlocutor",
+          "en": "One point of contact"
+        },
+        "p": {
+          "es": "Coordino abogados, prestamistas, inspectores y compañía de títulos por ti.",
+          "en": "I coordinate attorneys, lenders, inspectors and the title company for you."
+        }
+      }
+    ]
+  },
+  "contact": {
+    "meta": {
+      "title": {
+        "es": "Contacto",
+        "en": "Contact"
+      },
+      "description": {
+        "es": "Escríbeme por WhatsApp, teléfono o el formulario. Respondo en español o inglés.",
+        "en": "Reach me by WhatsApp, phone or the form. I reply in English or Spanish."
+      }
+    },
+    "eyebrow": {
+      "es": "Contacto",
+      "en": "Contact"
+    },
+    "title": {
+      "es": "Hablemos",
+      "en": "Let’s talk"
+    },
+    "lead": {
+      "es": "Elige el canal que prefieras. Dime si compras, vendes o alquilas para prepararme antes de hablar.",
+      "en": "Choose the channel you prefer. Tell me whether you are buying, selling or renting so I can prepare before we speak."
+    },
+    "office": {
+      "es": "Oficina",
+      "en": "Office"
+    },
+    "byAppointment": {
+      "es": "Reuniones con cita, en persona o por video",
+      "en": "Meetings by appointment, in person or by video"
+    }
+  }
+}

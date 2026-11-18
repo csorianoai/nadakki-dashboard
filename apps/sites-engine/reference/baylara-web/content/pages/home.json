@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "title": { "es": "Baylara · Condominios frente al mar en Miami, explicados por un especialista bilingüe", "en": "Baylara · Miami oceanfront condos, explained by a bilingual specialist" },
+    "description": { "es": "Guía de edificios, informes de mercado y asesoría bilingüe para comprar, vender o alquilar condominios frente al agua en Sunny Isles Beach, Bal Harbour, Aventura, Miami Beach y Fort Lauderdale.", "en": "Building guide, market reports and bilingual advice to buy, sell or rent waterfront condos in Sunny Isles Beach, Bal Harbour, Aventura, Miami Beach and Fort Lauderdale." }
+  },
+  "eyebrow": "Sunny Isles Beach · Bal Harbour · Aventura · Miami Beach · Fort Lauderdale",
+  "title": { "es": "Condominios frente al mar en Miami, explicados por un especialista bilingüe", "en": "Miami oceanfront condos, explained by a bilingual specialist" },
+  "sub": { "es": "Edificio por edificio: cuotas, reglas de alquiler, seguridad estructural y ventas recientes, con su fuente. En español e inglés.", "en": "Building by building: fees, rental rules, structural safety and recent sales, each with its source. In English and Spanish." },
+  "paths": [
+    { "key": "listings", "label": { "es": "Comprar", "en": "Buy" }, "text": { "es": "Propiedades y edificios frente al agua", "en": "Waterfront homes and buildings" } },
+    { "key": "sell", "label": { "es": "Vender", "en": "Sell" }, "text": { "es": "Valoración gratuita y plan de venta", "en": "Free valuation and a sale plan" } },
+    { "key": "international", "label": { "es": "Comprar desde el extranjero", "en": "Buy from abroad" }, "text": { "es": "Paso a paso para no residentes", "en": "Step by step for non-residents" } }
+  ],
+  "rentLink": { "es": "¿Buscas alquilar?", "en": "Looking to rent?" },
+  "trust": {
+    "bilingual": { "es": "Bilingüe inglés y español", "en": "Bilingual English and Spanish" },
+    "license": { "es": "Agente con licencia en Florida", "en": "Florida-licensed agent" },
+    "specialist": { "es": "Especialista en Sunny Isles, Bal Harbour y Aventura", "en": "Specialist in Sunny Isles, Bal Harbour and Aventura" },
+    "countries": { "es": "Clientes de {n} países", "en": "Clients from {n} countries" },
+    "response": { "es": "Respuesta por WhatsApp en {n} horas", "en": "WhatsApp reply within {n} hours" }
+  },
+  "bEyebrow": { "es": "Guía de edificios", "en": "Building guide" },
+  "bTitle": { "es": "Cada torre, con sus reglas y sus números", "en": "Every tower, with its rules and its numbers" },
+  "bAll": { "es": "Ver la guía completa ({n})", "en": "See the full guide ({n})" },
+  "pExclusive": { "es": "Exclusivas", "en": "Exclusive listings" },
+  "pMonth": { "es": "Selección del mes", "en": "Selection of the month" },
+  "pTitle": { "es": "Propiedades frente al agua", "en": "Waterfront properties" },
+  "iEyebrow": { "es": "Centro del comprador internacional", "en": "International buyer center" },
+  "iTitle": { "es": "Comprar en Miami viviendo en Latinoamérica o República Dominicana", "en": "Buying in Miami while living in Latin America or the Dominican Republic" },
+  "iBlocks": [
+    { "h": { "es": "Cómo compra un extranjero", "en": "How a foreign buyer purchases" }, "p": { "es": "A título personal o mediante una sociedad, con abogado y contador desde el inicio.", "en": "Personally or through a company, with an attorney and accountant from the start." } },
+    { "h": { "es": "Financiación para no residentes", "en": "Financing for non-residents" }, "p": { "es": "Hipotecas para extranjeros, compra al contado y prueba de fondos.", "en": "Foreign national mortgages, cash purchases and proof of funds." } },
+    { "h": { "es": "Cierre a distancia", "en": "Remote closing" }, "p": { "es": "Firma remota o por correo, poder apostillado y transferencias verificadas.", "en": "Remote or mail-away signing, apostilled power of attorney and verified wires." } }
+  ],
+  "iMore": { "es": "Ver el paso a paso", "en": "See the step by step" },
+  "mEyebrow": { "es": "Informe de mercado", "en": "Market report" },
+  "mMore": { "es": "Leer el informe completo", "en": "Read the full report" },
+  "aEyebrow": { "es": "Sobre mí", "en": "About" },
+  "aText": { "es": "Asesoro a compradores, vendedores y propietarios de condominios frente al agua entre Miami Beach y Fort Lauderdale, y acompaño a compradores que viven fuera de EE. UU. Cada conversación empieza por lo que quieres lograr, no por un listado.", "en": "I advise buyers, sellers and owners of waterfront condos between Miami Beach and Fort Lauderdale, and I guide buyers who live outside the U.S. Every conversation starts with what you want to achieve, not with a listing." },
+  "aMore": { "es": "Más sobre mí", "en": "More about me" },
+  "rEyebrow": { "es": "Reseñas en Google", "en": "Google reviews" },
+  "rTitle": { "es": "Lo que dicen los clientes", "en": "What clients say" },
+  "cTitle": { "es": "Hablemos de tu próximo paso", "en": "Let’s talk about your next step" },
+  "cText": { "es": "Escríbeme por WhatsApp, agenda una consulta o déjame tus datos y te respondo.", "en": "Message me on WhatsApp, book a consultation or leave your details and I will reply." }
+}

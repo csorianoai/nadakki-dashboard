@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Vehicle } from "@/lib/vehicles";
 
+/** Solo con vendedor real. Valoraciones y telefono no existen en el modelo: no se muestran. */
 export function ContactSeller({ vehicle }: { vehicle: Vehicle }) {
-  const [phoneVisible, setPhoneVisible] = useState(false);
+  if (!vehicle.dealerName) return null;
   const defaultMsg = `¡Hola! Este ${vehicle.make} ${vehicle.model} ${vehicle.year} se ve interesante. ¿Sigue disponible?`;
 
   return (
@@ -14,10 +14,12 @@ export function ContactSeller({ vehicle }: { vehicle: Vehicle }) {
       <h2 className="font-manrope text-lg font-bold text-nk-fg">
         Contactar {vehicle.dealerName}
       </h2>
-      <p className="mt-1 flex items-center gap-1 text-sm text-nk-fg-muted">
-        <Star className="h-4 w-4 fill-nk-warning text-nk-warning" aria-hidden />
-        {vehicle.rating.toFixed(1)} · responde en ~{vehicle.avgResp}
-      </p>
+      {vehicle.rating != null && vehicle.avgResp ? (
+        <p className="mt-1 flex items-center gap-1 text-sm text-nk-fg-muted">
+          <Star className="h-4 w-4 fill-nk-warning text-nk-warning" aria-hidden />
+          {vehicle.rating.toFixed(1)} · responde en ~{vehicle.avgResp}
+        </p>
+      ) : null}
 
       <textarea
         defaultValue={defaultMsg}
@@ -28,16 +30,6 @@ export function ContactSeller({ vehicle }: { vehicle: Vehicle }) {
       <div className="mt-3 flex flex-wrap gap-2">
         <Button variant="brand" className="flex-1">
           Enviar mensaje
-        </Button>
-        <Button
-          variant="outline"
-          className="gap-2"
-          onClick={() => setPhoneVisible(true)}
-        >
-          {!phoneVisible ? (
-            <span className="h-2 w-2 rounded-full bg-nk-danger" aria-hidden />
-          ) : null}
-          {phoneVisible ? "809-555-01XX" : "Ver número"}
         </Button>
       </div>
     </section>

@@ -22,6 +22,11 @@ export const COPY = {
     lang: "Idioma de la pantalla",
     fairHousing: "Cumplimiento de Fair Housing: esta pantalla no usa ningún dato ni filtro de clase protegida.",
     dlButton: "Descargar", dlLoading: "Descargando…", dlDemo: "Descargar: no disponible en demo", dlRetry: "Reintentar",
+    forbidden: "No tienes permiso para esta acción.",
+    genOperation: "Operación", genDocType: "Tipo de documento", genPick: "Elige una operación", genLoading: "Generando…", genButton: "Generar borrador",
+    genOk: "Borrador generado. Ya aparece en la lista de documentos.", genNotFound: "La operación no se encuentra.",
+    genConflict: "Esa plantilla no corresponde al tipo de la operación.", genInvalid: "Tipo de documento no válido.", genStorage: "No se pudo guardar el borrador. Inténtalo de nuevo.", genError: "No se pudo generar el borrador. Inténtalo de nuevo.",
+    genDocTypes: { lease_agreement: "Contrato de alquiler", sale_contract: "Contrato de compraventa", receipt: "Recibo" },
     dlNotFound: "Este documento no se encuentra.", dlGone: "Este documento fue retirado y ya no está disponible.", dlError: "No se pudo descargar el documento. Inténtalo de nuevo.",
   },
   en: {
@@ -43,6 +48,11 @@ export const COPY = {
     lang: "Screen language",
     fairHousing: "Fair Housing compliance: this screen uses no protected-class data or filter.",
     dlButton: "Download", dlLoading: "Downloading…", dlDemo: "Download: not available in demo", dlRetry: "Retry",
+    forbidden: "You do not have permission for this action.",
+    genOperation: "Transaction", genDocType: "Document type", genPick: "Choose a transaction", genLoading: "Generating…", genButton: "Generate draft",
+    genOk: "Draft generated. It now shows in the documents list.", genNotFound: "The transaction could not be found.",
+    genConflict: "That template does not match the transaction type.", genInvalid: "Invalid document type.", genStorage: "The draft could not be saved. Please try again.", genError: "The draft could not be generated. Please try again.",
+    genDocTypes: { lease_agreement: "Lease agreement", sale_contract: "Sale contract", receipt: "Receipt" },
     dlNotFound: "This document could not be found.", dlGone: "This document was withdrawn and is no longer available.", dlError: "The document could not be downloaded. Please try again.",
   },
 } as const;

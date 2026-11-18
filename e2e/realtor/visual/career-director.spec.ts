@@ -1,6 +1,7 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { sesion } from "../sesion";
 
 /**
  * Career Director sobre el armazón de RE-SHELL a 1440×900 frente a la referencia DL10A (Mi oficina, nav-11:
@@ -8,26 +9,10 @@ import { join } from "node:path";
  * (servidor 3101) y acceso denegado (403 → nada).
  */
 
-const B = "http://backend.invalid";
 const THRESHOLD = 0.12;
 const NODEMO = "http://127.0.0.1:3101";
 const REF = join(__dirname, "../../../docs/design/realtor/DL10A/ref/career-director.png");
 
-async function sesion(page: Page, acceso: number) {
-  await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
-  await page.route(`${B}/**`, (route) => route.fulfill({ json: {} }));
-  await page.route(`${B}/api/v2/auth/refresh`, (route) =>
-    route.fulfill({ json: { access_token: "a.b.c", refresh_token: "r", expires_in: 3600 } }));
-  const tenant = { id: "t1", slug: "qa", display_name: "QA", subscribed_cores: ["real_estate"] };
-  await page.route(`${B}/api/v2/auth/me`, (route) =>
-    route.fulfill({ json: {
-      user: { id: "u1", email: "qa@nadakki.test", name: "QA", is_active: true, mfa_enabled: false },
-      current_tenant: tenant, all_tenants: [tenant], active_roles: [],
-    } }));
-  await page.route(/\/api\/v1\/realestate\/acceso/, (route) =>
-    route.fulfill({ status: acceso, json: acceso === 200 ? { ok: true } : { detail: "forbidden" } }));
-  await page.addInitScript(() => localStorage.setItem("nadakki_refresh_token_v2", "r"));
-}
 
 test("positivo: DEMO con sus marcas, licencia, supervisión, metas y NO_DISPONIBLE; el bloque de la barra ya es enlace", async ({ page }) => {
   await sesion(page, 200);
@@ -38,7 +23,8 @@ test("positivo: DEMO con sus marcas, licencia, supervisión, metas y NO_DISPONIB
   await expect(page.getByTestId("card-licencia")).toContainText("SYNTH-SL-0100");
   await expect(page.getByTestId("card-supervision")).toContainText("555-0100");
   await expect(page.getByTestId("goal")).toHaveCount(2);
-  await expect(page.getByTestId("no-disponible-meta-cierres")).toContainText("NO_DISPONIBLE");
+  await expect(page.getByTestId("no-disponible-meta-cierres")).toHaveAttribute("data-quality", "NO_DISPONIBLE");
+  await expect(page.getByTestId("no-disponible-meta-cierres")).toContainText("Sin datos todavía");
   await expect(page.getByTestId("career-director")).toHaveAttribute("href", "/realtor/career-director");
   await expect(page.getByTestId("career-director")).not.toContainText("Próximamente");
   await page.getByTestId("lang-toggle").click();
@@ -82,7 +68,8 @@ test("datos reales (contrato C-RE-OLA3, registros SYNTH) sin DEMO: métricas, vo
   await expect(page.getByTestId("career-real")).toBeVisible({ timeout: 30_000 });
   await expect(page.getByTestId("metric-closings_count")).toHaveText("3");
   await expect(page.getByTestId("metric-showings_count")).toHaveText("12");
-  await expect(page.getByTestId("no-disponible-active_listings")).toContainText("NO_DISPONIBLE");
+  await expect(page.getByTestId("no-disponible-active_listings")).toHaveAttribute("data-quality", "NO_DISPONIBLE");
+  await expect(page.getByTestId("no-disponible-active_listings")).toContainText("Sin datos todavía");
   await expect(page.getByTestId("volume-row")).toHaveCount(2);
   await expect(page.getByTestId("card-volumen")).toContainText("410000.00 USD");
   await expect(page.getByTestId("card-volumen")).toContainText("450000.00 ARS");

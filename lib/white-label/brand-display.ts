@@ -3,7 +3,7 @@
  * Never fall back to "Nadakki" for external tenants; use neutral copy or API branding.
  */
 
-export const NEUTRAL_PLATFORM_TITLE = "Plataforma de crédito";
+export const NEUTRAL_PLATFORM_TITLE = "Nadakki AI Suite";
 export const NEUTRAL_SUITE_LABEL = "Suite operativa";
 export const NEUTRAL_LOGIN_FOOTER = "Acceso multi-institución";
 export const NEUTRAL_FORGE_PRODUCT = "Forge";

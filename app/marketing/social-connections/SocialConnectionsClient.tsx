@@ -5,7 +5,7 @@ import { motion } from "@/lib/motion-stub";
 import {
   Share2,
   Facebook,
-  Youtube,
+  BarChart3,
   Linkedin,
   Twitter,
   Loader2,
@@ -37,8 +37,8 @@ const PLATFORM_CONFIG: Record<
     enabled: true,
   },
   google: {
-    name: "Google (Ads + Analytics + YouTube)",
-    Icon: Youtube,
+    name: "Google (Ads + Analytics)",
+    Icon: BarChart3,
     color: "#EA4335",
     enabled: true,
   },

@@ -1,0 +1,76 @@
+{
+  "slug": "the-perigon-miami-beach",
+  "sample": false,
+  "authorized": true,
+  "order": 13,
+  "sourceId": "1221",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/1221/the-perigon-miami-beach",
+  "name": "The Perigon Miami Beach",
+  "area": "Miami Beach",
+  "zone": "miami-beach",
+  "address": "5333 Collins Ave, Miami Beach, FL 33140",
+  "devType": "condo",
+  "status": "preconstruction",
+  "deliveryYear": 2027,
+  "delivery": {
+    "es": "Entrega estimada: 2027",
+    "en": "Estimated delivery: 2027"
+  },
+  "priceFrom": 12500000,
+  "beds": "3 – 4",
+  "units": 73,
+  "floors": 18,
+  "sqft": "2,100 – 6,700",
+  "developer": "Mast Capital & Starwood Capital Group",
+  "architect": "OMA",
+  "interiorDesigner": "Tara Bernerd & Partners",
+  "landscape": null,
+  "description": {
+    "es": [
+      "The Perigon Miami Beach es un condominio en preconstrucción en Miami Beach, en 5333 Collins Ave, Miami Beach, FL 33140. Contempla 73 residencias en 18 pisos, de 3 – 4 habitaciones y de 2,100 – 6,700 sq ft.",
+      "Equipo: arquitectura de OMA; interiorismo de Tara Bernerd & Partners; desarrollo de Mast Capital & Starwood Capital Group. Entrega estimada: 2027. Precios desde $12,500,000."
+    ],
+    "en": [
+      "The Perigon Miami Beach is a condominium in pre-construction in Miami Beach, at 5333 Collins Ave, Miami Beach, FL 33140. It comprises 73 residences over 18 floors, with 3 – 4 bedrooms and of 2,100 – 6,700 sq ft.",
+      "Team: architecture by OMA; interiors by Tara Bernerd & Partners; developed by Mast Capital & Starwood Capital Group. Estimated delivery: 2027. Prices from $12,500,000."
+    ]
+  },
+  "interior": null,
+  "amenities": {
+    "es": [
+      "Unos 200 pies lineales de playa privada",
+      "Restaurante frente al mar de un chef reconocido",
+      "Salón privado tipo speakeasy para residentes",
+      "Piscina frente al océano",
+      "Spa al aire libre"
+    ],
+    "en": [
+      "About 200 linear feet of private beachfront",
+      "Oceanfront restaurant by a renowned chef",
+      "Residents-only speakeasy lounge",
+      "Oceanfront pool",
+      "Outdoor spa"
+    ]
+  },
+  "images": [
+    "dev-the-perigon-miami-beach-01",
+    "dev-the-perigon-miami-beach-02",
+    "dev-the-perigon-miami-beach-03",
+    "dev-the-perigon-miami-beach-04",
+    "dev-the-perigon-miami-beach-05",
+    "dev-the-perigon-miami-beach-06",
+    "dev-the-perigon-miami-beach-07",
+    "dev-the-perigon-miami-beach-08",
+    "dev-the-perigon-miami-beach-09",
+    "dev-the-perigon-miami-beach-10",
+    "dev-the-perigon-miami-beach-11",
+    "dev-the-perigon-miami-beach-12"
+  ],
+  "heroImages": [
+    "dev-the-perigon-miami-beach-01"
+  ],
+  "geo": {
+    "lat": 25.8322295,
+    "lng": -80.120988
+  }
+}

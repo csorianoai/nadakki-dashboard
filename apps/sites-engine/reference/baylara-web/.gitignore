@@ -1,0 +1,13 @@
+node_modules
+.next
+.vercel
+.env*
+!.env.example
+*.log
+
+.vercel
+
+# Herramientas locales (Lighthouse, capturas, ffmpeg) y capturas de pantalla
+.tools/
+capturas/
+

@@ -8,20 +8,37 @@ export interface Vehicle {
   model: string;
   year: number;
   price: number;
+  /** Moneda ISO del precio (ARS, DOP…), solo si el backend la devuelve. */
+  currency?: string;
   loc: string;
   type: VehicleType;
   km: number;
   trans: string;
   fuel: string;
-  badge: string;
-  match: number;
+  badge?: string;
+  match?: number;
   grad: string;
   verified: boolean;
-  rating: number;
-  reviews: number;
+  /** Datos del vendedor: solo si el backend los trae. Nunca se inventan. */
+  rating?: number;
+  reviews?: number;
   featuresLine: string;
-  dealerName: string;
-  avgResp: string;
+  dealerName?: string;
+  avgResp?: string;
+  /** Id real del backend (puede ser UUID); el enlace publico lo usa. */
+  refId?: string;
+  /** Numero REAL de fotos de la unidad (solo si el backend lo trae). */
+  photoCount?: number;
+  /** URL publica (cdn_url) de la foto principal, solo si el backend la devuelve. */
+  primary_photo_url?: string | null;
+  /** Galeria real de la unidad (cdn_url), solo si el backend la devuelve. */
+  photos?: VehiclePhoto[] | null;
+}
+
+export interface VehiclePhoto {
+  cdn_url: string;
+  position?: number | null;
+  alt?: string | null;
 }
 
 const DEALERS = ["AutoMundo RD", "Motores del Este", "Autos del Cibao", "Caribe Motors"] as const;
@@ -239,8 +256,45 @@ export function getVehicleById(id: number | string): Vehicle | undefined {
   return VEHICLES_SEED.find((v) => v.id === n);
 }
 
-export function photoCount(id: number): number {
-  return 18 + (id * 3) % 12;
+/** Fotos reales de la unidad; undefined si no se conoce (nunca se inventa). */
+export function photoCount(
+  vehicle: Pick<Vehicle, "photoCount"> & { photos?: readonly unknown[] | null },
+): number | undefined {
+  if (Array.isArray(vehicle.photos) && vehicle.photos.length > 0) return vehicle.photos.length;
+  const n = vehicle.photoCount;
+  return typeof n === "number" && Number.isFinite(n) && n > 0 ? Math.floor(n) : undefined;
+}
+
+function esUrlHttp(u: unknown): u is string {
+  return typeof u === "string" && /^https?:\/\//i.test(u.trim());
+}
+
+/**
+ * URLs reales de las fotos de la unidad, en orden de galeria y sin repetidos.
+ * Vacio si el backend no trae ninguna: en ese caso (y solo en ese) se pinta el degradado.
+ */
+export function vehiclePhotoUrls(
+  vehicle: Pick<Vehicle, "primary_photo_url" | "photos">,
+): string[] {
+  const fuente = Array.isArray(vehicle.photos) ? vehicle.photos : [];
+  const ordenadas = fuente
+    .map((p, i) => ({ url: p?.cdn_url, pos: typeof p?.position === "number" ? p.position : i, i }))
+    .filter((p) => esUrlHttp(p.url))
+    .sort((a, b) => a.pos - b.pos || a.i - b.i)
+    .map((p) => (p.url as string).trim());
+  const out = Array.from(new Set(ordenadas));
+  const principal = esUrlHttp(vehicle.primary_photo_url) ? vehicle.primary_photo_url.trim() : undefined;
+  if (principal && !out.includes(principal)) out.unshift(principal);
+  return out;
+}
+
+/** Foto principal real: primary_photo_url o la primera de la galeria; undefined si no hay. */
+export function primaryPhotoUrl(
+  vehicle: Pick<Vehicle, "primary_photo_url" | "photos">,
+): string | undefined {
+  return esUrlHttp(vehicle.primary_photo_url)
+    ? vehicle.primary_photo_url.trim()
+    : vehiclePhotoUrls(vehicle)[0];
 }
 
 export const BODY_TYPES = [

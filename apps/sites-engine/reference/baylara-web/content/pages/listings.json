@@ -1,0 +1,12 @@
+{
+  "meta": {
+    "title": { "es": "Propiedades en venta frente al agua", "en": "Waterfront properties for sale" },
+    "description": { "es": "Apartamentos, penthouses y casas frente al agua en Sunny Isles Beach, Bal Harbour, Aventura, Miami Beach y Fort Lauderdale.", "en": "Waterfront condos, penthouses and homes in Sunny Isles Beach, Bal Harbour, Aventura, Miami Beach and Fort Lauderdale." }
+  },
+  "eyebrow": { "es": "Comprar", "en": "Buy" },
+  "title": { "es": "Propiedades en venta", "en": "Properties for sale" },
+  "lead": { "es": "Apartamentos, penthouses y casas frente al agua en Sunny Isles Beach, Bal Harbour, Aventura, Miami Beach y Fort Lauderdale.", "en": "Waterfront condos, penthouses and homes in Sunny Isles Beach, Bal Harbour, Aventura, Miami Beach and Fort Lauderdale." },
+  "alertTitle": { "es": "¿No ves la propiedad adecuada?", "en": "Not seeing the right property?" },
+  "alertText": { "es": "Cuéntame qué buscas y te enviaré las nuevas propiedades que encajen en cuanto salgan al mercado.", "en": "Tell me what you are looking for and I will send you new listings that match as soon as they come on the market." },
+  "alertBtn": { "es": "Crear mi búsqueda", "en": "Create my search" }
+}
