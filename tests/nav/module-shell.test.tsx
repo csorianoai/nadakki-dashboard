@@ -194,7 +194,7 @@ describe("InicioSuite: el menú de la Suite sirve para elegir módulo", () => {
     render(conSesion(sesion("tenant_admin", ["legal", "credit"]), <InicioSuite>portada</InicioSuite>));
     const menu = screen.getByRole("complementary", { name: "Menú de Suite" });
     const elegir = within(menu).getByTestId("menu-grupo-suite-modulos");
-    expect(within(elegir).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/credit-hub", "/legal", "/admin"]);
+    expect(within(elegir).getAllByRole("link").map((a) => a.getAttribute("href"))).toEqual(["/credit-hub", "/legal", "/admin/usuarios"]);
     expect(within(menu).getByRole("link", { name: "Inicio" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByRole("main")).toHaveTextContent("portada");
     expect(screen.getByTestId("module-shell")).toHaveAttribute("data-modulo", "suite");

@@ -6,8 +6,6 @@ const FOOTER_COLS = [
     title: "Comprar",
     links: [
       { label: "Buscar vehículos", href: "/autos/vehiculos" },
-      { label: "Financiamiento", href: "/autos#comparador" },
-      { label: "Bancos aliados", href: "/autos#bancos" },
     ],
   },
   {

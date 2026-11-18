@@ -289,6 +289,7 @@ export const MOTIVO_EN_CAMPO: Record<string, { campo: keyof VehicleManualForm; m
   DISPLAY_PRICE_CURRENCY_INVALID: { campo: "display_price_currency", mensaje: "Esa moneda no es válida." },
   PLATE_PAIR: { campo: "plate", mensaje: "Completa dominio y país, o ninguno." },
   PLATE_COUNTRY_INVALID: { campo: "plate_country", mensaje: "Ese país no es válido para el dominio." },
+  VIN_DUPLICATE: { campo: "vin", mensaje: "Ya existe un vehículo con ese VIN." },
   STOCK_NUMBER_TAKEN: { campo: "stock_number", mensaje: "Ese número de stock ya lo tiene otro vehículo." },
 };
 

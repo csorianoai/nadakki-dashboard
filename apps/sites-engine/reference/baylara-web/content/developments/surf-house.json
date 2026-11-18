@@ -1,0 +1,53 @@
+{
+  "slug": "surf-house",
+  "sample": false,
+  "authorized": true,
+  "order": 16,
+  "sourceId": "2227",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/2227/surf-house",
+  "name": "Surf House",
+  "area": "Surfside",
+  "zone": null,
+  "address": "8995 Collins Ave, Surfside, FL 33154",
+  "devType": "residential",
+  "status": null,
+  "deliveryYear": 2026,
+  "delivery": {
+    "es": "Entrega estimada: 2026",
+    "en": "Estimated delivery: 2026"
+  },
+  "priceFrom": 8500000,
+  "beds": "2 – 5",
+  "units": 17,
+  "floors": 11,
+  "sqft": "2,262 – 7,780",
+  "developer": "Fort Partners",
+  "architect": "Kobi Karp Architecture / Jerome Engelking",
+  "interiorDesigner": null,
+  "landscape": null,
+  "description": {
+    "es": [
+      "Surf House es un proyecto residencial en Surfside, en 8995 Collins Ave, Surfside, FL 33154. Contempla 17 residencias en 11 pisos, de 2 – 5 habitaciones y de 2,262 – 7,780 sq ft.",
+      "Equipo: arquitectura de Kobi Karp Architecture / Jerome Engelking; desarrollo de Fort Partners. Entrega estimada: 2026. Precios desde $8,500,000."
+    ],
+    "en": [
+      "Surf House is a residential project in Surfside, at 8995 Collins Ave, Surfside, FL 33154. It comprises 17 residences over 11 floors, with 2 – 5 bedrooms and of 2,262 – 7,780 sq ft.",
+      "Team: architecture by Kobi Karp Architecture / Jerome Engelking; developed by Fort Partners. Estimated delivery: 2026. Prices from $8,500,000."
+    ]
+  },
+  "interior": null,
+  "amenities": null,
+  "images": [
+    "dev-surf-house-01",
+    "dev-surf-house-02",
+    "dev-surf-house-03",
+    "dev-surf-house-04"
+  ],
+  "heroImages": [
+    "dev-surf-house-01"
+  ],
+  "geo": {
+    "lat": 25.8760723,
+    "lng": -80.1210884
+  }
+}

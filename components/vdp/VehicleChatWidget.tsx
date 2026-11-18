@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { useState } from "react";
+import { FEATURE_VEHICLE_CHAT_BACKEND } from "@/lib/autos-agent/feature-flags";
 import type { Vehicle } from "@/lib/vehicles";
 
 const VehicleChatButton = dynamic(
@@ -16,6 +17,8 @@ const VehicleChatWindow = dynamic(
 
 export function VehicleChatWidget({ vehicle }: { vehicle: Vehicle }) {
   const [open, setOpen] = useState(false);
+  // Sin chat real no se ofrece: antes respondia con un mock.
+  if (!FEATURE_VEHICLE_CHAT_BACKEND) return null;
   const label = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
 
   return (

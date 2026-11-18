@@ -1,0 +1,373 @@
+{
+  "_comment": "Listados. 'sample': true = solo vista previa. 'exclusive': true = exclusiva propia (aparece primero). 'building' enlaza con content/buildings/<slug>. Al conectar el IDX se reemplaza por el feed con los mismos campos. null = la sección se oculta. photos = ids de content/media.json (cada imagen con permiso del propietario en producción). listingId = número de listado propio; mlsNumber = del MLS. interior/exterior = listas ES/EN para las secciones desplegables.",
+  "items": [
+    {
+      "slug": "ejemplo-residencia-frente-al-oceano-sunny-isles",
+      "sample": true,
+      "kind": "sale",
+      "status": "active",
+      "zone": "sunny-isles-beach",
+      "type": "condo",
+      "featured": true,
+      "price": 2450000,
+      "beds": 3,
+      "baths": 3.5,
+      "sqft": 2450,
+      "terraceSqft": null,
+      "yearBuilt": null,
+      "parking": null,
+      "hoaMonthly": 2650,
+      "view": {
+        "es": "Océano e Intracoastal",
+        "en": "Ocean & Intracoastal"
+      },
+      "title": {
+        "es": "Residencia frente al océano con terraza envolvente",
+        "en": "Oceanfront residence with wraparound terrace"
+      },
+      "address": "Collins Ave (dirección de ejemplo), Sunny Isles Beach, FL 33160",
+      "mlsNumber": null,
+      "listingBrokerage": null,
+      "description": {
+        "es": [
+          "Residencia en esquina, en piso alto, con ventanales de piso a techo y una terraza envolvente orientada al Atlántico al este y al Intracoastal al oeste."
+        ],
+        "en": [
+          "A corner residence on a high floor with floor-to-ceiling glass and a wraparound terrace facing the Atlantic to the east and the Intracoastal to the west."
+        ]
+      },
+      "features": {
+        "es": [
+          "Vista directa al océano",
+          "Terraza envolvente",
+          "Ventanales de impacto de piso a techo",
+          "Vestíbulo con ascensor privado",
+          "Acceso directo a la playa"
+        ],
+        "en": [
+          "Direct ocean views",
+          "Wraparound terrace",
+          "Floor-to-ceiling impact glass",
+          "Private elevator foyer",
+          "Direct beach access"
+        ]
+      },
+      "photos": [
+        "sunny-isles-sunset",
+        "sunny-isles-north",
+        "miami-beach-coast",
+        "south-beach-dusk"
+      ],
+      "tourUrl": null,
+      "geo": null,
+      "building": "ejemplo-edificio-uno",
+      "exclusive": false,
+      "taxesAnnual": null,
+      "listingId": "BAY-EJEMPLO-01",
+      "interior": {
+        "es": [
+          "Cocina abierta con isla",
+          "Suite principal con vestidor",
+          "Suelos de mármol",
+          "Lavadero dentro de la residencia"
+        ],
+        "en": [
+          "Open kitchen with island",
+          "Primary suite with walk-in closet",
+          "Marble floors",
+          "In-residence laundry"
+        ]
+      },
+      "exterior": {
+        "es": [
+          "Terraza envolvente de 600 sq ft",
+          "Piscina frente al mar",
+          "Servicio de playa",
+          "Dos plazas de garaje"
+        ],
+        "en": [
+          "600 sq ft wraparound terrace",
+          "Oceanfront pool",
+          "Beach service",
+          "Two garage spaces"
+        ]
+      }
+    },
+    {
+      "slug": "ejemplo-penthouse-piscina-azotea-sunny-isles",
+      "sample": true,
+      "kind": "sale",
+      "status": "active",
+      "zone": "sunny-isles-beach",
+      "type": "penthouse",
+      "featured": false,
+      "price": 7900000,
+      "beds": 4,
+      "baths": 5.5,
+      "sqft": 4800,
+      "title": {
+        "es": "Penthouse con piscina privada en la azotea",
+        "en": "Penthouse with private rooftop pool"
+      },
+      "photos": [],
+      "building": null,
+      "exclusive": false,
+      "taxesAnnual": null
+    },
+    {
+      "slug": "ejemplo-residencia-frente-a-la-playa-bal-harbour",
+      "sample": true,
+      "kind": "sale",
+      "status": "active",
+      "zone": "bal-harbour",
+      "type": "condo",
+      "featured": true,
+      "price": 1850000,
+      "beds": 2,
+      "baths": 2.5,
+      "sqft": 1620,
+      "title": {
+        "es": "Residencia frente a la playa con vista directa al océano",
+        "en": "Beachfront residence with direct ocean views"
+      },
+      "photos": [],
+      "building": null,
+      "exclusive": false,
+      "taxesAnnual": null
+    },
+    {
+      "slug": "ejemplo-casa-intracoastal-muelle-aventura",
+      "sample": true,
+      "kind": "sale",
+      "status": "active",
+      "zone": "aventura",
+      "type": "house",
+      "featured": true,
+      "price": 4600000,
+      "beds": 5,
+      "baths": 5,
+      "sqft": 5200,
+      "title": {
+        "es": "Casa en el Intracoastal con muelle privado",
+        "en": "Intracoastal home with private dock"
+      },
+      "photos": [],
+      "building": null,
+      "exclusive": false,
+      "taxesAnnual": null
+    },
+    {
+      "slug": "ejemplo-residencia-vista-bahia-aventura",
+      "sample": true,
+      "kind": "sale",
+      "status": "active",
+      "zone": "aventura",
+      "type": "condo",
+      "featured": false,
+      "price": 1290000,
+      "beds": 3,
+      "baths": 3,
+      "sqft": 2100,
+      "title": {
+        "es": "Residencia con vista a la bahía y al campo de golf",
+        "en": "Residence with bay and golf course views"
+      },
+      "photos": [],
+      "building": null,
+      "exclusive": false,
+      "taxesAnnual": null
+    },
+    {
+      "slug": "ejemplo-residencia-mid-beach",
+      "sample": true,
+      "kind": "sale",
+      "status": "active",
+      "zone": "miami-beach",
+      "type": "condo",
+      "featured": false,
+      "price": 1650000,
+      "beds": 2,
+      "baths": 2,
+      "sqft": 1450,
+      "title": {
+        "es": "Residencia en Mid-Beach con vista al océano y a la bahía",
+        "en": "Mid-Beach residence with ocean and bay views"
+      },
+      "photos": [],
+      "building": null,
+      "exclusive": false,
+      "taxesAnnual": null
+    },
+    {
+      "slug": "ejemplo-casa-frente-a-la-bahia-miami-beach",
+      "sample": true,
+      "kind": "sale",
+      "status": "active",
+      "zone": "miami-beach",
+      "type": "house",
+      "featured": false,
+      "price": 9800000,
+      "beds": 6,
+      "baths": 6.5,
+      "sqft": 6100,
+      "title": {
+        "es": "Casa frente a la bahía con piscina",
+        "en": "Bayfront home with pool"
+      },
+      "photos": [],
+      "building": null,
+      "exclusive": false,
+      "taxesAnnual": null
+    },
+    {
+      "slug": "ejemplo-casa-canal-fort-lauderdale",
+      "sample": true,
+      "kind": "sale",
+      "status": "active",
+      "zone": "fort-lauderdale",
+      "type": "house",
+      "featured": false,
+      "price": 3950000,
+      "beds": 4,
+      "baths": 4.5,
+      "sqft": 4100,
+      "title": {
+        "es": "Casa en canal de aguas profundas con muelle",
+        "en": "Deep-water canal home with dock"
+      },
+      "photos": [],
+      "building": null,
+      "exclusive": false,
+      "taxesAnnual": null
+    },
+    {
+      "slug": "ejemplo-alquiler-amueblado-sunny-isles",
+      "sample": true,
+      "kind": "rent",
+      "status": "active",
+      "zone": "sunny-isles-beach",
+      "type": "condo",
+      "featured": false,
+      "price": 9500,
+      "beds": 2,
+      "baths": 2,
+      "sqft": 1400,
+      "title": {
+        "es": "Residencia amueblada frente al océano, contrato anual",
+        "en": "Furnished oceanfront residence, annual lease"
+      },
+      "photos": [],
+      "building": null,
+      "exclusive": false,
+      "taxesAnnual": null
+    },
+    {
+      "slug": "ejemplo-alquiler-intracoastal-aventura",
+      "sample": true,
+      "kind": "rent",
+      "status": "active",
+      "zone": "aventura",
+      "type": "condo",
+      "featured": false,
+      "price": 7200,
+      "beds": 3,
+      "baths": 3,
+      "sqft": 1900,
+      "title": {
+        "es": "Residencia con vista al Intracoastal, contrato anual",
+        "en": "Intracoastal-view residence, annual lease"
+      },
+      "photos": [],
+      "building": null,
+      "exclusive": false,
+      "taxesAnnual": null
+    },
+    {
+      "slug": "ejemplo-alquiler-bahia-miami-beach",
+      "sample": true,
+      "kind": "rent",
+      "status": "active",
+      "zone": "miami-beach",
+      "type": "condo",
+      "featured": false,
+      "price": 5400,
+      "beds": 1,
+      "baths": 1.5,
+      "sqft": 950,
+      "title": {
+        "es": "Residencia con vista a la bahía",
+        "en": "Bay-view residence"
+      },
+      "photos": [],
+      "building": null,
+      "exclusive": false,
+      "taxesAnnual": null
+    },
+    {
+      "slug": "ejemplo-villa-golf-cap-cana",
+      "sample": true,
+      "kind": "sale",
+      "status": "active",
+      "zone": "punta-cana",
+      "area": "Cap Cana, Punta Cana · RD",
+      "type": "villa",
+      "featured": false,
+      "price": 1950000,
+      "beds": 4,
+      "baths": 4.5,
+      "sqft": 3800,
+      "title": {
+        "es": "Villa junto al campo de golf con piscina privada",
+        "en": "Villa by the golf course with private pool"
+      },
+      "photos": [],
+      "building": null,
+      "exclusive": false,
+      "taxesAnnual": null
+    },
+    {
+      "slug": "ejemplo-apartamento-playa-bavaro",
+      "sample": true,
+      "kind": "sale",
+      "status": "active",
+      "zone": "punta-cana",
+      "area": "Bávaro, Punta Cana · RD",
+      "type": "condo",
+      "featured": false,
+      "price": 420000,
+      "beds": 2,
+      "baths": 2,
+      "sqft": 1300,
+      "title": {
+        "es": "Apartamento frente a la playa",
+        "en": "Beachfront apartment"
+      },
+      "photos": [],
+      "building": null,
+      "exclusive": false,
+      "taxesAnnual": null
+    },
+    {
+      "slug": "ejemplo-preventa-vista-oceano-punta-cana",
+      "sample": true,
+      "kind": "sale",
+      "status": "preconstruction",
+      "zone": "punta-cana",
+      "area": "Punta Cana · RD",
+      "type": "condo",
+      "featured": false,
+      "price": 610000,
+      "beds": 3,
+      "baths": 3,
+      "sqft": 1750,
+      "title": {
+        "es": "Residencia en preventa con vista al océano",
+        "en": "Pre-construction residence with ocean views"
+      },
+      "photos": [],
+      "building": null,
+      "exclusive": false,
+      "taxesAnnual": null
+    }
+  ]
+}

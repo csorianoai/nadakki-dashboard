@@ -1,5 +1,6 @@
 "use client";
 
+import { moduleDisplayTitle } from "@/lib/agentDisplayNames";
 import { useState, useCallback, useEffect, useRef } from "react";
 import {
   CheckCircle2,
@@ -15,6 +16,7 @@ import {
 import { postGoogleAdsPreflight, type GoogleAdsPreflightResult } from "@/lib/api/googleAdsPreflight";
 import PreflightResultModal from "@/components/preflight/PreflightResultModal";
 import { useTenant } from "@/contexts/TenantContext";
+import { fetchWithFallback } from "@/lib/api/client";
 
 // ── Types ────────────────────────────────────────────────
 type ModuleStatus = "completed" | "ready" | "blocked" | "in_progress" | "not_ready";
@@ -34,36 +36,32 @@ type GoogleAdsModuleStep = {
 const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m01",
-    title: "Platform Fundamentals",
-    description: "Entender la plataforma y metricas clave",
-    status: "completed",
+    title: "Fundamentos de la plataforma",
+    description: "Entender la plataforma y las métricas clave",
+    status: "not_ready",
     dependencies: [],
-    lastRunAt: "2026-04-10T10:00:00Z",
-    score: 92,
     actionKey: "google_ads_m01_fundamentals",
   },
   {
     id: "m02",
-    title: "Account Structure",
-    description: "Jerarquia de cuenta y campana",
-    status: "completed",
+    title: "Estructura de la cuenta",
+    description: "Jerarquía de la cuenta y de las campañas",
+    status: "not_ready",
     dependencies: ["m01"],
-    lastRunAt: "2026-04-11T10:00:00Z",
-    score: 88,
     actionKey: "google_ads_m02_account_structure",
   },
   {
     id: "m03",
-    title: "Keyword Research",
-    description: "Investigacion de palabras clave y match types",
+    title: "Investigación de palabras clave",
+    description: "Investigación de palabras clave y tipos de concordancia",
     status: "ready",
     dependencies: ["m02"],
     actionKey: "google_ads_m03_keyword_research",
   },
   {
     id: "m04",
-    title: "Negative Keywords",
-    description: "Limpieza de search terms y listas negativas",
+    title: "Palabras clave negativas",
+    description: "Limpieza de términos de búsqueda y listas de exclusión",
     status: "blocked",
     dependencies: ["m03"],
     blockedReason: "Requiere completar M03 primero",
@@ -71,8 +69,8 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
   {
     id: "m05",
-    title: "Quality Score & Ad Rank",
-    description: "Diagnostico de calidad y ad rank",
+    title: "Nivel de calidad y posición del anuncio",
+    description: "Diagnóstico de calidad y posición del anuncio",
     status: "blocked",
     dependencies: ["m03"],
     blockedReason: "Requiere completar M03 primero",
@@ -80,8 +78,8 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
   {
     id: "m06",
-    title: "Smart Bidding",
-    description: "Estrategias de puja automatica",
+    title: "Puja inteligente",
+    description: "Estrategias de puja automática",
     status: "blocked",
     dependencies: ["m05"],
     blockedReason: "Requiere completar M05 primero",
@@ -89,15 +87,15 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
   {
     id: "m07",
-    title: "RSA Ad Copy",
-    description: "Creativos responsivos y ad strength",
+    title: "Textos de anuncios responsivos",
+    description: "Anuncios responsivos y calidad del anuncio",
     status: "ready",
     dependencies: ["m02"],
     actionKey: "google_ads_m07_rsa_copy",
   },
   {
     id: "m08",
-    title: "Extensions & Assets",
+    title: "Extensiones y activos",
     description: "Extensiones de anuncio y activos",
     status: "ready",
     dependencies: ["m02"],
@@ -105,8 +103,8 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
   {
     id: "m09",
-    title: "Audiences",
-    description: "Segmentacion y senales de audiencia",
+    title: "Audiencias",
+    description: "Segmentación y señales de audiencia",
     status: "blocked",
     dependencies: ["m03"],
     blockedReason: "Requiere completar M03 primero",
@@ -115,34 +113,34 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   {
     id: "m10",
     title: "Performance Max",
-    description: "Campanas PMax y asset groups",
+    description: "Campañas de máximo rendimiento y grupos de recursos",
     status: "blocked",
     dependencies: ["m13"],
-    blockedReason: "Requiere configurar Conversion Tracking (M13)",
+    blockedReason: "Requiere configurar seguimiento de conversiones (M13)",
     actionKey: "google_ads_m10_pmax",
   },
   {
     id: "m11",
-    title: "Shopping Campaigns",
-    description: "Shopping estandar y Merchant Center",
+    title: "Campañas de Shopping",
+    description: "Shopping estándar y Merchant Center",
     status: "blocked",
     dependencies: ["m13"],
-    blockedReason: "Requiere configurar Conversion Tracking (M13)",
+    blockedReason: "Requiere configurar seguimiento de conversiones (M13)",
     actionKey: "google_ads_m11_shopping",
   },
   {
     id: "m12",
-    title: "Demand Gen",
-    description: "Campanas de generacion de demanda",
+    title: "Generación de demanda",
+    description: "Campañas de generación de demanda",
     status: "blocked",
     dependencies: ["m13"],
-    blockedReason: "Requiere configurar Conversion Tracking (M13)",
+    blockedReason: "Requiere configurar seguimiento de conversiones (M13)",
     actionKey: "google_ads_m12_demand_gen",
   },
   {
     id: "m13",
-    title: "Conversion Tracking",
-    description: "Tracking y enhanced conversions",
+    title: "Seguimiento de conversiones",
+    description: "Seguimiento y conversiones mejoradas",
     status: "not_ready",
     blockedReason: "Google Tag no detectado en la cuenta",
     dependencies: ["m02"],
@@ -150,31 +148,67 @@ const INITIAL_MODULES: GoogleAdsModuleStep[] = [
   },
   {
     id: "m14",
-    title: "Attribution & GA4",
-    description: "Modelo de atribucion y consent mode v2",
+    title: "Atribución y GA4",
+    description: "Modelo de atribución y modo de consentimiento",
     status: "blocked",
     dependencies: ["m13"],
-    blockedReason: "Requiere configurar Conversion Tracking (M13)",
+    blockedReason: "Requiere configurar seguimiento de conversiones (M13)",
     actionKey: "google_ads_m14_attribution",
   },
   {
     id: "m15",
-    title: "API Primer",
-    description: "Google Ads API y operaciones programaticas",
+    title: "Conexión técnica con Google Ads",
+    description: "Conexión con Google Ads y operaciones automáticas",
     status: "ready",
     dependencies: [],
     actionKey: "google_ads_m15_api",
   },
 ];
 
-async function getModules(tenantId: string): Promise<GoogleAdsModuleStep[]> {
-  // TODO: swap for real endpoint when ready:
-  // GET /api/v1/google-ads/modules/status
-  // const res = await fetch("/api/v1/google-ads/modules/status", {
-  //   headers: { "X-Tenant-ID": tenantId }
-  // })
-  // if (res.ok) return res.json()
-  return INITIAL_MODULES;
+type ModulesStatusBody = {
+  modules?: Array<{
+    id: string;
+    title: string;
+    description: string;
+    action_key: string;
+    status: string;
+    dependencies?: string[];
+    blocked_reason?: string | null;
+    last_run_at?: string | null;
+    score?: number | null;
+  }>;
+};
+
+// Estado real desde GET /api/v1/google-ads/modules/status (Authorization de la sesion).
+// Si falla o no hay tenant: lista vacia honesta, nunca datos de muestra.
+async function getModules(tenantId: string | null): Promise<GoogleAdsModuleStep[]> {
+  if (!tenantId) return [];
+  const res = await fetchWithFallback<ModulesStatusBody | null>("/api/v1/google-ads/modules/status", {
+    tenantId,
+    fallbackData: null,
+  });
+  if (res.source !== "live" || !res.data || !Array.isArray(res.data.modules)) return [];
+  if (res.data.modules.length === 0) {
+    // Sin cuenta conectada: todo pendiente, sin fechas ni puntajes.
+    return INITIAL_MODULES.map((m) => ({
+      ...m,
+      status: "not_ready" as ModuleStatus,
+      blockedReason: undefined,
+      lastRunAt: null,
+      score: null,
+    }));
+  }
+  return res.data.modules.map((m) => ({
+    id: m.id,
+    title: m.title,
+    description: m.description,
+    actionKey: m.action_key,
+    status: m.status as ModuleStatus,
+    dependencies: m.dependencies ?? [],
+    blockedReason: m.blocked_reason ?? undefined,
+    lastRunAt: m.last_run_at ?? null,
+    score: m.score ?? null,
+  }));
 }
 
 function notReadyFallback(
@@ -186,8 +220,8 @@ function notReadyFallback(
     action_key: actionKey,
     tenant_id: tenantId,
     status: "not_ready",
-    reasons: ["Preflight service unavailable"],
-    required_fixes: ["Verificar conectividad del backend"],
+    reasons: ["El servicio de verificación previa no está disponible"],
+    required_fixes: ["Verificar la conexión con el servicio"],
     approval_required: false,
     next_step: detail,
   };
@@ -201,6 +235,7 @@ function progressCount(modules: GoogleAdsModuleStep[]) {
 function readinessScore(modules: GoogleAdsModuleStep[]) {
   const completed = modules.filter((m) => m.status === "completed").length;
   const ready = modules.filter((m) => m.status === "ready").length;
+  if (modules.length === 0) return 0;
   return Math.round(((completed * 2 + ready) / (modules.length * 2)) * 100);
 }
 
@@ -271,11 +306,11 @@ function ModuleCard({ module, isRunning, onRun }: CardProps) {
               <ModuleStatusBadge status={module.status} />
               {module.score != null && (
                 <span className="text-xs text-slate-400">
-                  Score: <span className="text-indigo-400 font-medium">{module.score}</span>
+                  Puntaje: <span className="text-indigo-400 font-medium">{module.score}</span>
                 </span>
               )}
             </div>
-            <p className="text-sm font-medium text-slate-100 mb-0.5">{module.title}</p>
+            <p className="text-sm font-medium text-slate-100 mb-0.5">{moduleDisplayTitle(module.id, module.title)}</p>
             <p className="text-xs text-slate-500 mb-2">{module.description}</p>
             {module.blockedReason && (
               <p className="text-xs text-amber-300 flex items-center gap-1">
@@ -358,7 +393,7 @@ export default function GoogleAdsExecutionFlow() {
 
   useEffect(() => {
     let alive = true;
-    getModules(safeTenantId).then((data) => {
+    getModules(tenantId?.trim() || null).then((data) => {
       if (!alive) return;
       setModules(data);
       setLoading(false);
@@ -366,7 +401,7 @@ export default function GoogleAdsExecutionFlow() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [tenantId]);
 
   const handleRun = useCallback(
     async (module: GoogleAdsModuleStep) => {
@@ -381,7 +416,7 @@ export default function GoogleAdsExecutionFlow() {
             notReadyFallback(
               module.actionKey,
               safeTenantId,
-              pfRes.error || "Revisa que el backend esté activo en Render"
+              pfRes.error || "Revisa que el servicio esté disponible e inténtalo de nuevo"
             )
           );
           setPendingModule(module);
@@ -391,7 +426,7 @@ export default function GoogleAdsExecutionFlow() {
         setPendingModule(module);
       } catch {
         setPreflightResult(
-          notReadyFallback(module.actionKey, safeTenantId, "Revisa que el backend esté activo en Render")
+          notReadyFallback(module.actionKey, safeTenantId, "Revisa que el servicio esté disponible e inténtalo de nuevo")
         );
         setPendingModule(module);
       } finally {
@@ -422,7 +457,6 @@ export default function GoogleAdsExecutionFlow() {
                 ...m,
                 status: "completed" as ModuleStatus,
                 lastRunAt: new Date().toISOString(),
-                score: Math.floor(Math.random() * 20) + 78,
               }
             : m
         )
@@ -461,7 +495,7 @@ export default function GoogleAdsExecutionFlow() {
               Flujo de Ejecución Google Ads
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Progreso guiado M01–M15 · Pre-flight automático antes de ejecutar
+              Progreso guiado M01–M15 · verificación previa automática antes de ejecutar
             </p>
           </div>
           <div className="flex items-center gap-6">

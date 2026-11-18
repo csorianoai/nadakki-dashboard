@@ -1,0 +1,53 @@
+{
+  "_comment": "Datos del negocio. Los campos en null se muestran como 'Pendiente' solo en vista previa; el build de producción falla mientras falten los obligatorios (ver scripts/check-compliance.mjs).",
+  "brand": "Baylara",
+  "siteUrl": "https://baylara.com",
+  "agent": {
+    "name": "César Almonte Soriano",
+    "registeredLastName": "Almonte Soriano",
+    "licenseNumber": "SL3666300",
+    "title": {
+      "es": "Asociado de ventas inmobiliarias con licencia en Florida",
+      "en": "Florida Licensed Real Estate Sales Associate"
+    },
+    "photo": null,
+    "languages": [
+      "Español",
+      "English"
+    ],
+    "bio": {
+      "es": null,
+      "en": null
+    },
+    "background": []
+  },
+  "brokerage": {
+    "name": "Broker's LLC",
+    "nameVerified": true,
+    "licenseNumber": null,
+    "address": "20200 W Dixie Hwy, Ste G-07, Aventura, FL 33180",
+    "phone": null
+  },
+  "contact": {
+    "phone": "+1 305 907 4078",
+    "whatsapp": "+1 305 907 4078",
+    "publicEmail": "info@baylara.com",
+    "officeAddress": null,
+    "hours": {
+      "es": null,
+      "en": null
+    }
+  },
+  "responseTime": {
+    "es": null,
+    "en": null
+  },
+  "valuationDays": null,
+  "drPartnerBrokerage": null,
+  "mlsName": null,
+  "mlsDisclaimer": {
+    "es": null,
+    "en": null
+  },
+  "testimonials": []
+}

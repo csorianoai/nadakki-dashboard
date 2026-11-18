@@ -1,0 +1,24 @@
+// INFORME DE MERCADO — EJEMPLO ("sample": true = solo vista previa). Copia como <slug>.jsonc por mes.
+// Indicadores admitidos por zona o edificio: medianPrice, pricePerSqft, daysOnMarket, closedSales, activeListings.
+// Un indicador ausente o en null se oculta. Toda cifra viene de la fuente indicada en "source" con su "date".
+{
+  "slug": "ejemplo-2026-10",
+  "sample": true,
+  "month": "2026-10",                        // AAAA-MM: mes que cubre el informe
+  "title": { "es": "Mercado frente al agua · octubre 2026", "en": "Waterfront market · October 2026" },
+  "summary": { "es": "Resumen del mes por zona: precio mediano, precio por pie cuadrado y días en el mercado.", "en": "Monthly summary by area: median price, price per square foot and days on market." },
+  "source": "MLS — ejemplo",
+  "date": "2026-11-03",
+  "zones": [
+    { "zone": "sunny-isles-beach", "medianPrice": 1250000, "pricePerSqft": 780, "daysOnMarket": 94 },
+    { "zone": "bal-harbour", "medianPrice": 1650000, "pricePerSqft": 950, "daysOnMarket": 101 },
+    { "zone": "aventura", "medianPrice": 640000, "pricePerSqft": 455, "daysOnMarket": 88 }
+  ],
+  "buildings": [
+    { "building": "ejemplo-edificio-uno", "closedSales": 3, "pricePerSqft": 1170, "activeListings": 9 }
+  ],
+  "body": {
+    "es": ["Texto del informe: qué cambió frente al mes anterior y qué significa para compradores y vendedores en cada zona."],
+    "en": ["Report text: what changed from the previous month and what it means for buyers and sellers in each area."]
+  }
+}

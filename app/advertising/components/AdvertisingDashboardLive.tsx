@@ -34,9 +34,9 @@ export function AdvertisingDashboardLive({ title = "Publicidad — Dashboard API
           <span className="text-sm font-semibold text-slate-900 dark:text-white">{title}</span>
           <DataSourceBadge source={source} error={error} />
           {loading ? (
-            <span className="text-xs text-gray-500">Cargando…</span>
+            <span className="text-xs text-gray-400">Cargando…</span>
           ) : (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-400">
               {d.platforms.length} plataforma(s) · spend {d.spend_total} · ads {d.active_ads} · imp.{" "}
               {d.impressions}
             </span>
@@ -55,26 +55,26 @@ export function AdvertisingDashboardLive({ title = "Publicidad — Dashboard API
       {!loading && hasMetrics && (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <div className="rounded-lg bg-white/80 dark:bg-slate-900/60 px-3 py-2 border border-slate-200/80 dark:border-slate-700">
-            <div className="text-[10px] uppercase text-gray-500">Spend total</div>
+            <div className="text-[10px] uppercase text-gray-400">Spend total</div>
             <div className="text-lg font-bold text-sky-600 dark:text-sky-400">{d.spend_total}</div>
           </div>
           <div className="rounded-lg bg-white/80 dark:bg-slate-900/60 px-3 py-2 border border-slate-200/80 dark:border-slate-700">
-            <div className="text-[10px] uppercase text-gray-500">Anuncios activos</div>
+            <div className="text-[10px] uppercase text-gray-400">Anuncios activos</div>
             <div className="text-lg font-bold text-sky-600 dark:text-sky-400">{d.active_ads}</div>
           </div>
           <div className="rounded-lg bg-white/80 dark:bg-slate-900/60 px-3 py-2 border border-slate-200/80 dark:border-slate-700">
-            <div className="text-[10px] uppercase text-gray-500">Impresiones</div>
+            <div className="text-[10px] uppercase text-gray-400">Impresiones</div>
             <div className="text-lg font-bold text-sky-600 dark:text-sky-400">{d.impressions}</div>
           </div>
           <div className="rounded-lg bg-white/80 dark:bg-slate-900/60 px-3 py-2 border border-slate-200/80 dark:border-slate-700">
-            <div className="text-[10px] uppercase text-gray-500">Plataformas</div>
+            <div className="text-[10px] uppercase text-gray-400">Plataformas</div>
             <div className="text-lg font-bold text-sky-600 dark:text-sky-400">{d.platforms.length}</div>
           </div>
         </div>
       )}
 
       {showEmpty && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+        <p className="text-xs text-gray-400 dark:text-gray-400 mt-3">
           Sin métricas de dashboard desde el API (o modo respaldo). Los enlaces de plataforma siguen
           disponibles abajo.
         </p>

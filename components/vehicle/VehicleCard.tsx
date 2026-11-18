@@ -5,15 +5,44 @@ import { useRouter } from "next/navigation";
 import { memo, useCallback } from "react";
 import { Camera, Fuel, Gauge, MapPin, Settings2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { fmtKm, fmtRD, fmtUS } from "@/lib/format";
+import { fmtKm } from "@/lib/format";
+import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
+import { publicVehicleHref } from "@/lib/autos-portal/vehicle-href";
 import { cuota, priceStatus } from "@/lib/finance";
-import { photoCount, type Vehicle } from "@/lib/vehicles";
+import { photoCount, primaryPhotoUrl, type Vehicle } from "@/lib/vehicles";
 import { QualityBadge } from "@/components/vehicle/QualityBadge";
 import { PrecioJustoBadge } from "@/components/vehicle/PrecioJustoBadge";
 import { SaveButton } from "@/components/vehicle/SaveButton";
 import { cn } from "@/lib/utils";
 
 export type VehicleCardVariant = "grid" | "list" | "compact";
+
+/** Foto real si el backend la trae; degradado solo cuando no hay ninguna. */
+function CardImagen({ vehicle, role }: { vehicle: Vehicle; role?: boolean }) {
+  const foto = primaryPhotoUrl(vehicle);
+  const alt = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+  if (foto) {
+    return (
+      // <img> y no next/image: media.nadakki.com no esta en images.remotePatterns (next.config.js es de otra zona).
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        data-testid="card-foto"
+        src={foto}
+        alt={role ? alt : ""}
+        className="absolute inset-0 h-full w-full object-cover"
+        loading="lazy"
+        decoding="async"
+      />
+    );
+  }
+  return (
+    <div
+      className="absolute inset-0"
+      style={{ background: vehicle.grad }}
+      {...(role ? { role: "img", "aria-label": alt } : { "aria-hidden": true })}
+    />
+  );
+}
 
 function CardPhoto({
   vehicle,
@@ -25,27 +54,24 @@ function CardPhoto({
 }: {
   vehicle: Vehicle;
   status: ReturnType<typeof priceStatus>;
-  photos: number;
+  photos?: number;
   saved: boolean;
   onSaveToggle?: () => void;
   aspectClass: string;
 }) {
   return (
     <div className={cn("relative overflow-hidden rounded-r-sm bg-nk-surface-2", aspectClass)}>
-      <div
-        className="absolute inset-0"
-        style={{ background: vehicle.grad }}
-        role="img"
-        aria-label={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-      />
+      <CardImagen vehicle={vehicle} role />
       <QualityBadge status={status} className="absolute left-2 top-2 md:left-3 md:top-3" />
       <div className="absolute right-2 top-2 md:right-3 md:top-3">
         <SaveButton saved={saved} onToggle={onSaveToggle ?? (() => undefined)} />
       </div>
-      <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--fg)_55%,transparent)] px-2 py-0.5 text-[10px] font-semibold text-[var(--surface)] backdrop-blur-sm md:bottom-3 md:right-3">
-        <Camera className="h-3 w-3" aria-hidden />
-        {photos}
-      </span>
+      {photos ? (
+        <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-[color-mix(in_srgb,var(--fg)_55%,transparent)] px-2 py-0.5 text-[10px] font-semibold text-[var(--surface)] backdrop-blur-sm md:bottom-3 md:right-3">
+          <Camera className="h-3 w-3" aria-hidden />
+          {photos}
+        </span>
+      ) : null}
     </div>
   );
 }
@@ -64,10 +90,11 @@ export const VehicleCard = memo(function VehicleCard({
   variant?: VehicleCardVariant;
 }) {
   const router = useRouter();
+  const fmt = useFmtPrecio();
   const status = priceStatus(vehicle.badge, vehicle.match);
-  const monthly = Math.round(cuota(vehicle.price, 20, 60));
-  const href = `/autos/vehiculo/${vehicle.id}`;
-  const photos = photoCount(vehicle.id);
+  const monthly = vehicle.price > 0 ? Math.round(cuota(vehicle.price, 20, 60)) : 0;
+  const href = publicVehicleHref(vehicle);
+  const photos = photoCount(vehicle);
 
   const navigate = useCallback(() => router.push(href), [router, href]);
   const prefetch = useCallback(() => router.prefetch(href), [router, href]);
@@ -95,7 +122,7 @@ export const VehicleCard = memo(function VehicleCard({
         )}
       >
         <div className="relative aspect-[3/2] w-full">
-          <div className="absolute inset-0" style={{ background: vehicle.grad }} aria-hidden />
+          <CardImagen vehicle={vehicle} />
           <QualityBadge status={status} className="absolute left-2 top-2" />
         </div>
         <div className="space-y-1 p-3">
@@ -103,7 +130,7 @@ export const VehicleCard = memo(function VehicleCard({
             {vehicle.year} {vehicle.make} {vehicle.model}
           </h4>
           <p className="font-manrope text-base font-extrabold tabular-nums text-nk-fg">
-            {fmtRD(vehicle.price)}
+            {fmt(vehicle.price)}
           </p>
           <p className="text-xs leading-snug text-nk-fg-muted">
             {fmtKm(vehicle.km)} · {vehicle.trans}
@@ -173,22 +200,18 @@ export const VehicleCard = memo(function VehicleCard({
           </div>
           <p className="flex items-center gap-1 text-[13px] text-nk-fg-muted">
             <MapPin className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            {vehicle.dealerName} · {vehicle.loc}
+            {[vehicle.dealerName, vehicle.loc].filter(Boolean).join(" · ")}
           </p>
         </div>
 
         <div className="vehicle-card-actions flex min-w-0 flex-col gap-2 md:items-stretch">
           <div>
             <p className="font-manrope text-[22px] font-extrabold tabular-nums text-nk-fg">
-              {fmtRD(vehicle.price)}
+              {fmt(vehicle.price)}
             </p>
-            <p className="text-sm text-nk-fg-muted">{fmtUS(vehicle.price)}</p>
           </div>
           <div className="flex flex-wrap gap-1.5">
             <QualityBadge status={status} />
-            <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
-              {vehicle.match}% match
-            </span>
             <PrecioJustoBadge vehicle={vehicle} />
           </div>
           <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
@@ -203,9 +226,11 @@ export const VehicleCard = memo(function VehicleCard({
               </Link>
             </Button>
           </div>
-          <p className="text-sm font-semibold tabular-nums text-brand">
-            {fmtRD(monthly)}/mes · 60 meses · 13.5% APR
-          </p>
+          {monthly > 0 ? (
+            <p className="text-sm font-semibold tabular-nums text-brand">
+              {fmt(monthly)}/mes · 60 meses · 13.5% APR
+            </p>
+          ) : null}
         </div>
       </article>
     );
@@ -272,20 +297,19 @@ export const VehicleCard = memo(function VehicleCard({
 
           <div className="flex flex-wrap items-center gap-2 pt-0.5">
             <p className="font-manrope text-[22px] font-extrabold tabular-nums text-nk-fg">
-              {fmtRD(vehicle.price)}
+              {fmt(vehicle.price)}
             </p>
             <QualityBadge status={status} />
           </div>
 
-          <p className="text-sm font-semibold tabular-nums text-brand">
-            {fmtRD(monthly)}/mes · 60 meses · 13.5% APR
-          </p>
+          {monthly > 0 ? (
+            <p className="text-sm font-semibold tabular-nums text-brand">
+              {fmt(monthly)}/mes · 60 meses · 13.5% APR
+            </p>
+          ) : null}
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
-            {vehicle.match}% match
-          </span>
           {(vehicle.id === 3 || vehicle.id === 7) && (
             <span className="rounded-full bg-brand-soft px-2 py-0.5 text-[10px] font-bold text-brand">
               Recién publicado
@@ -299,25 +323,29 @@ export const VehicleCard = memo(function VehicleCard({
           <PrecioJustoBadge vehicle={vehicle} />
         </div>
 
-        <div className="flex items-center gap-2 pt-1">
-          <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-r-sm bg-nk-surface-2 text-[9px] font-bold text-nk-fg-muted">
-            {vehicle.dealerName
-              .split(/\s+/)
-              .slice(0, 2)
-              .map((w) => w[0])
-              .join("")
-              .toUpperCase()}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-xs font-semibold text-nk-fg">
-              {vehicle.dealerName} | {vehicle.loc}
-            </p>
-            <p className="flex items-center gap-1 text-[11px] text-nk-fg-subtle">
-              <Star className="h-3 w-3 fill-nk-warning text-nk-warning" aria-hidden />
-              {vehicle.rating.toFixed(1)} ({vehicle.reviews} ventas)
-            </p>
+        {vehicle.dealerName ? (
+          <div className="flex items-center gap-2 pt-1">
+            <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-r-sm bg-nk-surface-2 text-[9px] font-bold text-nk-fg-muted">
+              {vehicle.dealerName
+                .split(/\s+/)
+                .slice(0, 2)
+                .map((w) => w[0])
+                .join("")
+                .toUpperCase()}
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-nk-fg">
+                {vehicle.dealerName} | {vehicle.loc}
+              </p>
+              {typeof vehicle.rating === "number" && typeof vehicle.reviews === "number" ? (
+                <p className="flex items-center gap-1 text-[11px] text-nk-fg-subtle">
+                  <Star className="h-3 w-3 fill-nk-warning text-nk-warning" aria-hidden />
+                  {vehicle.rating.toFixed(1)} ({vehicle.reviews} ventas)
+                </p>
+              ) : null}
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <div className="mt-auto flex gap-2 pt-2">
           <Button variant="brand" className="min-h-11 flex-1 hover:brightness-110" asChild>

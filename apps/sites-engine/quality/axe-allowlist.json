@@ -1,0 +1,4 @@
+{
+  "_formato": "entries: [{ \"rule\": \"id-de-regla-axe\", \"route\": \"/es/ruta\", \"reason\": \"motivo\", \"date\": \"AAAA-MM-DD\" }]. Sin motivo y fecha la entrada se rechaza.",
+  "entries": []
+}

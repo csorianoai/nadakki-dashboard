@@ -17,11 +17,11 @@ import {
   BadgeDollarSign,
   type LucideIcon,
 } from "lucide-react";
-import { useAgentRegistrySummary } from "@/app/hooks/useAgentRegistrySummary";
-import { AgentRegistryStatHome } from "@/components/agent-registry/AgentRegistryStatHome";
+import { AvisoRegistroAgentes, EstadisticaAgentes, RegistroAgentesProvider } from "@/app/_portada/registro-agentes";
 import { CORES_CONFIG } from "@/config/cores";
 import { useAuth } from "@/hooks/useAuth";
-import { esPersonalDePlataforma } from "@/lib/auth/platform-staff";
+import { esPersonalDePlataforma, esSuperadminDePlataforma } from "@/lib/auth/platform-staff";
+import { arquitecturaPortada, modulosDePortada, subtituloPortada } from "@/lib/portada/textos";
 
 /** Same-origin; proxied via next.config rewrites */
 const API_URL = "";
@@ -53,11 +53,13 @@ const QUICK_LINKS: {
   { href: "/admin/billing", label: "Billing", icon: Settings, color: "from-purple-500 to-pink-600" },
 ];
 
+/** Accesos de crédito: solo con módulo de crédito en el tenant. */
+const SOLO_CREDITO = ["/credit-hub", "/sic"];
+
 /** Cores destacados en home (resto en mapa completo). */
 const HIGHLIGHT_CORE_IDS = ["marketing", "contabilidad", "legal", "ventascrm", "logistica"] as const;
 
 export default function HomePage() {
-  const agentReg = useAgentRegistrySummary();
   const [stats, setStats] = useState({ totalTenants: 0, backendOnline: false });
 
   /**
@@ -75,6 +77,12 @@ export default function HomePage() {
    */
   const { allRoles } = useAuth();
   const esPlataforma = esPersonalDePlataforma(allRoles);
+  /** Registro de agentes: solo platform_superadmin (no lo pide ni lo avisa para nadie más). */
+  const esSuperadmin = esSuperadminDePlataforma(allRoles);
+  const { tenant } = useAuth();
+  const { ids: idsModulos, nombres: nombresModulos } = modulosDePortada({ roles: allRoles, subscribedCores: tenant?.subscribed_cores });
+  const tieneCredito = idsModulos.includes("credito");
+  const arquitectura = arquitecturaPortada(idsModulos, nombresModulos);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -87,8 +95,9 @@ export default function HomePage() {
           setStats((s) => ({ ...s, backendOnline: r.ok }));
         })
         .catch(() => {}),
-      fetch(`${API_URL}/api/v1/system/info`)
-        .then((r) => (r.ok ? r.json() : null))
+      // total_tenants es dato de plataforma: solo lo pide el personal de plataforma.
+      (esPlataforma ? fetch(`${API_URL}/api/v1/system/info`) : Promise.resolve(null))
+        .then((r) => (r && r.ok ? r.json() : null))
         .then((d) => {
           if (cancelled || !d) return;
           const info = d?.data || d;
@@ -103,13 +112,18 @@ export default function HomePage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [esPlataforma]);
 
-  const coresList = Object.values(CORES_CONFIG).sort((a, b) =>
+  const coresCatalogo = Object.values(CORES_CONFIG);
+  /** Un core del catálogo se muestra si el tenant tiene el módulo con ese mismo id; el superadmin ve todo. */
+  const coresList = (esSuperadmin ? coresCatalogo : coresCatalogo.filter((c) => idsModulos.includes(c.id))).sort((a, b) =>
     a.displayName.localeCompare(b.displayName, "es")
   );
+  const idsCores = new Set(coresList.map((c) => c.id));
+  /** Accesos rápidos de dominio (Legal, Compliance) solo si el dominio está a la vista del usuario. */
+  const DOMINIO_DE_ACCESO: Record<string, string> = { "/legal": "legal", "/compliance": "compliance" };
 
-  return (
+  const pagina = (
     <div className="ndk-page ndk-fade-in min-h-[80vh]">
       <div className="max-w-5xl mx-auto">
         <motion.div
@@ -130,26 +144,17 @@ export default function HomePage() {
               />
               {stats.backendOnline ? "Backend online" : "Backend offline"}
             </span>
-            {agentReg.available && (
-              <span className="text-xs text-gray-500">Agent Registry</span>
-            )}
-            {!agentReg.loading && !agentReg.available && (
-              <span className="text-xs text-amber-400/90" title={agentReg.tooltip}>
-                Agent Registry unavailable
-              </span>
-            )}
+            {esSuperadmin ? <AvisoRegistroAgentes /> : null}
           </div>
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
             NADAKKI AI Suite
           </h1>
-          <p className="text-gray-400 mt-2 text-lg">
-            Plataforma enterprise de IA: riesgo crediticio, crecimiento autonomo y dominios operativos.
-          </p>
-          <p className="text-gray-500 mt-3 text-sm max-w-2xl leading-relaxed">
-            <span className="text-gray-400 font-medium">Arquitectura del producto:</span>{" "}
-            Sistema · SIC / riesgo · Crecimiento (publicidad, workflows, marketing) · Autopilot IA ·
-            Dominios de negocio · Admin y control.
-          </p>
+          <p className="text-gray-400 mt-2 text-lg">{subtituloPortada(idsModulos, nombresModulos)}</p>
+          {arquitectura ? (
+            <p className="text-gray-500 mt-3 text-sm max-w-2xl leading-relaxed">
+              <span className="text-gray-400 font-medium">Arquitectura del producto:</span> {arquitectura}
+            </p>
+          ) : null}
         </motion.div>
 
         {esPlataforma ? (
@@ -165,12 +170,7 @@ export default function HomePage() {
               <Bot className="w-5 h-5 text-purple-400" />
               <span className="text-gray-400 text-sm">Agentes</span>
             </div>
-            <AgentRegistryStatHome
-              loading={agentReg.loading}
-              available={agentReg.available}
-              summary={agentReg.summary}
-              tooltip={agentReg.tooltip}
-            />
+            {esSuperadmin ? <EstadisticaAgentes /> : <span className="text-2xl font-bold text-white">—</span>}
           </div>
           <div className="rounded-xl bg-white/5 border border-white/10 p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -197,7 +197,7 @@ export default function HomePage() {
               <BarChart3 className="w-5 h-5 text-green-400" />
               <span className="text-gray-400 text-sm">Dominios (catálogo)</span>
             </div>
-            <span className="text-2xl font-bold text-white">{coresList.length}</span>
+            <span className="text-2xl font-bold text-white">{coresCatalogo.length}</span>
           </div>
         </motion.div>
         ) : null}
@@ -215,7 +215,7 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-2">
             {HIGHLIGHT_CORE_IDS.map((id) => {
               const c = CORES_CONFIG[id];
-              if (!c) return null;
+              if (!c || !idsCores.has(id)) return null;
               return (
                 <Link
                   key={id}
@@ -264,7 +264,7 @@ export default function HomePage() {
           <h2 className="text-xl font-bold text-white mb-1">Acceso rápido por función</h2>
           <p className="text-sm text-gray-500 mb-4">Operacion diaria, inteligencia autonoma, cumplimiento y gobierno.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {QUICK_LINKS.map((link) => (
+            {QUICK_LINKS.filter((l) => (tieneCredito || !SOLO_CREDITO.includes(l.href)) && (!DOMINIO_DE_ACCESO[l.href] || idsCores.has(DOMINIO_DE_ACCESO[l.href]))).map((link) => (
               <Link key={link.href} href={link.href}>
                 <motion.div
                   whileHover={{ scale: 1.02, y: -2 }}
@@ -313,4 +313,5 @@ export default function HomePage() {
       </div>
     </div>
   );
+  return esSuperadmin ? <RegistroAgentesProvider>{pagina}</RegistroAgentesProvider> : pagina;
 }

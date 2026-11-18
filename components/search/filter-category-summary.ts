@@ -2,11 +2,11 @@
 
 import type { FilterCategoryId } from "@/components/search/filter-categories";
 import type { FilterState } from "@/lib/search-types";
-import { fmtRD } from "@/lib/format";
 
 export function getCategoryActiveSummary(
   state: FilterState,
   id: FilterCategoryId,
+  fmt: (n: number) => string,
 ): { count: number; label: string } | null {
   switch (id) {
     case "location":
@@ -40,7 +40,7 @@ export function getCategoryActiveSummary(
         return null;
       return {
         count: 1,
-        label: [state.minPrice && `Desde ${fmtRD(state.minPrice)}`, state.maxPrice && `Hasta ${fmtRD(state.maxPrice)}`]
+        label: [state.minPrice && `Desde ${fmt(state.minPrice)}`, state.maxPrice && `Hasta ${fmt(state.maxPrice)}`]
           .filter(Boolean)
           .join(" ") || state.priceBadges[0] || "Precio reducido",
       };

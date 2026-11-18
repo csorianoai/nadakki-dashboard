@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { agentDisplayName } from "@/lib/agentDisplayNames";
 import GoogleAdsClient from "./GoogleAdsClient";
+import ConectarGoogleAds from "@/components/google-ads/ConectarGoogleAds";
 import { AgentCard } from "@/components/ui/AgentCard";
 import { useTenant } from "@/contexts/TenantContext";
 import { AdvertisingDashboardLive } from "../components/AdvertisingDashboardLive";
@@ -20,45 +23,32 @@ interface Agent {
   description: string;
   icon: string;
   status: "active" | "inactive" | "pending";
-  metrics?: Array<{ label: string; value: number | string }>;
 }
 
 const AGENTS: Agent[] = [
   {
     id: "budget-pacing",
     backendId: "google_ads_budget_pacing_agent__googleadsbudgetpacingia",
-    name: "Budget Pacing Agent",
+    name: agentDisplayName("google_ads_budget_pacing_agent__googleadsbudgetpacingia"),
     description: "Auditoría de conversiones, diagnóstico PMax y propuestas de puja",
     icon: "💰",
     status: "active",
-    metrics: [
-      { label: "Presupuesto", value: "$500" },
-      { label: "Paced", value: "45%" },
-    ],
   },
   {
     id: "strategist",
     backendId: "google_ads_strategist_agent__googleadsstrategistia",
-    name: "Strategist Agent",
+    name: agentDisplayName("google_ads_strategist_agent__googleadsstrategistia"),
     description: "Propuestas de campaña Search, PMax, Demand Gen y Shopping",
     icon: "📊",
     status: "active",
-    metrics: [
-      { label: "Analisis", value: 24 },
-      { label: "Efectividad", value: "92%" },
-    ],
   },
   {
     id: "rsa-copy-generator",
     backendId: "rsa_ad_copy_generator_agent__rsaadcopygeneratoria",
-    name: "RSA Copy Generator",
+    name: agentDisplayName("rsa_ad_copy_generator_agent__rsaadcopygeneratoria"),
     description: "Propuestas de creativos y activos",
     icon: "📝",
     status: "active",
-    metrics: [
-      { label: "Ads", value: 342 },
-      { label: "CTR", value: "5.2%" },
-    ],
   },
 ];
 
@@ -66,9 +56,9 @@ const API_BASE = "";
 
 function notReadyTitle(actionKey: string): string {
   if (actionKey === "bid_strategy_change_propose") {
-    return "Not ready: conversion tracking must be validated before bid strategy changes.";
+    return "No está listo: primero hay que validar el seguimiento de conversiones antes de cambiar la estrategia de puja.";
   }
-  return "Not ready: prerequisites must be satisfied before this action.";
+  return "No está listo: faltan requisitos previos para esta acción.";
 }
 
 type GuardedAction = {
@@ -83,56 +73,56 @@ type GuardedAction = {
 const GUARDED_ACTIONS: GuardedAction[] = [
   {
     id: "search",
-    label: "Propose Search campaign",
+    label: "Proponer campaña de Búsqueda",
     actionKey: "propose_search_campaign",
     agentId: "google_ads_strategist_agent__googleadsstrategistia",
     payload: { action: "search_campaign_propose" },
   },
   {
     id: "pmax",
-    label: "Propose PMax campaign",
+    label: "Proponer campaña Performance Max",
     actionKey: "propose_pmax_campaign",
     agentId: "google_ads_strategist_agent__googleadsstrategistia",
     payload: { action: "pmax_campaign_propose" },
   },
   {
     id: "demandgen",
-    label: "Propose Demand Gen campaign",
+    label: "Proponer campaña de Generación de demanda",
     actionKey: "propose_demand_gen_campaign",
     agentId: "google_ads_strategist_agent__googleadsstrategistia",
     payload: { action: "demand_gen_campaign_propose" },
   },
   {
     id: "shopping",
-    label: "Propose Shopping campaign",
+    label: "Proponer campaña de Shopping",
     actionKey: "propose_shopping_campaign",
     agentId: "google_ads_strategist_agent__googleadsstrategistia",
     payload: { action: "shopping_campaign_propose" },
   },
   {
     id: "conv-audit",
-    label: "Run conversion tracking audit",
+    label: "Auditar el seguimiento de conversiones",
     actionKey: "conversion_tracking_audit",
     agentId: "google_ads_budget_pacing_agent__googleadsbudgetpacingia",
     payload: { action: "conversion_tracking_audit" },
   },
   {
     id: "pmax-diag",
-    label: "Run PMax diagnostic",
+    label: "Diagnosticar Performance Max",
     actionKey: "pmax_diagnostic",
     agentId: "google_ads_budget_pacing_agent__googleadsbudgetpacingia",
     payload: { action: "pmax_diagnostic" },
   },
   {
     id: "bid-strategy",
-    label: "Propose bid strategy change",
+    label: "Proponer cambio de estrategia de puja",
     actionKey: "bid_strategy_change_propose",
     agentId: "google_ads_budget_pacing_agent__googleadsbudgetpacingia",
     payload: { action: "bid_strategy_change_propose" },
   },
   {
     id: "assets",
-    label: "Propose asset creation",
+    label: "Proponer creación de activos",
     actionKey: "propose_asset_creation",
     agentId: "rsa_ad_copy_generator_agent__rsaadcopygeneratoria",
     payload: { action: "rsa_ad_copy_generate" },
@@ -179,13 +169,13 @@ export default function GoogleAdsPage() {
         if (pf) {
           const title =
             pf.status === "blocked"
-              ? "Blocked: this tenant is not eligible for this campaign type."
+              ? "Bloqueado: esta cuenta no puede usar este tipo de campaña."
               : notReadyTitle(pf.action_key);
           openModal({
             variant: pf.status === "blocked" ? "blocked" : "not_ready",
             title,
             result: pf,
-            bodyLines: [...pf.reasons, ...(pf.required_fixes?.length ? ["", "Required fixes:", ...pf.required_fixes] : [])],
+            bodyLines: [...pf.reasons, ...(pf.required_fixes?.length ? ["", "Qué hay que corregir:", ...pf.required_fixes] : [])],
           });
           return;
         }
@@ -195,7 +185,7 @@ export default function GoogleAdsPage() {
             ? detail
             : typeof detail === "object" && detail && "message" in detail
               ? String((detail as { message: unknown }).message)
-              : `HTTP ${res.status}`;
+              : `No se pudo completar la acción (código ${res.status}).`;
         openModal({
           variant: "error",
           title: "Error",
@@ -211,16 +201,16 @@ export default function GoogleAdsPage() {
       );
       openModal({
         variant: "execute_ok",
-        title: forced ? "Proposal only: this action requires approval before execution." : "Ejecución completada",
+        title: forced ? "Solo propuesta: esta acción necesita aprobación antes de ejecutarse." : "Ejecución completada",
         bodyLines: forced
           ? [
               String(
                 (data.google_ads_preflight as { preflight_notice?: string })?.preflight_notice ??
-                  "Proposal only: this action requires approval before execution."
+                  "Solo propuesta: esta acción necesita aprobación antes de ejecutarse."
               ),
-              `dry_run efectivo: ${String(data.dry_run)}`,
+              `Modo de prueba (sin cambios reales): ${typeof data.dry_run === "boolean" ? (data.dry_run ? "sí" : "no") : "no informado"}`,
             ]
-          : ["La acción se ejecutó según la política del backend."],
+          : ["La acción se ejecutó según las reglas de tu cuenta."],
         executePayload: undefined,
       });
     } finally {
@@ -232,8 +222,8 @@ export default function GoogleAdsPage() {
     if (!tenantId) {
       openModal({
         variant: "error",
-        title: "Tenant",
-        bodyLines: ["Selecciona un tenant para continuar."],
+        title: "Cuenta",
+        bodyLines: ["Selecciona una cuenta para continuar."],
       });
       return;
     }
@@ -243,7 +233,7 @@ export default function GoogleAdsPage() {
       if (pfRes.ok === false) {
         openModal({
           variant: "error",
-          title: "Pre-flight no disponible",
+          title: "Verificación previa no disponible",
           bodyLines: [pfRes.error],
         });
         return;
@@ -264,8 +254,8 @@ export default function GoogleAdsPage() {
       setPendingAction(null);
       openModal({
         variant: "error",
-        title: "Pre-flight",
-        bodyLines: [`Unexpected status: ${String(pf.status)}`],
+        title: "Verificación previa",
+        bodyLines: ["Respuesta inesperada de la verificación previa."],
       });
     } finally {
       setLoading((p) => ({ ...p, [def.id]: false }));
@@ -289,15 +279,15 @@ export default function GoogleAdsPage() {
             variant: pf.status === "blocked" ? "blocked" : "not_ready",
             title:
               pf.status === "blocked"
-                ? "Blocked: this tenant is not eligible for this campaign type."
-                : "Not ready",
+                ? "Bloqueado: esta cuenta no puede usar este tipo de campaña."
+                : "No está listo",
             result: pf,
             bodyLines: pf.reasons,
           });
           return;
         }
         const err = data?.detail;
-        throw new Error(typeof err === "string" ? err : `HTTP ${res.status}`);
+        throw new Error(typeof err === "string" ? err : `No se pudo completar la acción (código ${res.status}).`);
       }
       setResults((prev) => ({ ...prev, [agent.id]: { success: true, data } }));
     } catch (err: unknown) {
@@ -311,21 +301,29 @@ export default function GoogleAdsPage() {
   };
 
   return (
-    <div className="space-y-8 p-6 max-w-7xl mx-auto">
+    // Los botones azules de AgentCard y GoogleAdsClient (blue-500, blanco 3.67:1) viven fuera de esta ruta: se oscurecen aqui, solo en esta pagina.
+    <div className="space-y-8 p-6 max-w-7xl mx-auto [&_.bg-blue-500]:bg-blue-700 [&_.bg-blue-500:hover]:bg-blue-800">
+      <ConectarGoogleAds />
+      <Link href="/advertising/google-ads/metricas" className="inline-block text-sm font-medium text-blue-400 hover:underline">
+        Ver métricas de campañas →
+      </Link>
+      <Link href="/advertising/google-ads/anuncios" className="inline-block ml-6 text-sm font-medium text-blue-400 hover:underline">
+        Anuncios de Google Ads →
+      </Link>
       <GoogleAdsClient embed navigationBackHref="/advertising" />
-      <AdvertisingDashboardLive title="Google Ads — Dashboard API" />
+      <AdvertisingDashboardLive title="Google Ads — Panel en vivo" />
       <div>
-        <h1 className="text-4xl font-bold mb-2">💰 Google Ads Hub</h1>
+        <h1 className="text-4xl font-bold mb-2">💰 Centro de Google Ads</h1>
         <p className="text-gray-600 dark:text-gray-400">
-          Agentes especializados de automatizacion - Conectados al Backend
+          Agentes especializados de automatización, conectados a tu cuenta
         </p>
       </div>
 
       <section className="rounded-xl border border-sky-200 dark:border-sky-800 bg-sky-50/50 dark:bg-slate-900/40 p-4">
-        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Acciones con pre-flight automático</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-1">Acciones con verificación previa automática</h2>
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Antes de ejecutar, se evalúa preparación del tenant y reglas por acción. Bloqueos y “not ready” no ejecutan;
-          las propuestas pueden forzar dry_run hasta aprobación.
+          Antes de ejecutar, se evalúa la preparación de la cuenta y reglas por acción. Si algo está bloqueado o no está listo, no se ejecuta;
+          las propuestas se quedan en modo de prueba hasta que alguien las apruebe.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
           {GUARDED_ACTIONS.map((a) => (
@@ -363,29 +361,20 @@ export default function GoogleAdsPage() {
             </div>
           </div>
           <div className="bg-white dark:bg-slate-900 rounded-lg border p-6">
-            {selected.metrics && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                {selected.metrics.map((m, i) => (
-                  <div key={i} className="text-center p-3 bg-gray-50 dark:bg-slate-800 rounded">
-                    <div className="font-bold text-2xl text-blue-600 dark:text-blue-400">{m.value}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{m.label}</div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <p className="mb-6 text-sm text-gray-600 dark:text-gray-400">Sin datos aún</p>
             <div className="flex gap-3 flex-wrap">
               <button
-                className="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded font-semibold disabled:opacity-50"
+                className="bg-blue-700 hover:bg-blue-800 text-white py-2 px-4 rounded font-semibold disabled:opacity-50"
                 type="button"
                 disabled={loading[selected.id]}
                 onClick={() => executeAgent(selected)}
               >
-                {loading[selected.id] ? "Ejecutando..." : "Ejecutar (dry run)"}
+                {loading[selected.id] ? "Ejecutando..." : "Ejecutar en modo de prueba"}
               </button>
               <button className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-100 py-2 px-4 rounded font-semibold" type="button">
                 Historico
               </button>
-              <button className="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded font-semibold" type="button">
+              <button className="bg-green-700 hover:bg-green-800 text-white py-2 px-4 rounded font-semibold" type="button">
                 Programar
               </button>
             </div>
@@ -404,7 +393,7 @@ export default function GoogleAdsPage() {
                       : "text-red-700 dark:text-red-300"
                   }`}
                 >
-                  {(results[selected.id] as { success?: boolean })?.success ? "Exito - DRY RUN" : "Error"}
+                  {(results[selected.id] as { success?: boolean })?.success ? "Éxito: modo de prueba" : "Error"}
                 </p>
                 <pre className="text-xs mt-2 overflow-auto max-h-40">
                   {JSON.stringify(

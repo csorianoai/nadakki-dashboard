@@ -1,0 +1,10 @@
+{
+  "_comment": "Declaración de accesibilidad. Revisar antes de producción.",
+  "title": { "es": "Accesibilidad", "en": "Accessibility" },
+  "updated": "2026-11-05",
+  "sections": [
+    { "h": { "es": "Nuestro compromiso", "en": "Our commitment" }, "p": { "es": "Queremos que este sitio sea fácil de usar para todas las personas, incluidas las que usan lectores de pantalla, teclado o ampliación. Seguimos como referencia las pautas WCAG 2.1 nivel AA.", "en": "We want this site to be easy to use for everyone, including people who use screen readers, keyboards or magnification. We follow WCAG 2.1 level AA as our reference." } },
+    { "h": { "es": "Qué hemos hecho", "en": "What we have done" }, "p": { "es": "Contraste de color suficiente, navegación completa con teclado, formularios con etiquetas, textos alternativos en imágenes y páginas que se adaptan a cualquier tamaño de pantalla.", "en": "Sufficient color contrast, full keyboard navigation, labeled forms, alternative text for images and pages that adapt to any screen size." } },
+    { "h": { "es": "Si encuentras una barrera", "en": "If you find a barrier" }, "p": { "es": "Escríbenos a {email} o llama al {phone} y te ayudaremos por otro medio mientras lo corregimos.", "en": "Write to {email} or call {phone} and we will help you another way while we fix it." } }
+  ]
+}

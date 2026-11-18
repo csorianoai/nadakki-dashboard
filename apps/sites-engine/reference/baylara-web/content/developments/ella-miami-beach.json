@@ -1,0 +1,76 @@
+{
+  "slug": "ella-miami-beach",
+  "sample": false,
+  "authorized": true,
+  "order": 7,
+  "sourceId": "1647",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/1647/ella-miami-beach",
+  "name": "Ella Miami Beach",
+  "area": "Miami Beach",
+  "zone": "miami-beach",
+  "address": "6940 Abbott Ave, Miami Beach, FL 33141",
+  "devType": "condo",
+  "status": null,
+  "deliveryYear": 2026,
+  "delivery": {
+    "es": "Entrega estimada: 2026",
+    "en": "Estimated delivery: 2026"
+  },
+  "priceFrom": 580000,
+  "beds": "1 – 2",
+  "units": 103,
+  "floors": 10,
+  "sqft": "434 – 1,076",
+  "developer": null,
+  "architect": null,
+  "interiorDesigner": "Steven G",
+  "landscape": null,
+  "description": {
+    "es": [
+      "Ella Miami Beach es un condominio en Miami Beach, en 6940 Abbott Ave, Miami Beach, FL 33141. Contempla 103 residencias en 10 pisos, de 1 – 2 habitaciones y de 434 – 1,076 sq ft.",
+      "Equipo: interiorismo de Steven G. Entrega estimada: 2026. Precios desde $580,000."
+    ],
+    "en": [
+      "Ella Miami Beach is a condominium in Miami Beach, at 6940 Abbott Ave, Miami Beach, FL 33141. It comprises 103 residences over 10 floors, with 1 – 2 bedrooms and of 434 – 1,076 sq ft.",
+      "Team: interiors by Steven G. Estimated delivery: 2026. Prices from $580,000."
+    ]
+  },
+  "interior": null,
+  "amenities": {
+    "es": [
+      "Piscina en la azotea",
+      "Gimnasio",
+      "Cancha de pickleball",
+      "Salón social",
+      "Mirador"
+    ],
+    "en": [
+      "Rooftop pool",
+      "Fitness center",
+      "Pickleball court",
+      "Lounge",
+      "Observation deck"
+    ]
+  },
+  "images": [
+    "dev-ella-miami-beach-01",
+    "dev-ella-miami-beach-02",
+    "dev-ella-miami-beach-03",
+    "dev-ella-miami-beach-04",
+    "dev-ella-miami-beach-05",
+    "dev-ella-miami-beach-06",
+    "dev-ella-miami-beach-07",
+    "dev-ella-miami-beach-08",
+    "dev-ella-miami-beach-09",
+    "dev-ella-miami-beach-10",
+    "dev-ella-miami-beach-11",
+    "dev-ella-miami-beach-12"
+  ],
+  "heroImages": [
+    "dev-ella-miami-beach-01"
+  ],
+  "geo": {
+    "lat": 25.8550085,
+    "lng": -80.1227067
+  }
+}

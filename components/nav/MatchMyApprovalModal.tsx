@@ -14,7 +14,7 @@ const STEPS = [
   {
     n: 2,
     title: "Recibe pre-aprobaciones en 24h",
-    desc: "Credicefi + Banco Piloto RD responden con montos y tasas reales.",
+    desc: "Las entidades participantes responden con montos y tasas.",
   },
   {
     n: 3,

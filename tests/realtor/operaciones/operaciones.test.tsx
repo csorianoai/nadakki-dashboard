@@ -102,10 +102,12 @@ describe("pantalla", () => {
     mockApiFetch.mockResolvedValue({ status: 200, json: async () => ({ demo: true }) });
     render(<OperacionesPanel />);
     await screen.findByTestId("operaciones-empty");
-    expect(mockApiFetch).toHaveBeenCalledTimes(1);
-    const [url, init] = mockApiFetch.mock.calls[0];
-    expect(String(url)).not.toMatch(/tenant/i);
-    expect(JSON.stringify(init ?? {})).not.toMatch(/tenant/i);
+    // P3: además del acceso, el formulario de apertura lee las plantillas; NINGUNA petición lleva tenant.
+    await waitFor(() => expect(mockApiFetch).toHaveBeenCalledTimes(2));
+    for (const [url, init] of mockApiFetch.mock.calls) {
+      expect(String(url)).not.toMatch(/tenant/i);
+      expect(JSON.stringify(init ?? {})).not.toMatch(/tenant/i);
+    }
     expect(within(screen.getByTestId("operaciones-panel")).queryByText(/SYNTH/)).toBeNull();
   });
 

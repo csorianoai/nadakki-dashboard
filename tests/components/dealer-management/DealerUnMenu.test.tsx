@@ -122,11 +122,13 @@ describe("TopNav: la barra del marketplace no entra en el panel del dealer", () 
     expect(container).toBeEmptyDOMElement();
   });
 
-  it("en la vitrina publica sigue con Vender, Dealers y Mi Shopper", () => {
+  it("en la vitrina publica sigue con Vender y Dealers, sin Match My Approval ni selector de tenants (14a)", () => {
     pathname = "/autos/vehiculos";
     render(<TopNav />);
     expect(screen.getByRole("link", { name: "Vender" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Dealers" })).toBeInTheDocument();
-    expect(screen.getByText("Match My Approval")).toBeInTheDocument();
+    expect(screen.queryByText("Match My Approval")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Tenant")).not.toBeInTheDocument();
+    expect(document.body.textContent).not.toMatch(/Banco Piloto|Credicefi/);
   });
 });

@@ -1,13 +1,10 @@
 "use client";
 
-import { FONT_DISPLAY, RT } from "@/lib/realtor/tokens";
+import { RT } from "@/lib/realtor/tokens";
 
 export type RealtorView = "agente" | "broker";
 
 type Props = {
-  center: string;
-  /** Id del centro vivo que no es fila de la barra (p. ej. Propietarios): la miga lo señala. */
-  offBarId?: string;
   view: RealtorView;
   onView: (v: RealtorView) => void;
   demo: boolean;
@@ -21,14 +18,16 @@ const VIEWS: { id: RealtorView; label: string }[] = [
   { id: "broker", label: "Broker" },
 ];
 
-/** Barra superior: miga, vista simulada Agente/Broker (sin permisos nuevos), píldora y reinicio solo en DEMO. */
-export function ShellTopBar({ center, offBarId, view, onView, demo, tenantDemo = false, onResetDemo }: Props) {
+/**
+ * Barra superior del armazón: vista simulada Agente/Broker (sin permisos nuevos), píldora y reinicio solo en DEMO, y el aviso de
+ * tenant DEMO. La miga es UNA, la de la Suite (BarraSuite, migasDe), que ya nombra el centro: aquí no se repite (ROP-UX-QUICKFIX).
+ * Sin nada que mostrar, la barra no se pinta.
+ */
+export function ShellTopBar({ view, onView, demo, tenantDemo = false, onResetDemo }: Props) {
+  if (!demo && tenantDemo !== true) return null;
   return (
     <header data-testid="shell-topbar" style={{ position: "sticky", top: 0, zIndex: 20, background: RT.page, borderBottom: `1px solid ${RT.line}` }}>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px 16px", padding: "10px 40px" }}>
-        <nav aria-label="Miga" data-testid="shell-crumb" style={{ fontSize: 13, color: RT.muted }}>
-          <span style={{ fontFamily: FONT_DISPLAY }}>Nadakki Realtor OS</span> › <strong {...(offBarId ? { "data-testid": `center-${offBarId}`, "data-center-state": "live" } : {})} style={{ color: RT.ink }}>{center}</strong>
-        </nav>
         {tenantDemo === true ? (
           <span role="status" data-testid="tenant-demo" style={{ background: RT.demoBg, color: RT.demoText, padding: "6px 12px", borderRadius: 999, fontSize: 12, fontWeight: 700 }}>
             Tenant DEMO · los datos de este espacio son de demostración

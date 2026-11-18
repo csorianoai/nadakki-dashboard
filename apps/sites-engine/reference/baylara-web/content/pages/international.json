@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "title": { "es": "Comprar frente al mar en Miami desde Latinoamérica", "en": "Buying oceanfront in Miami from Latin America" },
+    "description": { "es": "Paso a paso para comprar desde Latinoamérica y República Dominicana: estructura, financiación, impuestos y retenciones, cuentas, cierre a distancia y alquiler.", "en": "Step by step to buy from Latin America and the Dominican Republic: structure, financing, taxes and withholdings, accounts, remote closing and rentals." }
+  },
+  "eyebrow": { "es": "Compradores internacionales", "en": "International buyers" },
+  "title": { "es": "Comprar frente al mar en Miami desde Latinoamérica, paso a paso", "en": "Buying oceanfront in Miami from Latin America, step by step" },
+  "lead": { "es": "Casi todo el proceso puede hacerse a distancia. Coordino abogados, prestamistas, compañía de títulos e inspectores, y te explico cada decisión en tu idioma.", "en": "Most of the process can be done remotely. I coordinate the attorneys, lenders, title company and inspectors, and explain each decision in your language." },
+  "notice": { "es": "Información general; consulte con su abogado y contador.", "en": "General information; consult your attorney and accountant." },
+  "download": { "es": "Descargar la guía: Comprar frente al mar en Miami desde Latinoamérica", "en": "Download the guide: Buying oceanfront in Miami from Latin America" },
+  "cta": { "es": "Planificar mi compra", "en": "Plan my purchase" },
+  "sections": [
+    { "id": "estructura", "h": { "es": "1. Estructura de compra", "en": "1. Purchase structure" },
+      "p": { "es": "Se puede comprar a título personal, mediante una sociedad en Florida (LLC) o mediante otras estructuras. La elección afecta impuestos, herencia y privacidad, y la toma tu abogado con tu contador antes de firmar la oferta.", "en": "You can buy in your own name, through a Florida company (LLC) or through other structures. The choice affects taxes, estate planning and privacy, and is made by your attorney with your accountant before you sign an offer." },
+      "list": { "es": ["Defínela antes de la oferta: cambiarla después cuesta tiempo y dinero", "El nombre del comprador en el contrato debe coincidir con la estructura elegida"], "en": ["Decide it before the offer: changing it later costs time and money", "The buyer name on the contract must match the chosen structure"] } },
+    { "id": "financiacion", "h": { "es": "2. Financiación para no residentes", "en": "2. Financing for non-residents" },
+      "p": { "es": "La mayoría de compradores extranjeros paga al contado. También existen hipotecas para extranjeros sin historial de crédito en EE. UU.; la entrada, la tasa y los documentos dependen de cada prestamista.", "en": "Most foreign buyers pay cash. Foreign national mortgages also exist without U.S. credit history; down payment, rate and documents depend on each lender." },
+      "list": { "es": ["Prueba de fondos o preaprobación antes de ofertar", "El edificio debe ser aprobable por el prestamista: lo verifico antes"], "en": ["Proof of funds or pre-approval before making an offer", "The building must be approvable by the lender: I check it first"] } },
+    { "id": "impuestos", "h": { "es": "3. Impuestos y retenciones", "en": "3. Taxes and withholdings" },
+      "p": { "es": "Al comprar hay costos de cierre, seguro de título y el impuesto anual a la propiedad del condado. Al vender, un vendedor extranjero puede estar sujeto a la retención FIRPTA sobre el precio de venta, y los ingresos por alquiler tienen obligaciones fiscales en EE. UU.", "en": "When buying there are closing costs, title insurance and the county’s annual property tax. When selling, a foreign seller may be subject to FIRPTA withholding on the sale price, and rental income carries U.S. tax obligations." },
+      "list": { "es": ["Al comprar: costos de cierre, seguro de título, impuesto a la propiedad", "Al alquilar: declaración de ingresos en EE. UU.", "Al vender: retención FIRPTA cuando aplique"], "en": ["Buying: closing costs, title insurance, property tax", "Renting: U.S. income tax filing", "Selling: FIRPTA withholding when it applies"] } },
+    { "id": "cuentas", "h": { "es": "4. Cuentas bancarias y transferencias", "en": "4. Bank accounts and wires" },
+      "p": { "es": "Los fondos llegan por transferencia a la cuenta de garantía de la compañía de títulos, con origen documentado. Una cuenta bancaria en EE. UU. facilita pagar cuotas, impuestos y servicios después de la compra.", "en": "Funds arrive by wire to the title company’s escrow account, with a documented source. A U.S. bank account makes it easier to pay fees, taxes and utilities after closing." },
+      "list": { "es": ["Confirma las instrucciones de transferencia por teléfono, con un número obtenido por tu cuenta", "Nunca envío datos bancarios por email ni por mensaje"], "en": ["Confirm wiring instructions by phone, using a number you obtained yourself", "I never send bank details by email or message"] } },
+    { "id": "cierre", "h": { "es": "5. Cierre a distancia", "en": "5. Remote closing" },
+      "p": { "es": "Florida permite la notarización remota en línea, y las compañías de títulos gestionan cierres por correo. Si no puedes firmar, un poder notarial apostillado permite que otra persona firme por ti.", "en": "Florida allows remote online notarization, and title companies handle mail-away closings. If you cannot sign, an apostilled power of attorney lets someone sign for you." },
+      "list": { "es": ["Inspección final por video antes del cierre", "Seguro de título emitido al cierre", "Escritura registrada en el condado"], "en": ["Final walk-through by video before closing", "Title insurance issued at closing", "Deed recorded with the county"] } },
+    { "id": "alquiler", "h": { "es": "6. Después: alquiler y administración", "en": "6. After closing: rental and management" },
+      "p": { "es": "Cada edificio tiene sus reglas de alquiler (plazo mínimo, veces por año, aprobación de la asociación). Las verifico antes de la oferta y, después del cierre, coordino la administración y el alquiler si lo deseas.", "en": "Each building has its rental rules (minimum term, times per year, association approval). I verify them before the offer and, after closing, coordinate management and leasing if you want." },
+      "list": { "es": ["Consulta las reglas de cada torre en la Guía de edificios"], "en": ["Check each tower’s rules in the Building guide"] } }
+  ],
+  "faqTitle": { "es": "Preguntas frecuentes", "en": "Frequent questions" },
+  "faq": [
+    { "q": { "es": "¿Necesito vivir en EE. UU. para comprar?", "en": "Do I need to live in the U.S. to buy?" }, "a": { "es": "No. Los no residentes pueden comprar en Florida. Comprar una propiedad no otorga por sí mismo ningún estatus migratorio.", "en": "No. Non-residents can buy in Florida. Buying property does not by itself grant any immigration status." } },
+    { "q": { "es": "¿Puedo alquilar la propiedad?", "en": "Can I rent the property out?" }, "a": { "es": "Depende del reglamento de cada edificio. Lo reviso antes de que hagas una oferta.", "en": "It depends on each building’s rules. I review them before you make an offer." } },
+    { "q": { "es": "¿Cuánto tarda el proceso?", "en": "How long does the process take?" }, "a": { "es": "Desde la oferta aceptada hasta el cierre, el plazo que fije el contrato; la financiación suele alargarlo.", "en": "From accepted offer to closing, the period set in the contract; financing usually makes it longer." } }
+  ],
+  "formTitle": { "es": "Cuéntame sobre tu compra", "en": "Tell me about your purchase" },
+  "formText": { "es": "Tres preguntas y te respondo con un primer plan y los profesionales que vas a necesitar.", "en": "Three questions and I will reply with a first plan and the professionals you will need." }
+}

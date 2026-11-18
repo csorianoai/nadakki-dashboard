@@ -1,7 +1,9 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { AlertTriangle, Building2, CheckCircle2, Loader2, Store } from "lucide-react";
+import { AlertTriangle, Briefcase, Building2, CheckCircle2, Loader2, Store } from "lucide-react";
+
+import { ClientTenantForm } from "./ClientTenantForm";
 
 import {
   createDealer,
@@ -11,7 +13,7 @@ import {
   type OnboardingResult,
 } from "@/lib/admin/saas-onboarding-api";
 
-type Mode = "institution" | "dealer";
+type Mode = "institution" | "dealer" | "client";
 
 type InstitutionForm = {
   tenantName: string;
@@ -169,7 +171,7 @@ export function SaasOnboardingWizard() {
         <p className="mt-1 text-sm text-gray-400">Creates tenant-isolated records through the protected admin API and reads back the final status.</p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2" role="group" aria-label="Onboarding type">
+      <div className="grid gap-3 sm:grid-cols-3" role="group" aria-label="Onboarding type">
         <button type="button" data-testid="mode-institution" aria-pressed={mode === "institution"} onClick={() => changeMode("institution")} className={`rounded-xl border p-4 text-left ${mode === "institution" ? "border-purple-400 bg-purple-500/10" : "border-white/10 bg-white/5"}`}>
           <Building2 className="mb-2 h-5 w-5 text-purple-300" />
           <strong className="text-white">Crear institución</strong>
@@ -178,8 +180,13 @@ export function SaasOnboardingWizard() {
           <Store className="mb-2 h-5 w-5 text-cyan-300" />
           <strong className="text-white">Crear concesionario</strong>
         </button>
+        <button type="button" data-testid="mode-client" aria-pressed={mode === "client"} onClick={() => changeMode("client")} className={`rounded-xl border p-4 text-left ${mode === "client" ? "border-emerald-400 bg-emerald-500/10" : "border-white/10 bg-white/5"}`}>
+          <Briefcase className="mb-2 h-5 w-5 text-emerald-300" />
+          <strong className="text-white">Crear cliente o agencia</strong>
+        </button>
       </div>
 
+      {mode === "client" ? <ClientTenantForm /> : (
       <form onSubmit={submit} className="grid gap-4 rounded-xl border border-white/10 bg-white/5 p-5 md:grid-cols-2">
         {mode === "institution" ? (
           <>
@@ -214,6 +221,7 @@ export function SaasOnboardingWizard() {
           <p className="mt-3 text-xs text-gray-500">The temporary password is sent only in the authenticated request and cleared from this form after every attempt.</p>
         </div>
       </form>
+      )}
     </section>
   );
 }
