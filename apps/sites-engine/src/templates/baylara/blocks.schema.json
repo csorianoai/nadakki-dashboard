@@ -154,6 +154,130 @@
           "$ref": "#/$defs/cta_link"
         }
       }
+    },
+    "block_baylara_lead_form": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "intent",
+        "fields",
+        "submit"
+      ],
+      "properties": {
+        "intent": {
+          "enum": [
+            "buyer",
+            "seller",
+            "tenant",
+            "consult",
+            "property",
+            "alerts",
+            "market",
+            "saved"
+          ]
+        },
+        "fields": {
+          "type": "array",
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "label"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[a-zA-Z][a-zA-Z0-9]{0,29}$",
+                "not": {
+                  "enum": [
+                    "intent",
+                    "lang",
+                    "form_rendered_at",
+                    "company_website",
+                    "website",
+                    "consent",
+                    "consent_email",
+                    "tenant_id",
+                    "site_id",
+                    "listing",
+                    "development",
+                    "building"
+                  ]
+                }
+              },
+              "label": {
+                "$ref": "#/$defs/i18n"
+              },
+              "type": {
+                "enum": [
+                  "text",
+                  "email",
+                  "tel",
+                  "date",
+                  "month",
+                  "textarea",
+                  "select"
+                ]
+              },
+              "options": {
+                "type": "array",
+                "maxItems": 40,
+                "items": {
+                  "type": "string",
+                  "maxLength": 120
+                }
+              },
+              "full": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "submit": {
+          "$ref": "#/$defs/i18n"
+        },
+        "note": {
+          "$ref": "#/$defs/i18n"
+        },
+        "consent_phone": {
+          "$ref": "#/$defs/i18n"
+        },
+        "consent_email": {
+          "$ref": "#/$defs/i18n"
+        },
+        "privacy_route": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "clave de pagina del manifiesto (privacy)"
+        },
+        "privacy_label": {
+          "$ref": "#/$defs/i18n"
+        },
+        "interest": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "slug"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "listing",
+                "development",
+                "building"
+              ]
+            },
+            "slug": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+              "maxLength": 96
+            }
+          }
+        }
+      }
     }
   }
 }
