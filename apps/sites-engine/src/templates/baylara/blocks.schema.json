@@ -7,26 +7,153 @@
   "additionalProperties": false,
   "properties": {
     "agent": {
-      "type": "object", "additionalProperties": false,
-      "properties": { "name": { "type": "string", "maxLength": 120 }, "title": { "$ref": "#/$defs/i18n" }, "photo": { "type": "string", "maxLength": 80, "description": "id de PublicMedia" } }
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "title": {
+          "$ref": "#/$defs/i18n"
+        },
+        "photo": {
+          "type": "string",
+          "maxLength": 80,
+          "description": "id de PublicMedia"
+        }
+      }
     },
-    "brokerage_address": { "type": "string", "maxLength": 300 },
-    "mls_disclaimer": { "$ref": "#/$defs/i18n" },
-    "dr_partner_brokerage": { "type": "string", "maxLength": 200 },
-    "response_time": { "$ref": "#/$defs/i18n" },
-    "valuation_days": { "type": "integer", "minimum": 1, "maximum": 60 },
+    "brokerage_address": {
+      "type": "string",
+      "maxLength": 300
+    },
+    "mls_disclaimer": {
+      "$ref": "#/$defs/i18n"
+    },
+    "dr_partner_brokerage": {
+      "type": "string",
+      "maxLength": 200
+    },
+    "response_time": {
+      "$ref": "#/$defs/i18n"
+    },
+    "valuation_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 60
+    },
     "testimonials": {
-      "type": "array", "maxItems": 12,
+      "type": "array",
+      "maxItems": 12,
       "items": {
-        "type": "object", "additionalProperties": false, "required": ["quote", "author"],
-        "properties": { "quote": { "$ref": "#/$defs/i18n" }, "author": { "type": "string", "maxLength": 120 }, "role": { "type": "string", "maxLength": 120 } }
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "quote",
+          "author"
+        ],
+        "properties": {
+          "quote": {
+            "$ref": "#/$defs/i18n"
+          },
+          "author": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "role": {
+            "type": "string",
+            "maxLength": 120
+          }
+        }
       }
     }
   },
   "$defs": {
     "i18n": {
-      "type": "object", "additionalProperties": false, "required": ["es"],
-      "properties": { "es": { "type": "string", "maxLength": 2000 }, "en": { "type": "string", "maxLength": 2000 } }
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "es"
+      ],
+      "properties": {
+        "es": {
+          "type": "string",
+          "maxLength": 2000
+        },
+        "en": {
+          "type": "string",
+          "maxLength": 2000
+        }
+      }
+    },
+    "cta_link": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "route"
+      ],
+      "properties": {
+        "label": {
+          "$ref": "#/$defs/i18n"
+        },
+        "route": {
+          "type": "string",
+          "maxLength": 40,
+          "description": "clave de pagina del manifiesto (about, contact, ...)"
+        }
+      }
+    },
+    "block_text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 20000
+        }
+      }
+    },
+    "block_baylara_hero": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/i18n"
+        },
+        "subtitle": {
+          "$ref": "#/$defs/i18n"
+        },
+        "cta": {
+          "$ref": "#/$defs/cta_link"
+        }
+      }
+    },
+    "block_baylara_cta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "button"
+      ],
+      "properties": {
+        "title": {
+          "$ref": "#/$defs/i18n"
+        },
+        "body": {
+          "$ref": "#/$defs/i18n"
+        },
+        "button": {
+          "$ref": "#/$defs/cta_link"
+        }
+      }
     }
   }
 }
