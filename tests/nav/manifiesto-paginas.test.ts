@@ -27,7 +27,9 @@ const RAIZ = path.resolve(__dirname, "..", "..");
  * Tope de páginas en `pendiente-revision`. Solo puede bajar: si resuelves una, baja la cifra; si necesitas subirla,
  * es una decisión que César ve en el diff.
  */
-const MAXIMO_PENDIENTES = 50; // release sin Mi web: main tiene 50 pendientes (staging necesita 57 por las 7 de /mi-web)
+// 58: release de Mi web (Nadakki Sites, panel): las 8 páginas /mi-web entran como pendiente-revision (solo las enlaza su
+// propio shell). Tope autorizado por César el 17-nov-2026 («autorizado a subir el tope de páginas»), igual que en staging.
+const MAXIMO_PENDIENTES = 58;
 
 // ── Utilidades ────────────────────────────────────────────────────────────────────────────────────
 
