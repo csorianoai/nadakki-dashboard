@@ -42,8 +42,9 @@ describe('ST2-07 LeadForm (baylara.lead_form)', () => {
     expect(es).toContain('action="/api/lead"');
     expect(es).toContain('name="company_website"');
     expect(es).toContain('name="form_rendered_at"');
-    expect(es).toContain('<noscript>');
-    expect(es).toContain('setTimeout');
+    // CSP del motor: script-src/style-src 'self' sin inline -> el HTML no puede depender de script, style ni boton deshabilitado.
+    expect(es).not.toMatch(/<script|<style|<noscript|disabled/);
+    expect(es).toContain(`data-text-version-whatsapp="${TEXT_VERSIONS.whatsapp}"`);
     expect(es).toContain(`data-text-version="${TEXT_VERSIONS.phone_sms}"`);
     expect(es).toContain(`data-text-version="${TEXT_VERSIONS.email}"`);
     expect(es).toContain('name="listing" value="synth-condo-01"');

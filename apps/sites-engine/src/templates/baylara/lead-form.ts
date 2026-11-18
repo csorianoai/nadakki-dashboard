@@ -1,6 +1,7 @@
 // Formulario de contacto de Baylara portado a TypeScript (sin cliente React): POST nativo a /api/lead (ST2-05).
-// Sin JS: el boton con respaldo <noscript>, un temporizador lo habilita y el tiempo de relleno lo da la cookie del host.
-// Con JS: el script de pintado fija form_rendered_at. Nunca se emite Idempotency-Key (la pone el motor en el servidor).
+// HTML de servidor puro (la CSP del motor es script-src 'self' sin inline): el boton va siempre habilitado y el tiempo
+// minimo de relleno lo garantiza handleLead con la cookie firmada de host. form_rendered_at queda vacio en el HTML.
+// Nunca se emite Idempotency-Key (la pone el motor en el servidor).
 import { createElement as h, type ReactElement } from 'react';
 import type { I18nText, Lang } from '@/core/types';
 import { TEXT_VERSIONS } from '@/leads/consent';
@@ -12,9 +13,6 @@ export interface LeadFormData {
 }
 
 const tx = (t: I18nText | undefined, lang: Lang): string => (t ? (lang === 'en' ? t.en ?? t.es : t.es) : '');
-// Textos fijos del propio script (sin contenido de usuario): fijan form_rendered_at y rescatan el boton a los 8 s.
-const READY = "(function(){var f=document.currentScript.parentNode;var r=f.querySelector('[name=form_rendered_at]');if(r)r.value=new Date().toISOString();f.setAttribute('data-ready','');var b=f.querySelector('button[data-wait]');if(b)b.disabled=false})()";
-const RESCUE = "setTimeout(function(){document.querySelectorAll('form[data-lead]:not([data-ready]) button[data-wait]').forEach(function(b){b.disabled=false})},8000)";
 
 function field(f: LeadField, id: string, lang: Lang): ReactElement {
   const fid = `${id}-${f.name}`;
@@ -25,10 +23,11 @@ function field(f: LeadField, id: string, lang: Lang): ReactElement {
   return h('div', { key: f.name, className: `f${f.full ? ' full' : ''}` }, h('label', { htmlFor: fid }, tx(f.label, lang)), control);
 }
 
+
 export function LeadForm(p: { data: LeadFormData; lang: Lang; privacyHref?: string; id?: string }): ReactElement {
   const { data: d, lang } = p;
   const id = p.id ?? 'lf';
-  const consent = (name: string, text: I18nText, channel: keyof typeof TEXT_VERSIONS) => h('div', { className: 'consent', 'data-text-version': TEXT_VERSIONS[channel] },
+  const consent = (name: string, text: I18nText, channel: keyof typeof TEXT_VERSIONS, extra: Record<string, string> = {}) => h('div', { className: 'consent', 'data-text-version': TEXT_VERSIONS[channel], ...extra },
     h('input', { id: `${id}-${name}`, name, type: 'checkbox' }),
     h('label', { htmlFor: `${id}-${name}` }, tx(text, lang), ' ', p.privacyHref ? h('a', { href: p.privacyHref }, tx(d.privacy_label, lang)) : null));
   const label = tx(d.submit, lang);
@@ -41,12 +40,7 @@ export function LeadForm(p: { data: LeadFormData; lang: Lang; privacyHref?: stri
     h('div', { className: 'hp', 'aria-hidden': 'true' }, h('label', { htmlFor: `${id}-company_website` }, 'Website'),
       h('input', { id: `${id}-company_website`, name: 'company_website', tabIndex: -1, autoComplete: 'off' })),
     d.consent_email ? consent('consent_email', d.consent_email, 'email') : null,
-    d.consent_phone ? consent('consent', d.consent_phone, 'phone_sms') : null,
-    h('div', { className: 'btn-row' },
-      h('button', { type: 'submit', className: 'btn btn-primary', 'data-wait': '', disabled: true, suppressHydrationWarning: true }, label),
-      h('noscript', null, h('button', { type: 'submit', className: 'btn btn-primary' }, label),
-        h('style', { dangerouslySetInnerHTML: { __html: 'form[data-lead] button[data-wait]{display:none}' } }))),
-    d.note ? h('p', { className: 'small' }, tx(d.note, lang)) : null,
-    h('script', { dangerouslySetInnerHTML: { __html: READY } }),
-    h('script', { dangerouslySetInnerHTML: { __html: RESCUE } }));
+    d.consent_phone ? consent('consent', d.consent_phone, 'phone_sms', { 'data-text-version-whatsapp': TEXT_VERSIONS.whatsapp }) : null,
+    h('div', { className: 'btn-row' }, h('button', { type: 'submit', className: 'btn btn-primary' }, label)),
+    d.note ? h('p', { className: 'small' }, tx(d.note, lang)) : null);
 }
