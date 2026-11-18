@@ -63,4 +63,10 @@ Origin/Sec-Fetch-Site ajeno -> 403; cuerpo > 16 KiB -> 413; `tenant_id` en el cu
 `node scripts/compare-captures.mjs --site-id S --reference URL --candidate URL` toma capturas full-page de `quality/routes.json` (12 rutas) a 1440x900 y 390x844 (animaciones off, `Date` y `Math.random` fijos, fuentes cargadas, red inactiva) y compara con pixelmatch: falla (exit 1) si >0,1 % de pixeles (`--threshold`) o si el ALTO de pagina difiere. Informe `test-results/captures/<site_id>/report.json` + PNG de diferencias.
 - La linea base va por sitio (`quality/baseline/<site_id>/`); `--reference-dir` solo se acepta si su carpeta se llama como el `--site-id`. `--update-baseline` con `CI=true` -> exit 2.
 - La linea base de 24 capturas NO esta versionada: se regenera desde el snapshot de referencia con las mismas banderas de entorno que el candidato (las muestras de `content.js:12-14` solo aparecen fuera de produccion). Paso real referencia-vs-motor: humano/otra instancia.
-- Pendiente en 2/2: axe (wcag2a/aa/21a/21aa, allowlist en `quality/axe-allowlist.json`), Lighthouse movil (mediana de 3 >= 85) y verificacion CSP por ruta x idioma.
+
+## Puertas de calidad 2/2 (ST2-08)
+`node scripts/quality-gates.mjs <axe|lighthouse|csp> --site-id S --base URL [--only /es/ruta]` (cada ruta de `quality/routes.json` en es y en; `--only` = ruta exacta y su gemela). Informe por sitio en `test-results/<puerta>/<site_id>/report.json`.
+- **axe**: wcag2a/wcag2aa/wcag21a/wcag21aa a 1440 y 390; cualquier violacion falla. Excepciones solo en `quality/axe-allowlist.json` (`rule`, `route`, `reason`, `date`); entrada incompleta -> error.
+- **lighthouse**: movil, throttling simulado por defecto, Chromium de Playwright, 3 corridas por ruta y MEDIANA >= 85 (solo rutas `/es`); un JSON por corrida. Si la memoria disponible < `--min-mem-mb` (1200) sale `LIGHTHOUSE=ENTORNO` con exit 3 y NUNCA PASS. **PENDIENTE DE MEDICION** en el runner de CI (2.560 MB); lo medido aqui es sobre el servidor de prueba, no sobre Baylara.
+- **csp**: cabecera presente, sin `unsafe-inline`/`unsafe-eval`, y todo `<script>` inline con nonce de la cabecera o hash declarado (`ld+json` y `importmap` son datos).
+- El servidor de prueba (`quality/lib/test-server.mjs`) es un core simulado con contenido sintetico; la medicion real contra un core de staging es paso humano.
