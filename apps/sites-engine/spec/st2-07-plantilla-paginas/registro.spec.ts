@@ -19,6 +19,7 @@ const body = (type: string, data: unknown) => [{ block_id: 'b1', type, data }];
 
 async function page(blocks: unknown[], siteId = SITE_A.id, segs = ['sobre-mi']) {
   const f = createFakeCore();
+  f.mutate('/manifest', (b) => ({ ...b, template: { id: 'baylara', version: 1 } }));
   f.mutate('/pages/about', (b) => ({ ...b, body: blocks }));
   const c = createCoreClient({ baseUrl: 'https://core.test/api/v1/sites', token: 'tok-sintetico', fetch: f.fetch });
   return renderSite(c, siteId, segs);
