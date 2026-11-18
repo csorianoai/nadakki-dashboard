@@ -24,7 +24,7 @@ it("estructura aprobada: cuatro grupos, en orden, sin «Próximamente» ni Finan
     ["Mi día", "Bandeja del broker"],
     ["Contactos", "Propietarios", "Conversaciones", "Propiedades"],
     ["Operaciones", "Documentos"],
-    ["Marketing", "Mercado", "Inteligencia de propiedad", "Resultados", "Career Director", "Alta", "Agente web", "Academia"],
+    ["Marketing", "Mercado", "Inteligencia de propiedad", "Resultados", "Career Director", "Alta", "Agente web", "Mi web", "Academia"],
   ]);
   const all = REALTOR_MENU.flatMap((g) => g.items);
   expect(all.some((i) => /finanzas|crm|mi oficina/i.test(i.label))).toBe(false);
@@ -41,6 +41,7 @@ it("estructura aprobada: cuatro grupos, en orden, sin «Próximamente» ni Finan
   expect(byId["propietarios"].href).toBe("/realtor/propietarios");
   expect(byId["alta"].href).toBe("/realtor/alta");
   expect(byId["agente-web"].href).toBe("/realtor/agente-web");
+  expect(byId["mi-web"].href).toBe("/mi-web");
   expect(all.some((i) => ["propietarios", "alta", "agente-web"].includes(i.id) && /pronto/i.test(i.label))).toBe(false);
   expect(byId["academia"].href).toBeUndefined();
 });
