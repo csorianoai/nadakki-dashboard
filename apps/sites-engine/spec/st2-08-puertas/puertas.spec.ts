@@ -89,7 +89,7 @@ describe('ST2-08 axe WCAG 2.1 AA', () => {
       expect(r.code, r.out + r.err).toBe(0);
       expect(r.out).toContain('AXE=PASS');
       const rep = JSON.parse(readFileSync(path.join(tmp, 'axe', 'sitio-a', 'report.json'), 'utf8'));
-      expect(rep.results.map((x: { width: number }) => x.width).sort()).toEqual([390, 390, 1440, 1440]);
+      expect(rep.results.map((x: { width: number }) => x.width).sort((p: number, q: number) => q - p)).toEqual([1440, 1440, 390, 390]);
     } finally { await s.close(); }
   }, 120_000);
 
