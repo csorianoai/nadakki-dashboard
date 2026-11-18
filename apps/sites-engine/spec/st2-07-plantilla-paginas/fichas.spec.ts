@@ -24,7 +24,7 @@ async function html(siteId: string, segs: string[]) {
 }
 
 describe('ST2-07 fichas de entidades (propiedad, desarrollo, zona, edificio)', () => {
-  it('[positivo] ficha de propiedad en es y en: titulo, precio, caracteristicas y formulario con la propiedad de interes', async () => {
+  it('[positivo] ficha de propiedad en es y en: titulo, precio, caracteristicas', async () => {
     const es = await html(SITE_A.id, ['synth-condo-01']);
     expect(es).toContain('Propiedad synth-condo-01');
     expect(es).toContain('450');
