@@ -20,6 +20,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import { useSocialConnections } from "@/hooks/useSocialConnections";
 import { useTenant } from "@/contexts/TenantContext";
 import Link from "next/link";
+import { useEstadoGoogle } from "@/components/google-ads/useEstadoGoogle";
 
 const PLATFORM_CONFIG: Record<
   string,
@@ -62,6 +63,9 @@ export default function SocialConnectionsClient() {
     useSocialConnections();
 
   const [openMenuKey, setOpenMenuKey] = useState<string | null>(null);
+  const [tickGoogle, setTickGoogle] = useState(0);
+  // Google: el estado sale de connection_status (probado contra Google), no de needs_refresh del access token.
+  const google = useEstadoGoogle(tenantId, tickGoogle);
 
   useEffect(() => {
     if (!openMenuKey) return;
@@ -79,6 +83,7 @@ export default function SocialConnectionsClient() {
   );
 
   const onQuietRefresh = () => {
+    setTickGoogle((n) => n + 1);
     void fetchStatus(undefined, { quiet: true });
   };
 
@@ -93,6 +98,7 @@ export default function SocialConnectionsClient() {
       }
       setOpenMenuKey(null);
       await disconnect(platformKey);
+      setTickGoogle((n) => n + 1);
       void fetchStatus();
     },
     [disconnect, fetchStatus]
@@ -179,8 +185,11 @@ export default function SocialConnectionsClient() {
             const platformData = platformMap.get(key);
             const connected = platformData?.connected ?? false;
             const needsRefresh = platformData?.needs_refresh ?? false;
-            const healthyConnected = connected && !needsRefresh;
-            const degraded = connected && needsRefresh;
+            const esGoogle = key === "google";
+            const healthyConnected = esGoogle ? google.estado === "connected" : connected && !needsRefresh;
+            const degraded = esGoogle ? google.estado === "expired" : connected && needsRefresh;
+            const porConectar = esGoogle ? google.estado === "not_connected" : !connected;
+            const correo = esGoogle ? google.email ?? platformData?.user_email : platformData?.user_email;
 
             const cardRing =
               healthyConnected
@@ -215,14 +224,14 @@ export default function SocialConnectionsClient() {
                           <div className="mt-2 space-y-1">
                             <span className="inline-flex items-center gap-1.5 text-sm text-emerald-400">
                               <CheckCircle2 className="w-4 h-4 shrink-0" />
-                              Listo · conectado
+                              {esGoogle ? "Conectado" : "Listo · conectado"}
                             </span>
                             <p className="text-sm text-gray-500 m-0">
                               No necesitas volver a autorizar mientras el estado se mantenga así.
                             </p>
-                            {(platformData?.page_name || platformData?.user_email) && (
+                            {(platformData?.page_name || correo) && (
                               <p className="text-sm text-gray-500 m-0 truncate">
-                                {[platformData?.page_name, platformData?.user_email]
+                                {[platformData?.page_name, correo]
                                   .filter(Boolean)
                                   .join(" · ")}
                               </p>
@@ -232,16 +241,25 @@ export default function SocialConnectionsClient() {
                           <div className="mt-2 space-y-1">
                             <span className="inline-flex items-center gap-1.5 text-sm text-amber-300">
                               <AlertCircle className="w-4 h-4 shrink-0" />
-                              Requiere atención
+                              {esGoogle ? "La conexión venció" : "Requiere atención"}
                             </span>
                             <p className="text-sm text-gray-500 m-0">
-                              El token o permisos pueden estar vencidos. Usa el flujo OAuth real para revisar (tú inicias la
-                              sesión en el proveedor).
+                              {esGoogle
+                                ? "Google ya no acepta la autorización guardada. Reconecta para seguir usando Google Ads."
+                                : "El token o permisos pueden estar vencidos. Usa el flujo OAuth real para revisar (tú inicias la sesión en el proveedor)."}
                             </p>
                           </div>
                         ) : (
                           <p className="text-sm text-gray-500 mt-2 m-0">
-                            {config.enabled ? "No conectado" : "Próximamente"}
+                            {esGoogle
+                              ? google.estado === "loading"
+                                ? "Comprobando la conexión…"
+                                : porConectar
+                                  ? "No conectado"
+                                  : "No pudimos comprobar la conexión"
+                              : config.enabled
+                                ? "No conectado"
+                                : "Próximamente"}
                           </p>
                         )}
                       </div>
@@ -295,16 +313,16 @@ export default function SocialConnectionsClient() {
                           disabled={!tenantId}
                           className="flex items-center gap-2 px-4 py-2 bg-amber-500/25 hover:bg-amber-500/35 border border-amber-500/40 rounded-lg text-amber-100 text-sm font-medium transition-colors disabled:opacity-50"
                         >
-                          Revisar conexión
+                          {esGoogle ? "Reconectar Google Ads" : "Revisar conexión"}
                         </button>
-                      ) : !connected && config.enabled ? (
+                      ) : esGoogle && !porConectar ? null : porConectar && config.enabled ? (
                         <button
                           type="button"
                           onClick={() => connect(key)}
                           disabled={!tenantId}
                           className="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 rounded-lg text-white text-sm font-medium transition-colors disabled:opacity-50"
                         >
-                          Conectar {config.name.split(" ")[0]}
+                          {esGoogle ? "Conectar Google Ads" : `Conectar ${config.name.split(" ")[0]}`}
                         </button>
                       ) : (
                         <button
