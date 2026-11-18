@@ -115,7 +115,7 @@ export function CargaManual({ propertyId }: { propertyId: string }) {
   };
   return (
     <section data-testid="pi-carga" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <section data-testid="pi-comps" data-state={comps.state} style={CARD}>
+      {comps.state !== "hidden" && <section data-testid="pi-comps" data-state={comps.state} style={CARD}>
         <h2 style={{ margin: "0 0 12px", fontSize: 18 }}>Proyectos competidores</h2>
         {comps.state === "loading" ? <p role="status">Cargando…</p>
           : comps.state !== "ok" ? <p role="status" data-testid="pi-comp-msg" data-state={comps.state}>{MSG[comps.state] ?? MSG.error}</p>
@@ -134,8 +134,8 @@ export function CargaManual({ propertyId }: { propertyId: string }) {
         </form>
         <Errors id="pi-comp-form-error" r={cr} />
         <CsvImport what="competitor-projects" label="competidores" onDone={csv} />
-      </section>
-      <section data-testid="pi-obs" data-state={obs.state} style={CARD}>
+      </section>}
+      {obs.state !== "hidden" && <section data-testid="pi-obs" data-state={obs.state} style={CARD}>
         <h2 style={{ margin: "0 0 12px", fontSize: 18 }}>Señales observadas</h2>
         {obs.state === "loading" ? <p role="status">Cargando…</p>
           : obs.state !== "ok" ? <p role="status" data-testid="pi-obs-msg" data-state={obs.state}>{MSG[obs.state] ?? MSG.error}</p>
@@ -161,7 +161,7 @@ export function CargaManual({ propertyId }: { propertyId: string }) {
         </form>
         <Errors id="pi-obs-form-error" r={or} />
         <CsvImport what="observations" label="observaciones" onDone={csv} />
-      </section>
+      </section>}
     </section>
   );
 }

@@ -61,6 +61,14 @@ it("vacío: lo dice; 404 oculta la sección; sin sesión no llama", async () => 
   expect(mockApiFetch).not.toHaveBeenCalled();
 });
 
+it("404 en una sola sección: esa sección no se pinta y la otra sí", async () => {
+  api({ [`${BASE}/properties/${P}/competitor-projects`]: res(404), [`${BASE}/properties/${P}/observations`]: res(200, { data: [OBS] }) });
+  render(<CargaManual propertyId={P} />);
+  expect(await screen.findByTestId("pi-obs-row")).toBeInTheDocument();
+  expect(screen.queryByTestId("pi-comps")).toBeNull();
+  expect(screen.queryByText("No se pudo leer esta sección.")).toBeNull();
+});
+
 it("alta manual: envía los campos con property_id, sin tenant ni evidence_tier, y recarga", async () => {
   api(lists([], []));
   render(<CargaManual propertyId={P} />);
