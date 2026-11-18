@@ -8,8 +8,7 @@ import { Media } from './media';
 const LABELS = {
   price: { es: 'Precio', en: 'Price' }, price_from: { es: 'Desde', en: 'From' }, features: { es: 'Características', en: 'Features' },
   amenities: { es: 'Amenidades', en: 'Amenities' }, developer: { es: 'Desarrollador', en: 'Developer' }, delivery: { es: 'Entrega', en: 'Delivery' },
-  area: { es: 'Zona', en: 'Area' }, source: { es: 'Fuente', en: 'Source' }, hoa: { es: 'Cuota de administración (HOA)', en: 'HOA' },
-  range: { es: 'Rango de precios', en: 'Price range' }, gallery: { es: 'Galería', en: 'Gallery' },
+  area: { es: 'Zona', en: 'Area' }, source: { es: 'Fuente', en: 'Source' },  range: { es: 'Rango de precios', en: 'Price range' }, gallery: { es: 'Galería', en: 'Gallery' },
 } as const;
 const t = (k: keyof typeof LABELS, lang: Lang): string => LABELS[k][lang];
 const tx = (v: I18nText | undefined, lang: Lang): string => (v ? (lang === 'en' ? v.en ?? v.es : v.es) : '');
@@ -18,7 +17,10 @@ export function money(m: Money | undefined | null, lang: Lang): string {
   if (!m) return '';
   const n = Number(m.amount);
   if (!Number.isFinite(n) || !/^[A-Z]{3}$/.test(m.currency)) throw new BlockError('shape');
-  return new Intl.NumberFormat(lang === 'en' ? 'en-US' : 'es-ES', { style: 'currency', currency: m.currency, maximumFractionDigits: 0 }).format(n);
+  // Igual que Baylara (formatPrice): simbolo y agrupacion en-US en ambos idiomas ($450,000); otras monedas, su codigo.
+  const num = Math.round(n).toLocaleString('en-US');
+  void lang;
+  return m.currency === 'USD' ? `$${num}` : `${m.currency} ${num}`;
 }
 
 type Row = [string, string | undefined];
@@ -37,13 +39,12 @@ const gallery = (media: PublicMedia[] | undefined, lang: Lang, hosts: string[]):
 };
 const wrap = (kind: string, ...kids: (ReactElement | null)[]): ReactElement => h('article', { className: 'ficha', 'data-ficha': kind }, ...kids);
 
-export interface FichaCtx { lang: Lang; hosts: string[]; zoneName?: string }
+export interface FichaCtx { lang: Lang; hosts: string[] }
 
 export function listingFicha(d: PublicListing, c: FichaCtx): ReactElement {
   return wrap('listing',
     d.price ? h('p', { className: 'ficha-price' }, money(d.price, c.lang)) : null,
     d.description ? h('div', { className: 'ficha-desc' }, h('p', null, tx(d.description, c.lang))) : null,
-    kv([[t('area', c.lang), c.zoneName]]),
     section(t('features', c.lang), ticks(d.features.map((f) => tx(f, c.lang)))),
     gallery(d.media, c.lang, c.hosts));
 }
@@ -53,7 +54,7 @@ export function developmentFicha(d: PublicDevelopment, c: FichaCtx): ReactElemen
   return wrap('development',
     d.description ? h('div', { className: 'ficha-desc' }, h('p', null, tx(d.description, c.lang))) : null,
     kv([[t('price_from', c.lang), price], [t('developer', c.lang), d.developer], [t('delivery', c.lang), d.delivery_year ? String(d.delivery_year) : undefined],
-      [t('area', c.lang), d.area ?? c.zoneName]]),
+      [t('area', c.lang), d.area]]),
     section(t('amenities', c.lang), ticks((d.amenities ?? []).map((a) => tx(a, c.lang)))),
     gallery(d.media, c.lang, c.hosts));
 }
@@ -69,9 +70,7 @@ export function zoneFicha(d: PublicZone, c: FichaCtx): ReactElement {
 }
 
 export function buildingFicha(d: PublicBuilding, c: FichaCtx): ReactElement {
-  const hoa = d.hoa ? Object.entries(d.hoa).filter(([, v]) => typeof v === 'string' || typeof v === 'number').map(([k, v]) => [k, String(v)] as Row) : [];
   return wrap('building',
     d.summary ? h('div', { className: 'ficha-desc' }, h('p', null, tx(d.summary, c.lang))) : null,
-    section(t('hoa', c.lang), kv(hoa)),
     d.data_source ? h('p', { className: 'small' }, `${t('source', c.lang)}: ${d.data_source}${d.data_date ? ` (${d.data_date})` : ''}`) : null);
 }
