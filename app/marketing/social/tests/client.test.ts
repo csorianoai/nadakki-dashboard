@@ -1,7 +1,7 @@
 /**
  * SOC-D-CUENTAS 1/2 (hito B1, C-SOCIAL-D0): cliente tipado del contrato. Se prueba con fetch simulado.
  */
-import { createSocialClient } from "@/lib/social-center/client";
+import { createSocialClient } from "../_lib/client";
 
 describe("cliente tipado del contrato", () => {
   const json = (body: unknown, status = 200) =>

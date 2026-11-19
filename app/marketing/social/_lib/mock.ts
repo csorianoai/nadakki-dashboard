@@ -46,14 +46,15 @@ export const MOCK_CAPABILITIES: CapabilityCell[] = PLATFORMS.flatMap((p) => [
 
 /** Cliente en memoria con los datos sinteticos. Las escrituras no persisten: devuelven la ficha tal cual. */
 export function createMockClient(): SocialClient {
-  const byId = (id: string) => MOCK_ACCOUNTS.find((a) => a.id === id) ?? MOCK_ACCOUNTS[0];
+  const byId = (id: string) => MOCK_ACCOUNTS.find((a) => a.id === id);
+  const NOT_FOUND = { ok: false, status: 404, code: "NOT_FOUND" } as const;
   return {
     listBrands: async () => ({ ok: true, data: MOCK_BRANDS }),
     listAccounts: async (brandId) => ({ ok: true, data: MOCK_ACCOUNTS.filter((a) => a.brand_id === brandId) }),
     getCapabilities: async () => ({ ok: true, data: MOCK_CAPABILITIES }),
-    createAccount: async (b) => ({ ok: true, data: { ...MOCK_ACCOUNTS[0], brand_id: b.brand_id, account_kind: b.account_kind, status: "PLANNED" } }),
-    updateAccount: async (id, _v, patch) => ({ ok: true, data: { ...byId(id), ...patch } as SocialAccount }),
-    transition: async (id, _v, body) => ({ ok: true, data: { ...byId(id), status: body.to_status } }),
+    createAccount: async (b) => ({ ok: true, data: { ...MOCK_ACCOUNTS[0], id: "demo-new", platform: (PLATFORMS.find((p) => DEFAULT_KIND[p] === b.account_kind) ?? MOCK_ACCOUNTS[0].platform), brand_id: b.brand_id, account_kind: b.account_kind, status: "PLANNED" } }),
+    updateAccount: async (id, _v, patch) => { const a = byId(id); return a ? { ok: true, data: { ...a, ...patch } as SocialAccount } : NOT_FOUND; },
+    transition: async (id, _v, body) => { const a = byId(id); return a ? { ok: true, data: { ...a, status: body.to_status } } : NOT_FOUND; },
     startConnection: async () => ({ ok: false, status: 503, code: "PROVIDER_NOT_CONFIGURED" }),
   };
 }
