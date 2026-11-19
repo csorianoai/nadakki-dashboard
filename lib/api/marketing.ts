@@ -832,7 +832,7 @@ export async function fetchSocialStatus(tenantId: string) {
 }
 
 // Solo se abren URLs de autorización de los proveedores; cualquier otra respuesta se descarta.
-const OAUTH_HOSTS = /^https:\/\/(accounts\.google\.com|www\.facebook\.com)\//;
+const OAUTH_HOSTS = /^https:\/\/(accounts\.google\.com|www\.facebook\.com|www\.tiktok\.com)\//;
 
 /**
  * Pide al backend, con la sesión, la URL de autorización OAuth del tenant (Google o Meta).

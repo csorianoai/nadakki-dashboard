@@ -43,7 +43,7 @@ const PLATFORM_CONFIG: Record<
     color: "#EA4335",
     enabled: true,
   },
-  tiktok: { name: "TikTok", Icon: Share2, color: "#000000", enabled: false },
+  tiktok: { name: "TikTok", Icon: Share2, color: "#000000", enabled: true },
   linkedin: { name: "LinkedIn", Icon: Linkedin, color: "#0A66C2", enabled: false },
   x: { name: "X (Twitter)", Icon: Twitter, color: "#000000", enabled: false },
   pinterest: { name: "Pinterest", Icon: Share2, color: "#E60023", enabled: false },
