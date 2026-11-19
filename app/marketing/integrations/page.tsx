@@ -22,6 +22,8 @@ import GlassCard from "@/components/ui/GlassCard";
 import { useTenant } from "@/contexts/TenantContext";
 import { fetchSocialStatus } from "@/lib/api/marketing";
 import { apiFetch } from "@/lib/api/fetch-client";
+import { useEstadoGoogle } from "@/components/google-ads/useEstadoGoogle";
+import type { EstadoGoogleAds } from "@/components/google-ads/ConectarGoogleAds";
 
 type ConnState = "connected" | "disconnected" | "error" | "unknown";
 type SendgridState = "configured" | "not_configured" | "unknown";
@@ -66,7 +68,7 @@ function normalizePlatformsFromPayload(data: Record<string, unknown> | null): So
     }));
 }
 
-function deriveConnState(rows: SocialRow[], key: "meta" | "google", statusError: boolean): ConnState {
+function deriveConnState(rows: SocialRow[], key: "meta", statusError: boolean): ConnState {
   if (statusError) return "unknown";
   const map = new Map(rows.map((p) => [getPlatformKey(p.platform), p]));
   const p = map.get(key);
@@ -114,16 +116,21 @@ function StateBadge({ label, variant }: { label: string; variant: "ok" | "off" |
   );
 }
 
-function connBadge(state: ConnState) {
+/** Google usa la tabla de ConectarGoogleAds (connection_status); el resto conserva sus etiquetas. */
+function googleConnState(e: EstadoGoogleAds | "loading"): ConnState {
+  return e === "connected" ? "connected" : e === "expired" ? "error" : e === "not_connected" ? "disconnected" : "unknown";
+}
+
+function connBadge(state: ConnState, google = false) {
   switch (state) {
     case "connected":
-      return <StateBadge variant="ok" label="Listo · conectado" />;
+      return <StateBadge variant="ok" label={google ? "Conectado" : "Listo · conectado"} />;
     case "disconnected":
-      return <StateBadge variant="off" label="Desconectado" />;
+      return <StateBadge variant="off" label={google ? "No conectado" : "Desconectado"} />;
     case "error":
-      return <StateBadge variant="warn" label="Requiere atención" />;
+      return <StateBadge variant="warn" label={google ? "La conexión venció" : "Requiere atención"} />;
     default:
-      return <StateBadge variant="muted" label="Desconocido" />;
+      return <StateBadge variant="muted" label={google ? "No pudimos comprobar la conexión" : "Desconocido"} />;
   }
 }
 
@@ -143,11 +150,13 @@ function SocialIntegrationCard({
   description,
   anchor,
   state,
+  google = false,
 }: {
   title: string;
   description: string;
   anchor: string;
   state: ConnState;
+  google?: boolean;
 }) {
   const manageBase = "/marketing/social-connections";
   const manageHref = `${manageBase}#${anchor}`;
@@ -166,7 +175,7 @@ function SocialIntegrationCard({
           <h3 className="text-white font-semibold m-0">{title}</h3>
           <p className="text-sm text-gray-500 m-0 mt-1">{description}</p>
         </div>
-        {connBadge(state)}
+        {connBadge(state, google)}
       </div>
 
       {ready ? (
@@ -177,8 +186,10 @@ function SocialIntegrationCard({
       ) : null}
       {degraded ? (
         <p className="text-sm text-amber-200/85 m-0 mt-3">
-          El token o la sesión pueden necesitar revisión. Abre conexiones sociales y usa &quot;Revisar conexión&quot; para el
-          flujo OAuth real (sin pasos automáticos).
+          {google
+            ? "La conexión venció. Abre conexiones sociales y usa \"Reconectar Google Ads\"."
+            : <>El token o la sesión pueden necesitar revisión. Abre conexiones sociales y usa &quot;Revisar conexión&quot; para el
+          flujo OAuth real (sin pasos automáticos).</>}
         </p>
       ) : null}
       {(unknown || degraded) && !ready ? (
@@ -201,7 +212,7 @@ function SocialIntegrationCard({
             href={manageHref}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500/25 hover:bg-amber-500/35 border border-amber-500/40 text-amber-100 text-sm font-medium"
           >
-            Revisar conexión
+            {google ? "Reconectar Google Ads" : "Revisar conexión"}
             <ArrowRight className="w-4 h-4" />
           </Link>
         ) : disconnected ? (
@@ -210,7 +221,7 @@ function SocialIntegrationCard({
               href={manageHref}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium"
             >
-              Conectar
+              {google ? "Conectar Google Ads" : "Conectar"}
               <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
@@ -240,14 +251,14 @@ export default function IntegrationsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [socialErr, setSocialErr] = useState<string | null>(null);
   const [metaState, setMetaState] = useState<ConnState>("unknown");
-  const [googleState, setGoogleState] = useState<ConnState>("unknown");
+  const [recarga, setRecarga] = useState(0);
+  const googleState = googleConnState(useEstadoGoogle(tenantId, recarga).estado);
   const [sendgridState, setSendgridState] = useState<SendgridState>("unknown");
 
   const load = useCallback(async () => {
     if (!tenantId) {
       setSocialErr("Selecciona un tenant.");
       setMetaState("unknown");
-      setGoogleState("unknown");
       setSendgridState("unknown");
       setLoading(false);
       return;
@@ -265,7 +276,6 @@ export default function IntegrationsPage() {
         : null;
     const rows = normalizePlatformsFromPayload(payload);
     setMetaState(deriveConnState(rows, "meta", statusError));
-    setGoogleState(deriveConnState(rows, "google", statusError));
 
     setSendgridState(await fetchSendgridState(tenantId));
     setLoading(false);
@@ -279,6 +289,7 @@ export default function IntegrationsPage() {
 
   const onRefresh = () => {
     setRefreshing(true);
+    setRecarga((n) => n + 1);
     void load();
   };
 
@@ -340,6 +351,7 @@ export default function IntegrationsPage() {
               description="Google (Ads, Analytics, YouTube) vía OAuth. Estado según respuesta del backend."
               anchor="social-google"
               state={googleState}
+              google
             />
           </div>
 

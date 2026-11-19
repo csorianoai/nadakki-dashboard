@@ -107,6 +107,10 @@ export const listBuildings = B.list, createBuilding = B.create, updateBuilding =
 const one = <T>(name: string) => (siteId: string, id: string) => get<T>(() => `${sp(siteId)}/${name}/${seg(id)}`);
 export const getDevelopment = one<Development>("developments"), getZone = one<Zone>("zones"), getBuilding = one<Building>("buildings");
 
+// Conector de portales (BC-02): dry_run=true solo valida y devuelve el informe; el tenant sale del JWT.
+export const importPortal = (siteId: string, b: object, dryRun: boolean, o?: CallOpts) =>
+  post<unknown>(() => `${sp(siteId)}/import?dry_run=${dryRun ? "true" : "false"}`, b, o);
+
 // Medios
 export const presignMedia = (siteId: string, b: MediaPresignRequest, o?: CallOpts) => post<MediaPresign>(() => `${sp(siteId)}/media/presign`, b, o);
 export const createMedia = (siteId: string, b: MediaCreate, o?: CallOpts) => post<MediaAsset>(() => `${sp(siteId)}/media`, b, o);
