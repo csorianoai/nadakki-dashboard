@@ -10,9 +10,9 @@ import {
   MOCK_BRANDS,
   MOCK_CAPABILITIES,
   createMockClient,
-} from "@/lib/social-center/mock";
-import { PLATFORMS } from "@/lib/social-center/types";
-import type { LifecycleStatus, SocialClient } from "@/lib/social-center/types";
+} from "@/app/marketing/social/_lib/mock";
+import { PLATFORMS } from "@/app/marketing/social/_lib/types";
+import type { LifecycleStatus, SocialClient } from "@/app/marketing/social/_lib/types";
 
 const fail = () => Promise.resolve({ ok: false as const, status: 503 });
 
