@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
+import TikTokDraftUpload from "@/components/marketing/TikTokDraftUpload";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { useSocialConnections } from "@/hooks/useSocialConnections";
 import { useTenant } from "@/contexts/TenantContext";
@@ -341,6 +342,7 @@ export default function SocialConnectionsClient() {
           })}
         </div>
       )}
+      {platformMap.get("tiktok")?.connected ? <TikTokDraftUpload /> : null}
     </div>
   );
 }
