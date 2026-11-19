@@ -20,22 +20,30 @@ jest.mock("@/lib/api/qa", () => ({
   testAgentDryRun: jest.fn().mockResolvedValue({}),
 }));
 
-const PAGES: [string, () => { default: React.ComponentType }][] = [
+let mockBody: unknown = {};
+
+const PAGES: [string, () => { default: React.ComponentType }, unknown?][] = [
   ["api-keys", () => require("@/app/admin/api-keys/page")],
   ["billing", () => require("@/app/admin/billing/page")],
   ["usage", () => require("@/app/admin/usage/page")],
   ["qa", () => require("@/app/admin/qa/page")],
   ["landing-readiness", () => require("@/app/advertising/landing-readiness/page")],
   ["audit", () => require("@/app/audit/page")],
+  ["sic-mt", () => require("@/app/sic/multitenant-config/page")],
+  // billing: rama «sin planes» (plans vacío) y rama principal (con planes)
+  ["billing-sin-planes", () => require("@/app/admin/billing/page"), { plans: [] }],
+  ["billing-con-planes", () => require("@/app/admin/billing/page"), { plans: [{ id: "pro", name: "Pro", price: 10, executions_limit: 5, features: [] }] }],
 ];
 
 beforeEach(() => {
-  (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({}), text: async () => "{}" });
+  mockBody = {};
+  (global as any).fetch = jest.fn().mockImplementation(async () => ({ ok: true, status: 200, json: async () => mockBody, text: async () => JSON.stringify(mockBody) }));
 });
 
-describe.each(PAGES)("%s: sin UUID visible", (_n, load) => {
+describe.each(PAGES)("%s: sin UUID visible", (_n, load, body) => {
   it("muestra el nombre del tenant, el id solo en atributos", async () => {
     mockAuth = { tenantId: A, tenantName: "Mapaal" };
+    if (body !== undefined) mockBody = body;
     const Page = load().default;
     const { container } = render(<Page />);
     await waitFor(() => expect(container.textContent).toContain("Mapaal"));
@@ -43,6 +51,7 @@ describe.each(PAGES)("%s: sin UUID visible", (_n, load) => {
   });
   it("sin nombre disponible muestra «—», nunca el UUID", async () => {
     mockAuth = { tenantId: A, tenantName: "—" };
+    if (body !== undefined) mockBody = body;
     const Page = load().default;
     const { container } = render(<Page />);
     await new Promise((r) => setTimeout(r, 20));
