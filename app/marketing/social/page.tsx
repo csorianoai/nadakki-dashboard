@@ -3,9 +3,9 @@
 import { useMemo } from "react";
 import NavigationBar from "@/components/ui/NavigationBar";
 import { useTenant } from "@/contexts/TenantContext";
-import { createSocialClient } from "@/lib/social-center/client";
-import { detectLang } from "@/lib/social-center/copy";
-import { createMockClient } from "@/lib/social-center/mock";
+import { createSocialClient } from "@/app/marketing/social/_lib/client";
+import { detectLang } from "@/app/marketing/social/_lib/copy";
+import { createMockClient } from "@/app/marketing/social/_lib/mock";
 import SocialCenter from "./_components/SocialCenter";
 
 /**

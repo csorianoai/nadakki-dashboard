@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { COPY, PLATFORM_LABEL, STATUS_LABEL, type Lang } from "@/lib/social-center/copy";
-import { DEFAULT_KIND, PLATFORMS } from "@/lib/social-center/types";
-import type { Brand, CapabilityCell, Platform, SocialAccount, SocialClient } from "@/lib/social-center/types";
+import { COPY, PLATFORM_LABEL, STATUS_LABEL, type Lang } from "@/app/marketing/social/_lib/copy";
+import { DEFAULT_KIND, PLATFORMS } from "@/app/marketing/social/_lib/types";
+import type { Brand, CapabilityCell, Platform, SocialAccount, SocialClient } from "@/app/marketing/social/_lib/types";
 import AccountWizard from "./AccountWizard";
 
 type Load = "loading" | "unavailable" | "ready";

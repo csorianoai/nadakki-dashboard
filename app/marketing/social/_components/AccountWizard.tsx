@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { CONNECT_ALLOWED, COPY, PLATFORM_LABEL, SIGNUP_URL, type Lang } from "@/lib/social-center/copy";
-import type { Brand, CapabilityCell, LifecycleStatus, ProfileChecklist, SocialAccount, SocialClient } from "@/lib/social-center/types";
+import { CONNECT_ALLOWED, COPY, PLATFORM_LABEL, SIGNUP_URL, type Lang } from "@/app/marketing/social/_lib/copy";
+import type { Brand, CapabilityCell, LifecycleStatus, ProfileChecklist, SocialAccount, SocialClient } from "@/app/marketing/social/_lib/types";
 
 /**
  * Asistente de alta ASISTIDO por humano. Nunca tiene campos de contraseña, codigo ni token: la cuenta la crea una
