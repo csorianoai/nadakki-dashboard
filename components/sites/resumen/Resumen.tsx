@@ -7,6 +7,8 @@ import { SYNTH_READINESS } from "@/lib/sites/mocks/site";
 import { ESTADO, GATE, RESUMEN } from "@/lib/sites/resumen/copy";
 import { FONT, SIZE, ST } from "@/lib/sites/tokens";
 import type { Site, SiteStatus } from "@/lib/sites/types";
+import { IMP } from "@/lib/sites/importar/copy";
+import { ImportarPortal } from "../importar/ImportarPortal";
 import { Aviso } from "../shell/Aviso";
 import { useSites } from "../shell/SitesContext";
 
@@ -76,6 +78,7 @@ export function Resumen() {
   const carga = useSitio();
   const site = carga.k === "ok" ? carga.site : null;
   const bloqueos = useBloqueos(site?.id ?? null, demo);
+  const [conectar, setConectar] = useState(false);
 
   const fila = (testid: string, label: string, valor: React.ReactNode) => (
     <div data-testid={testid} style={{ background: ST.white, border: `1px solid ${ST.line}`, borderRadius: SIZE.radius, padding: SIZE.gap }}>
@@ -137,6 +140,17 @@ export function Resumen() {
                 {t("goPublish")}
               </a>
             </div>
+            <section data-testid="conectar-portal" style={{ background: ST.white, border: `1px solid ${ST.line}`, borderRadius: SIZE.radius, padding: SIZE.gap, display: "grid", gap: 8 }}>
+              <h2 style={{ margin: 0, fontSize: SIZE.fontSub }}>{pick(IMP.cardTitle, lang)}</h2>
+              <p style={{ margin: 0 }}>{pick(IMP.cardBody, lang)}</p>
+              <div>
+                <button type="button" data-testid="conectar-portal-abrir" className="sx-focus" aria-expanded={conectar} onClick={() => setConectar((v) => !v)}
+                  style={{ minHeight: SIZE.target, border: `1px solid ${ST.control}`, borderRadius: SIZE.radius, background: ST.white, color: ST.ink, fontSize: SIZE.fontBase, padding: "0 16px", cursor: "pointer" }}>
+                  {pick(conectar ? IMP.close : IMP.open, lang)}
+                </button>
+              </div>
+              {conectar && <ImportarPortal key={site.id} siteId={site.id} />}
+            </section>
           </>
         );
       })()}
