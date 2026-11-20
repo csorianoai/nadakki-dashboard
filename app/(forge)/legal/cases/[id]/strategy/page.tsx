@@ -12,7 +12,7 @@ export default function LegalCaseStrategyPage({ params }: { params: Promise<{ id
   const { id } = use(params);
   const { effectiveTenantId, tenantHydrated, tenantError } = useLegalEffectiveTenantId();
   const { data: c, isLoading, error, refetch } = useLegalCase(effectiveTenantId, id);
-  const { data: st, isLoading: ls, selectStrategies, selecting } = useCaseStrategies(effectiveTenantId, id);
+  const { data: st, isLoading: ls, error: strategyError, selectStrategies, selecting } = useCaseStrategies(effectiveTenantId, id);
   const [selected, setSelected] = useState<string[]>([]);
 
   const strategies: CaseStrategy[] = st?.strategies ?? c?.strategies ?? [];
@@ -29,11 +29,13 @@ export default function LegalCaseStrategyPage({ params }: { params: Promise<{ id
     <main id="main-content" className="min-h-0 space-y-6">
       <CaseDetailHeader legalCase={c} />
       {ls ? <p className="text-sm text-forgeGray-500">Cargando estrategias…</p> : null}
+      {!ls && strategyError ? <p role="status" className="text-sm text-amber-700">{String((strategyError as Error).message).includes("503") ? "El modelo no está disponible. Intenta más tarde." : "La generación de estrategias aún no está disponible."}</p> : null}
       <CaseStrategyMultiSelect
         strategies={strategies}
         selectedIds={selected}
         onChange={setSelected}
         busy={selecting}
+        emptyMessage={strategyError ? "No se pudieron cargar estrategias." : "No hay estrategias generadas para este expediente."}
         onSubmit={async () => {
           await selectStrategies({ strategy_ids: selected, generate_documents_immediately: true });
           void refetch();

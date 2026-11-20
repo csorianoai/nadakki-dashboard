@@ -32,9 +32,7 @@ export default function LegalLibraryClient() {
       <header>
         <h2 className="text-2xl font-medium">Biblioteca legal</h2>
         <p className="mt-2 text-sm text-zinc-500">
-          Búsqueda normativa indexada — datos reales desde{" "}
-          <code className="font-mono text-xs">GET /library/status</code> y{" "}
-          <code className="font-mono text-xs">GET /library/search</code>.
+          Consulte las leyes y documentos jurídicos disponibles para su investigación.
         </p>
       </header>
 
@@ -43,17 +41,10 @@ export default function LegalLibraryClient() {
       ) : statusQ.data ? (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4 text-sm">
           <p>
-            <span className="text-zinc-400">Servicio:</span> {String(statusQ.data.service ?? "—")}
+            {Number(statusQ.data.documentos ?? statusQ.data.documents ?? 0) === 0
+              ? "Todavía no hay documentos cargados en la biblioteca."
+              : `Documentos disponibles: ${String(statusQ.data.documentos ?? statusQ.data.documents)}`}
           </p>
-          <p>
-            <span className="text-zinc-400">Estado:</span> {String(statusQ.data.status ?? "—")}
-          </p>
-          {statusQ.data.strategies ? (
-            <p className="mt-1 text-xs text-zinc-500">
-              Estrategias: {(statusQ.data.strategies as string[]).join(", ")}
-            </p>
-          ) : null}
-          {statusQ.data.note ? <p className="mt-2 text-xs text-amber-200/90">{String(statusQ.data.note)}</p> : null}
         </section>
       ) : (
         <p className="text-sm text-zinc-500">Cargando estado…</p>
@@ -83,7 +74,7 @@ export default function LegalLibraryClient() {
             ))}
           </ul>
         ) : searchQ.isSuccess && !searchQ.isFetching ? (
-          <p className="text-sm text-zinc-500">Sin resultados para esta consulta.</p>
+          <p className="text-sm text-zinc-500">No encontramos documentos sobre esta consulta en la biblioteca.</p>
         ) : null}
       </section>
     </div>
