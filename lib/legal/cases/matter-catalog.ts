@@ -74,7 +74,7 @@ export function deriveCaseType(materia: MatterArea, subtype: string): CaseType |
 }
 
 export const COVERAGE_BADGE: Record<CoverageStatus, { label: string; className: string }> = {
-  VERIFIED: { label: "Cobertura legal verificada", className: "bg-emerald-950/40 text-emerald-400 border-emerald-700/40" },
-  DRAFT:    { label: "En revisión legal",          className: "bg-amber-950/30 text-amber-400 border-amber-700/40" },
-  BASIC:    { label: "Registro básico",            className: "bg-zinc-800/50 text-zinc-400 border-zinc-700/40" },
+  VERIFIED: { label: "Registro e investigación", className: "bg-emerald-950/40 text-emerald-400 border-emerald-700/40" },
+  DRAFT:    { label: "Flujo de expediente",      className: "bg-amber-950/30 text-amber-400 border-amber-700/40" },
+  BASIC:    { label: "Registro e investigación", className: "bg-zinc-800/50 text-zinc-400 border-zinc-700/40" },
 };

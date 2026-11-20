@@ -101,6 +101,10 @@ export function ResearchDictamenView({
     packStatus: packInfo?.verification_status ?? packInfo?.status,
   });
   const strictRejection = parseStrictModeRejection(run);
+  const runState = run as (AgentRunResponse & { llm_mode?: string; estado?: string }) | undefined;
+  const honestMode = String(runState?.llm_mode ?? "").toUpperCase();
+  const noData = runState?.estado === "sin_datos" || honestMode === "SIN_DATOS";
+  const heuristic = honestMode === "HEURISTICA";
 
   const handleCiteClick = (sourceId: string) => {
     scrollToCitation(sourceId, {
@@ -120,6 +124,20 @@ export function ResearchDictamenView({
         </div>
         <Ley91Block />
       </div>
+    );
+  }
+
+  if (noData || heuristic) {
+    return (
+      <article className="lr-content lr-dictamen" aria-label="Estado de la respuesta">
+        <LegalContentHonestyBadges badges={honestyBadges} />
+        <p role="status" className="my-4 rounded border border-amber-500/40 p-3 text-sm">
+          {noData
+            ? "No hay datos suficientes para emitir un resultado. Aporte fuentes o consulte a un abogado."
+            : "Resultado heurístico: requiere validación por un abogado y no constituye un dictamen."}
+        </p>
+        <LegalStrictRejectionPanel rejection={strictRejection} />
+      </article>
     );
   }
 
