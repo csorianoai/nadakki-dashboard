@@ -101,8 +101,9 @@ export function ResearchDictamenView({
     packStatus: packInfo?.verification_status ?? packInfo?.status,
   });
   const strictRejection = parseStrictModeRejection(run);
-  const honestMode = String(run?.llm_mode ?? "").toUpperCase();
-  const noData = run?.estado === "sin_datos" || honestMode === "SIN_DATOS";
+  const runState = run as (AgentRunResponse & { llm_mode?: string; estado?: string }) | undefined;
+  const honestMode = String(runState?.llm_mode ?? "").toUpperCase();
+  const noData = runState?.estado === "sin_datos" || honestMode === "SIN_DATOS";
   const heuristic = honestMode === "HEURISTICA";
 
   const handleCiteClick = (sourceId: string) => {
