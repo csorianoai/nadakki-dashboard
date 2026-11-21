@@ -9,6 +9,7 @@ import { FONT, SIZE, ST } from "@/lib/sites/tokens";
 import type { Site, SiteStatus } from "@/lib/sites/types";
 import { IMP } from "@/lib/sites/importar/copy";
 import { ImportarPortal } from "../importar/ImportarPortal";
+import { PanelMarketing } from "./marketing/PanelMarketing";
 import { Aviso } from "../shell/Aviso";
 import { useSites } from "../shell/SitesContext";
 
@@ -151,6 +152,7 @@ export function Resumen() {
               </div>
               {conectar && <ImportarPortal key={site.id} siteId={site.id} />}
             </section>
+            <PanelMarketing key={`mkt-${site.id}`} siteId={site.id} lang={lang} demo={demo} />
           </>
         );
       })()}
