@@ -20,6 +20,11 @@ describe("RESULT_DB_CODEX_15.sh", () => {
     expect(script).toContain("jest tests/credit-hub/bank");
   });
 
+  it("eslint solo falla por no-console (no por errores ajenos preexistentes)", () => {
+    expect(script).toContain("-f json");
+    expect(script).toContain('ruleId === "no-console"');
+  });
+
   it("emite PASS y FAIL con el nombre de la prueba de hecho", () => {
     expect(script).toContain('echo "RESULT_DB_CODEX_15=PASS"');
     expect(script).toContain('echo "RESULT_DB_CODEX_15=FAIL"');
