@@ -20,6 +20,7 @@ export function LegalApiErrorPanel({ title, error, defectId, hint }: Props) {
       <p className="font-semibold text-forgeDanger-800">{title}</p>
       <p className="mt-2">{http?.detail ?? message}</p>
       {http ? <p className="mt-1 text-xs text-forgeGray-600">HTTP {http.status}</p> : null}
+      {http?.requestId ? <p className="mt-1 text-xs text-forgeGray-600">ID de solicitud: <code>{http.requestId}</code></p> : null}
       {defectId ? (
         <p className="mt-2 text-xs text-forgeGray-700">
           Registrado en backend defects ledger: <code className="font-mono">{defectId}</code>

@@ -2,6 +2,7 @@ export class LegalApiHttpError extends Error {
   readonly status: number;
   readonly body: string;
   readonly detail: string;
+  readonly requestId?: string;
 
   constructor(context: string, status: number, body: string) {
     const detail = extractLegalApiDetail(body);
@@ -10,7 +11,23 @@ export class LegalApiHttpError extends Error {
     this.status = status;
     this.body = body;
     this.detail = detail;
+    this.requestId = extractLegalApiRequestId(body);
   }
+}
+
+export function extractLegalApiRequestId(raw: string): string | undefined {
+  try {
+    const value = JSON.parse(raw) as Record<string, unknown>;
+    if (typeof value.request_id === "string" && value.request_id.trim()) return value.request_id;
+    const detail = value.detail;
+    if (detail && typeof detail === "object" && !Array.isArray(detail)) {
+      const requestId = (detail as Record<string, unknown>).request_id;
+      if (typeof requestId === "string" && requestId.trim()) return requestId;
+    }
+  } catch {
+    /* A plain-text backend error has no request id to expose. */
+  }
+  return undefined;
 }
 
 export function extractLegalApiDetail(raw: string): string {
