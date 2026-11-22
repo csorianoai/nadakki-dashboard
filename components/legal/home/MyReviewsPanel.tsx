@@ -21,8 +21,10 @@ function formatDue(iso: string | null): string | null {
 }
 
 /**
- * "Mis revisiones": documentos en la cola de validación (pending/assigned/in_review).
- * Solo lectura; aprobar o rechazar se hace dentro del expediente.
+ * "Revisiones del bufete": la cola de validación del tenant (pending/assigned/in_review),
+ * que puede incluir documentos asignados a otros abogados. No se llama "Mis revisiones"
+ * mientras no se filtre por el abogado del usuario. Solo lectura; aprobar o rechazar se
+ * hace dentro del expediente, en el flujo de revisión.
  */
 export function MyReviewsPanel({ tenantId, cases }: Props) {
   const m = useLegalHomeMessages();
@@ -36,7 +38,7 @@ export function MyReviewsPanel({ tenantId, cases }: Props) {
 
   let body: React.ReactNode;
   if (queue.loading) {
-    body = <div className="h-16 animate-pulse rounded-lg bg-zinc-800/50" aria-busy />;
+    body = <div className="h-16 animate-pulse rounded-lg bg-slate-100 dark:bg-zinc-800/60" aria-busy="true" />;
   } else if (queue.forbidden) {
     body = <p className="text-sm text-slate-500 dark:text-zinc-400">{m.reviews_forbidden}</p>;
   } else if (queue.error) {
@@ -55,7 +57,7 @@ export function MyReviewsPanel({ tenantId, cases }: Props) {
             const urgent = item.priority === "critical" || item.priority === "high";
             return (
               <li key={item.queue_item_id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-slate-900 dark:text-zinc-200">
                     {c ? c.title : m.reviews_case_fallback}
                     {c?.case_number_internal ? (
@@ -84,7 +86,13 @@ export function MyReviewsPanel({ tenantId, cases }: Props) {
           })}
         </ul>
         {extra > 0 ? <p className="mt-2 text-xs text-slate-500 dark:text-zinc-400">{m.reviews_more.replace("{n}", String(extra))}</p> : null}
-        {queue.partial ? <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">Vista parcial: la cola contiene al menos 200 registros. Consulta el expediente para validar el estado.</p> : null}
+        {queue.partial ? (
+          <p className="mt-2 text-xs text-amber-800 dark:text-amber-300">
+            {queue.openCount !== null
+              ? m.reviews_partial.replace("{n}", String(queue.open.length))
+              : m.reviews_partial_unknown}
+          </p>
+        ) : null}
       </>
     );
   }

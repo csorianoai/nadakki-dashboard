@@ -10,6 +10,8 @@ import { TaskLauncher } from "@/components/legal/TaskLauncher";
 import { MyReviewsPanel } from "@/components/legal/home/MyReviewsPanel";
 import { UpcomingHearingsPanel } from "@/components/legal/home/UpcomingHearingsPanel";
 import { ActiveCasesPanel } from "@/components/legal/home/ActiveCasesPanel";
+import { HomeKpiTiles } from "@/components/legal/home/HomeKpiTiles";
+import { PriorityDeadlinesPanel } from "@/components/legal/home/PriorityDeadlinesPanel";
 import { useLegalHomeMessages } from "@/hooks/useLegalHomeMessages";
 import { useLegalTasks } from "@/hooks/useLegalTasks";
 import { useLegalRecentActivity } from "@/hooks/useLegalRecentActivity";
@@ -17,9 +19,9 @@ import { useLegalEffectiveTenantId } from "@/hooks/useLegalCore";
 import { useLegalCases } from "@/hooks/legal/useLegalCases";
 
 /**
- * Inicio legal ("Mi despacho"). Orden: lo que vence → lo que espera revisión →
- * audiencias → tareas con IA → actividad. La navegación (expedientes, investigación,
- * auditoría, configuración) vive en la barra lateral; aquí no se repite.
+ * Inicio legal ("Mi despacho", NADAKKI Legal OS). Orden: indicadores → atención prioritaria
+ * (plazos) y revisiones del bufete → audiencias → expedientes recientes → tareas con IA →
+ * actividad → estado de fuentes y sistema. La navegación vive en la barra lateral.
  */
 export default function LegalHomeContent() {
   const m = useLegalHomeMessages();
@@ -33,7 +35,7 @@ export default function LegalHomeContent() {
   const showAdmin = auth.role === "admin" || auth.role === "owner";
 
   return (
-    <div id="main-content" className="flex min-h-[calc(100vh-10rem)] flex-col space-y-5 bg-slate-50/30 pb-8 dark:bg-transparent">
+    <div id="main-content" className="mx-auto flex w-full min-w-0 max-w-[1600px] min-h-[calc(100vh-10rem)] flex-col space-y-5 pb-8">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-1">
           <p className="text-xs font-medium uppercase tracking-wider text-blue-700 dark:text-blue-300">{m.hero_kicker}</p>
@@ -57,31 +59,40 @@ export default function LegalHomeContent() {
         </Link>
       </header>
 
-      <LegalStatusStrip tenantId={effectiveTenantId} />
+      <HomeKpiTiles
+        tenantId={effectiveTenantId}
+        casesTotal={typeof casesQ.data?.total === "number" ? casesQ.data.total : null}
+        casesLoading={casesQ.isLoading}
+      />
 
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr] [&>*]:min-w-0">
+        <PriorityDeadlinesPanel tenantId={effectiveTenantId} />
         <MyReviewsPanel tenantId={effectiveTenantId} cases={casesQ.data?.cases ?? []} />
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr] [&>*]:min-w-0">
+        <ActiveCasesPanel
+          cases={casesQ.data?.cases ?? []}
+          loading={casesQ.isLoading}
+          error={Boolean(casesQ.error)}
+        />
         <UpcomingHearingsPanel tenantId={effectiveTenantId} />
       </div>
 
-      <ActiveCasesPanel
-        cases={casesQ.data?.cases ?? []}
-        loading={casesQ.isLoading}
-        error={Boolean(casesQ.error)}
-      />
-
       <section aria-labelledby="legal-tasks" className="space-y-3 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <h2 id="legal-tasks" className="text-base font-semibold tracking-tight text-slate-900 dark:text-zinc-100">{m.main_heading}</h2>
-        <p className="text-sm text-zinc-500">{m.main_subheading}</p>
+        <p className="text-sm text-slate-600 dark:text-zinc-400">{m.main_subheading}</p>
         <TaskLauncher tasks={tasks} loading={loading} error={error} onRetry={() => void refetch()} />
       </section>
 
       <section aria-labelledby="legal-recent" className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <h2 id="legal-recent" className="text-base font-medium tracking-tight text-zinc-100">{m.recent_activity}</h2>
+        <h2 id="legal-recent" className="text-base font-semibold tracking-tight text-slate-900 dark:text-zinc-100">{m.recent_activity}</h2>
         <div className="mt-4">
           <RecentActivityList entries={recent.entries} loading={recent.loading} />
         </div>
       </section>
+
+      <LegalStatusStrip tenantId={effectiveTenantId} />
     </div>
   );
 }
