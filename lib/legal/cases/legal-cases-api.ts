@@ -189,8 +189,7 @@ export async function fetchStrategies(tenantId: string, caseId: string) {
   const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/strategies`, {
     headers: tenantHeaders(tenantId),
   });
-  if (!res.ok) throw new Error(`Error al cargar estrategias (${res.status})`);
-  return parseJson<unknown>(res);
+  return readLegalJson<unknown>(res, "Error al cargar estrategias");
 }
 
 export async function postStrategiesSelect(

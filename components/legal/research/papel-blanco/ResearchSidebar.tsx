@@ -39,10 +39,6 @@ export function ResearchSidebar({ tenantLabel }: Props) {
 
   return (
     <aside className="lr-sidebar" data-noprint aria-label="Navegación Legal Hub">
-      <div className="lr-sidebar-brand">
-        <h2>Legal Hub</h2>
-        <p>{tenantLabel}</p>
-      </div>
 
       <Link href="/legal/cases/new" className="lr-btn-nuevo">
         <Plus size={16} strokeWidth={1.9} aria-hidden />
