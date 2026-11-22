@@ -516,10 +516,12 @@ export async function fetchUpcomingDeadlines(
   tenantId: string,
   horizonDays: number = 30,
   includeAcknowledged: boolean = false,
-): Promise<{ deadlines: Record<string, unknown>[]; count: number; horizon_days: number }> {
+  includeOverdue: boolean = false,
+): Promise<{ deadlines: Record<string, unknown>[]; count: number; horizon_days: number; include_overdue: boolean | null; as_of_date_rd: string | null }> {
   const q = new URLSearchParams();
   q.set("horizon_days", String(horizonDays));
   if (includeAcknowledged) q.set("include_acknowledged", "true");
+  if (includeOverdue) q.set("include_overdue", "true");
   const res = await apiFetch(`${LEGAL_PREFIX}/deadlines/upcoming?${q.toString()}`, {
     headers: tenantHeaders(tenantId),
   });
@@ -528,7 +530,10 @@ export async function fetchUpcomingDeadlines(
   const deadlines = Array.isArray(raw.deadlines) ? raw.deadlines : [];
   const count = typeof raw.count === "number" ? raw.count : deadlines.length;
   const horizon_days = typeof raw.horizon_days === "number" ? raw.horizon_days : horizonDays;
-  return { deadlines, count, horizon_days };
+  // null = backend anterior: no confirma que los vencidos vengan incluidos.
+  const include_overdue = typeof raw.include_overdue === "boolean" ? raw.include_overdue : null;
+  const as_of_date_rd = typeof raw.as_of_date_rd === "string" ? raw.as_of_date_rd : null;
+  return { deadlines, count, horizon_days, include_overdue, as_of_date_rd };
 }
 
 export async function postAcknowledgeDeadline(

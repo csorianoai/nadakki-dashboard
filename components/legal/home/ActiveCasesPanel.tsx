@@ -37,8 +37,8 @@ export function ActiveCasesPanel({ cases, loading, error }: Props) {
     <section aria-labelledby="legal-active-cases" className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4 dark:border-zinc-800">
         <div>
-          <h2 id="legal-active-cases" className="text-base font-semibold text-slate-900 dark:text-zinc-100">Mis expedientes recientes</h2>
-          <p className="mt-0.5 text-xs text-slate-500 dark:text-zinc-400">Expedientes visibles para tu usuario; abre uno para continuar trabajando.</p>
+          <h2 id="legal-active-cases" className="text-base font-semibold text-slate-900 dark:text-zinc-100">Expedientes recientes</h2>
+          <p className="mt-0.5 text-xs text-slate-500 dark:text-zinc-400">Los últimos actualizados en tu despacho (no necesariamente asignados a ti). Abre uno para continuar.</p>
         </div>
         <Link href="/legal/cases" className="text-sm font-medium text-blue-700 hover:underline dark:text-blue-300">Ver expedientes</Link>
       </div>
