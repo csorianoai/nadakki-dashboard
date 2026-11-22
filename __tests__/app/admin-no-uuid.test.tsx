@@ -27,7 +27,6 @@ const PAGES: [string, () => { default: React.ComponentType }, unknown?][] = [
   ["billing", () => require("@/app/admin/billing/page")],
   ["usage", () => require("@/app/admin/usage/page")],
   ["qa", () => require("@/app/admin/qa/page")],
-  ["landing-readiness", () => require("@/app/advertising/landing-readiness/page")],
   ["audit", () => require("@/app/audit/page")],
   ["sic-mt", () => require("@/app/sic/multitenant-config/page")],
   // billing: rama «sin planes» (plans vacío) y rama principal (con planes)
