@@ -36,29 +36,29 @@ export function RecentActivityList({ entries, loading }: Props) {
 
   if (loading) {
     return (
-      <ul className="space-y-2" aria-busy>
+      <ul className="space-y-2" aria-busy="true">
         {[0, 1, 2, 3, 4].map((i) => (
-          <li key={i} className="h-10 animate-pulse rounded-lg bg-zinc-800/50" />
+          <li key={i} className="h-10 animate-pulse rounded-lg bg-slate-100 dark:bg-zinc-800/50" />
         ))}
       </ul>
     );
   }
 
   if (!entries.length) {
-    return <p className="text-sm text-zinc-500">{m.recent_empty}</p>;
+    return <p className="text-sm text-slate-600 dark:text-zinc-400">{m.recent_empty}</p>;
   }
 
   return (
-    <ul className="divide-y divide-zinc-800/50 overflow-hidden rounded-xl border border-zinc-800/50 bg-zinc-900/40">
+    <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white dark:divide-zinc-800/50 dark:border-zinc-800/50 dark:bg-zinc-900/40">
       {entries.map((e) => {
         const detail = detailLine(e);
         return (
           <li key={e.request_id} className="flex flex-wrap items-baseline justify-between gap-2 px-4 py-3">
             <div>
-              <p className="text-sm font-medium text-zinc-200">{legalResultLabel(e.agent_id)}</p>
-              {detail ? <p className="text-xs text-zinc-500">{detail}</p> : null}
+              <p className="text-sm font-medium text-slate-900 dark:text-zinc-200">{legalResultLabel(e.agent_id)}</p>
+              {detail ? <p className="text-xs text-slate-600 dark:text-zinc-400">{detail}</p> : null}
             </div>
-            <time className="text-xs tabular-nums text-zinc-500" dateTime={e.timestamp}>
+            <time className="text-xs tabular-nums text-slate-500 dark:text-zinc-400" dateTime={e.timestamp}>
               {formatAgo(e.timestamp)}
             </time>
           </li>

@@ -62,7 +62,7 @@ export function AddPartyForm({ tenantId, caseId, onDone, onCancel }: Props) {
         Nombre completo o razón social *
         <input ref={nombreRef} required value={f.full_name} onChange={(e) => set("full_name", e.target.value)} className={input} maxLength={255} />
       </label>
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3">
         <label className="block text-sm font-medium text-slate-700">
           Tipo de persona *
           <select value={f.actor_kind} onChange={(e) => set("actor_kind", e.target.value as AddActorBody["actor_kind"])} className={input}>
