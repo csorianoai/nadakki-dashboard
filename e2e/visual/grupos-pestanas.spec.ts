@@ -31,6 +31,7 @@ async function sesion(page: Page) {
   await page.addInitScript(() => {
     localStorage.setItem("nadakki_refresh_token_v2", "r");
     localStorage.setItem("nadakki_tenant_id", "t1");
+    sessionStorage.setItem("nadakki:legal:aviso-ley91-visto", "1"); // aviso legal ya aceptado en esta sesión
   });
 }
 
