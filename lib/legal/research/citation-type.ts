@@ -15,7 +15,8 @@ export const CITATION_TIPO_META: Record<
   { badge: string; tag: string; accent: string; text: string; bg: string; bd: string; ring: string }
 > = {
   normativa: {
-    badge: "Fuente normativa verificada",
+    // L2a: no se afirma verificación mientras la base legal esté sin certificar.
+    badge: "Fuente normativa (sin certificar)",
     tag: "CAPA 1 · vinculante",
     accent: "var(--lr-gold)",
     text: "var(--lr-gold-text)",

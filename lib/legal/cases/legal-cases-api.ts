@@ -90,8 +90,8 @@ export async function createCase(tenantId: string, body: CreateCasePayload): Pro
     headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`Error al crear expediente (${res.status})`);
-  const raw = await parseJson<unknown>(res);
+  // L2a: conserva status y detail del backend (rol, unidad, capacidad) para mostrarlos.
+  const raw = await readLegalJson<unknown>(res, "Error al crear expediente");
   const c = normalizeCase(raw);
   if (!c) throw new Error("Respuesta de creación inválida");
   return c;

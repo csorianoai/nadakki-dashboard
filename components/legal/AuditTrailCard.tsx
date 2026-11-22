@@ -1,6 +1,8 @@
 import type { TrazabilidadAuditoria } from "@/lib/legal-api";
 
-export function AuditTrailCard({ trazabilidad }: { trazabilidad: TrazabilidadAuditoria }) {
+export function AuditTrailCard({ trazabilidad }: { trazabilidad?: TrazabilidadAuditoria | null }) {
+  // Sin trazabilidad en la respuesta no hay nada que mostrar; antes la pantalla entera se caía.
+  if (!trazabilidad) return null;
   const hashPreview =
     trazabilidad.knowledge_pack_hash && trazabilidad.knowledge_pack_hash.length > 24
       ? `${trazabilidad.knowledge_pack_hash.slice(0, 24)}…`
