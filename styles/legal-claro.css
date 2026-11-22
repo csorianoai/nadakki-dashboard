@@ -1,0 +1,150 @@
+/*
+ * Core Legal en TEMA CLARO (César, 2026-11-22): fondo blanco, menú lateral claro con un ícono de color por
+ * función y texto legible. Se carga después de legal-contrast.css y gana por especificidad (.legal-surface.legal-claro).
+ *
+ * Contraste (WCAG 2.1, calculado contra blanco, #f8fafc, #f1f5f9 y el resaltado #fef3c7; mínimo 4.5:1 en texto):
+ * la prueba __tests__/legal/legal-claro-contraste.test.ts lee las variables de abajo y falla si alguna baja de 4.5:1.
+ */
+
+/* ── Paleta (la prueba de contraste lee estas variables) ── */
+.legal-claro-paleta,
+.legal-surface.legal-claro,
+[data-modulo="legal"] {
+  --lc-fondo: #ffffff;
+  --lc-tarjeta: #f8fafc;
+  --lc-elevado: #f1f5f9;
+  --lc-resaltado: #fef3c7;
+  --lc-borde: #cbd5e1;
+  --lc-texto: #0f172a;
+  --lc-texto-2: #475569;
+  --lc-texto-3: #526175;
+  --lc-acento: #8a5300;
+  --lc-acento-borde: #b45309;
+  --lc-red: #b91c1c; --lc-rose: #be123c; --lc-emerald: #047857; --lc-green: #166534; --lc-amber: #92400e;
+  --lc-yellow: #854d0e; --lc-orange: #9a3412; --lc-sky: #0369a1; --lc-blue: #1d4ed8; --lc-cyan: #155e75;
+  --lc-teal: #115e59; --lc-lime: #3f6212; --lc-indigo: #4338ca; --lc-violet: #6d28d9; --lc-purple: #7e22ce;
+  --lc-fuchsia: #a21caf; --lc-pink: #9d174d;
+}
+
+/* ── Contenido del Core Legal ── */
+.legal-surface.legal-claro {
+  --legal-accent: var(--lc-acento);
+  --legal-accent-strong: var(--lc-acento-borde);
+  --legal-bg: var(--lc-fondo);
+  --legal-surface-1: var(--lc-tarjeta);
+  --legal-surface-2: var(--lc-elevado);
+  --legal-border: var(--lc-borde);
+  --legal-text: var(--lc-texto);
+  --legal-text-secondary: var(--lc-texto-2);
+  background-color: var(--lc-fondo);
+  color: var(--lc-texto);
+}
+.legal-surface.legal-claro .bg-zinc-950, .legal-surface.legal-claro .bg-black,
+.legal-surface.legal-claro [class*="bg-zinc-950/"] { background-color: var(--lc-fondo) !important; }
+.legal-surface.legal-claro .bg-zinc-900, .legal-surface.legal-claro [class*="bg-zinc-900/"],
+.legal-surface.legal-claro [class*="bg-gradient-to-"] { background-color: var(--lc-tarjeta) !important; }
+.legal-surface.legal-claro .bg-zinc-800, .legal-surface.legal-claro [class*="bg-zinc-800/"],
+.legal-surface.legal-claro .hover\:bg-zinc-800:hover, .legal-surface.legal-claro .hover\:bg-zinc-900:hover,
+.legal-surface.legal-claro [class*="hover:bg-zinc-800/"]:hover { background-color: var(--lc-elevado) !important; }
+.legal-surface.legal-claro .bg-zinc-700, .legal-surface.legal-claro [class*="bg-zinc-700/"] { background-color: #e2e8f0 !important; }
+
+.legal-surface.legal-claro .border-zinc-800, .legal-surface.legal-claro .border-zinc-700,
+.legal-surface.legal-claro [class*="border-zinc-800/"], .legal-surface.legal-claro [class*="border-zinc-700/"],
+.legal-surface.legal-claro .border-zinc-600, .legal-surface.legal-claro .divide-zinc-800 > * { border-color: var(--lc-borde) !important; }
+
+/* Texto: claro sobre oscuro → oscuro sobre claro. text-white solo si el elemento no pinta su propio fondo
+   (un botón de color con text-white se queda blanco). */
+.legal-surface.legal-claro .text-zinc-50, .legal-surface.legal-claro .text-zinc-100,
+.legal-surface.legal-claro .text-zinc-200, .legal-surface.legal-claro .text-zinc-300,
+.legal-surface.legal-claro .text-slate-100, .legal-surface.legal-claro .text-slate-200,
+.legal-surface.legal-claro .text-white:not([class*="bg-"]),
+.legal-surface.legal-claro .hover\:text-white:hover:not([class*="bg-"]),
+.legal-surface.legal-claro .hover\:text-zinc-100:hover, .legal-surface.legal-claro .hover\:text-zinc-200:hover { color: var(--lc-texto) !important; }
+.legal-surface.legal-claro .text-zinc-400, .legal-surface.legal-claro .text-zinc-500,
+.legal-surface.legal-claro [class*="text-zinc-500/"], .legal-surface.legal-claro .text-slate-400,
+.legal-surface.legal-claro .text-slate-500 { color: var(--lc-texto-2) !important; }
+.legal-surface.legal-claro .text-zinc-600, .legal-surface.legal-claro .text-zinc-700,
+.legal-surface.legal-claro .text-slate-600 { color: var(--lc-texto-3) !important; }
+.legal-surface.legal-claro [class*="placeholder:text-zinc"]::placeholder { color: var(--lc-texto-3) !important; opacity: 1; }
+.legal-surface.legal-claro input:not([type="checkbox"]):not([type="radio"]),
+.legal-surface.legal-claro textarea, .legal-surface.legal-claro select {
+  color: var(--lc-texto) !important; -webkit-text-fill-color: var(--lc-texto) !important;
+}
+
+/* Acento (antes dorado sobre oscuro): ámbar oscuro legible sobre blanco. */
+.legal-surface.legal-claro .text-violet-200, .legal-surface.legal-claro .text-violet-300,
+.legal-surface.legal-claro .text-violet-400, .legal-surface.legal-claro .text-violet-500,
+.legal-surface.legal-claro .text-purple-400, .legal-surface.legal-claro .text-indigo-400,
+.legal-surface.legal-claro .hover\:text-violet-300:hover { color: var(--lc-acento) !important; }
+.legal-surface.legal-claro .bg-violet-950, .legal-surface.legal-claro [class*="bg-violet-950/"],
+.legal-surface.legal-claro [class*="bg-violet-900/"] { background-color: var(--lc-resaltado) !important; }
+
+/* Colores de estado: tonos 200–400 (pensados para fondo oscuro) → tonos 700–800. */
+.legal-surface.legal-claro [class*="text-red-2"], .legal-surface.legal-claro [class*="text-red-3"], .legal-surface.legal-claro [class*="text-red-4"] { color: var(--lc-red) !important; }
+.legal-surface.legal-claro [class*="text-rose-2"], .legal-surface.legal-claro [class*="text-rose-3"], .legal-surface.legal-claro [class*="text-rose-4"] { color: var(--lc-rose) !important; }
+.legal-surface.legal-claro [class*="text-emerald-2"], .legal-surface.legal-claro [class*="text-emerald-3"], .legal-surface.legal-claro [class*="text-emerald-4"] { color: var(--lc-emerald) !important; }
+.legal-surface.legal-claro [class*="text-green-2"], .legal-surface.legal-claro [class*="text-green-3"], .legal-surface.legal-claro [class*="text-green-4"] { color: var(--lc-green) !important; }
+.legal-surface.legal-claro [class*="text-amber-2"], .legal-surface.legal-claro [class*="text-amber-3"], .legal-surface.legal-claro [class*="text-amber-4"] { color: var(--lc-amber) !important; }
+.legal-surface.legal-claro [class*="text-yellow-2"], .legal-surface.legal-claro [class*="text-yellow-3"], .legal-surface.legal-claro [class*="text-yellow-4"] { color: var(--lc-yellow) !important; }
+.legal-surface.legal-claro [class*="text-orange-2"], .legal-surface.legal-claro [class*="text-orange-3"], .legal-surface.legal-claro [class*="text-orange-4"] { color: var(--lc-orange) !important; }
+.legal-surface.legal-claro [class*="text-sky-2"], .legal-surface.legal-claro [class*="text-sky-3"], .legal-surface.legal-claro [class*="text-sky-4"] { color: var(--lc-sky) !important; }
+.legal-surface.legal-claro [class*="text-blue-2"], .legal-surface.legal-claro [class*="text-blue-3"], .legal-surface.legal-claro [class*="text-blue-4"] { color: var(--lc-blue) !important; }
+.legal-surface.legal-claro [class*="text-cyan-2"], .legal-surface.legal-claro [class*="text-cyan-3"], .legal-surface.legal-claro [class*="text-cyan-4"] { color: var(--lc-cyan) !important; }
+.legal-surface.legal-claro [class*="text-teal-2"], .legal-surface.legal-claro [class*="text-teal-3"], .legal-surface.legal-claro [class*="text-teal-4"] { color: var(--lc-teal) !important; }
+.legal-surface.legal-claro [class*="text-lime-2"], .legal-surface.legal-claro [class*="text-lime-3"], .legal-surface.legal-claro [class*="text-lime-4"] { color: var(--lc-lime) !important; }
+.legal-surface.legal-claro [class*="text-fuchsia-3"], .legal-surface.legal-claro [class*="text-fuchsia-4"] { color: var(--lc-fuchsia) !important; }
+.legal-surface.legal-claro [class*="text-pink-3"], .legal-surface.legal-claro [class*="text-pink-4"] { color: var(--lc-pink) !important; }
+/* Fondos de estado oscuros (900/950) → tinte claro; bordes 700–900 → tono 200. */
+.legal-surface.legal-claro [class*="bg-red-9"], .legal-surface.legal-claro [class*="bg-rose-9"] { background-color: #fef2f2 !important; }
+.legal-surface.legal-claro [class*="bg-emerald-9"], .legal-surface.legal-claro [class*="bg-green-9"] { background-color: #ecfdf5 !important; }
+.legal-surface.legal-claro [class*="bg-amber-9"], .legal-surface.legal-claro [class*="bg-yellow-9"], .legal-surface.legal-claro [class*="bg-orange-9"] { background-color: #fffbeb !important; }
+.legal-surface.legal-claro [class*="bg-sky-9"], .legal-surface.legal-claro [class*="bg-blue-9"], .legal-surface.legal-claro [class*="bg-cyan-9"], .legal-surface.legal-claro [class*="bg-indigo-9"] { background-color: #eff6ff !important; }
+.legal-surface.legal-claro [class*="border-red-7"], .legal-surface.legal-claro [class*="border-red-8"], .legal-surface.legal-claro [class*="border-red-9"] { border-color: #fecaca !important; }
+.legal-surface.legal-claro [class*="border-emerald-7"], .legal-surface.legal-claro [class*="border-emerald-8"], .legal-surface.legal-claro [class*="border-emerald-9"] { border-color: #a7f3d0 !important; }
+.legal-surface.legal-claro [class*="border-amber-7"], .legal-surface.legal-claro [class*="border-amber-8"], .legal-surface.legal-claro [class*="border-amber-9"] { border-color: #fde68a !important; }
+.legal-surface.legal-claro [class*="border-sky-7"], .legal-surface.legal-claro [class*="border-sky-8"], .legal-surface.legal-claro [class*="border-blue-8"] { border-color: #bfdbfe !important; }
+
+/* ── Menú lateral del módulo Legal: claro, con ícono de color por función ── */
+[data-testid="menu-modulo"][data-modulo="legal"] {
+  background-color: var(--lc-tarjeta) !important; color: var(--lc-texto) !important; border-color: #e2e8f0 !important;
+}
+[data-testid="menu-modulo"][data-modulo="legal"] > div:first-child { border-color: #e2e8f0 !important; color: var(--lc-texto) !important; }
+[data-testid="menu-modulo"][data-modulo="legal"] button { color: var(--lc-texto-2) !important; }
+[data-testid="menu-modulo"][data-modulo="legal"] button:hover { background-color: #e2e8f0 !important; color: var(--lc-texto) !important; }
+[data-testid="menu-modulo"][data-modulo="legal"] p, [data-testid="menu-modulo"][data-modulo="legal"] [aria-expanded] { color: var(--lc-texto-2) !important; }
+[data-testid="menu-modulo"][data-modulo="legal"] a { color: #334155 !important; font-size: 0.875rem; }
+[data-testid="menu-modulo"][data-modulo="legal"] a:hover { background-color: #e2e8f0 !important; color: var(--lc-texto) !important; }
+[data-testid="menu-modulo"][data-modulo="legal"] a[aria-current="page"] {
+  background-color: var(--lc-resaltado) !important; color: var(--lc-texto) !important; border-left-color: var(--lc-acento-borde) !important; font-weight: 600;
+}
+[data-testid="menu-modulo"][data-modulo="legal"] a svg { width: 1.05rem; height: 1.05rem; }
+/* Un color por función (íconos ≥ 4.5:1 sobre el menú y sobre el resaltado). */
+[data-modulo="legal"] a[href="/legal"] svg { color: var(--lc-sky); }
+[data-modulo="legal"] a[href="/legal/cases"] svg { color: var(--lc-indigo); }
+[data-modulo="legal"] a[href="/legal/cases/new"] svg { color: var(--lc-emerald); }
+[data-modulo="legal"] a[href="/legal/contracts"] svg { color: var(--lc-amber); }
+[data-modulo="legal"] a[href="/legal/audiencias"] svg { color: var(--lc-rose); }
+[data-modulo="legal"] a[href="/legal/research"] svg { color: var(--lc-violet); }
+[data-modulo="legal"] a[href="/legal/library"] svg { color: var(--lc-teal); }
+[data-modulo="legal"] a[href="/legal/audit"] svg { color: var(--lc-texto-2); }
+[data-modulo="legal"] a[href="/legal/config"] svg { color: var(--lc-texto-3); }
+
+/* ── Pestañas del módulo Legal: claras ── */
+[data-modulo="legal"] [data-testid="pestanas-grupo"] { background-color: var(--lc-fondo) !important; border-color: #e2e8f0 !important; }
+[data-modulo="legal"] [data-testid="pestanas-grupo"] button { color: var(--lc-texto-2) !important; }
+[data-modulo="legal"] [data-testid="pestana-grupo"] { color: #334155 !important; font-size: 0.875rem; }
+[data-modulo="legal"] [data-testid="pestana-grupo"]:hover { background-color: var(--lc-elevado) !important; color: var(--lc-texto) !important; }
+[data-modulo="legal"] [data-testid="pestana-grupo"][aria-current="page"] {
+  background-color: var(--lc-fondo) !important; color: var(--lc-texto) !important;
+  border-color: #e2e8f0 !important; border-bottom-color: var(--lc-acento-borde) !important; font-weight: 600;
+}
+[data-modulo="legal"] main#main-content { background-color: var(--lc-fondo); }
+
+/* Botones y pasos con degradado + texto blanco: legal-contrast.css aplana los degradados al color de tarjeta,
+   y en claro eso dejaba el texto blanco sobre casi blanco («Siguiente», paso activo del asistente). Fondo sólido
+   índigo 700: blanco sobre #4338ca = 7.4:1. */
+.legal-surface.legal-claro [class*="bg-gradient-to-"].text-white {
+  background-color: var(--lc-indigo) !important;
+  color: #ffffff !important;
+}
+.legal-surface.legal-claro [class*="bg-gradient-to-"].text-white:hover { background-color: #3730a3 !important; }

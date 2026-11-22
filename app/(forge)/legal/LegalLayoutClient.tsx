@@ -8,8 +8,7 @@ import { CreditHubI18nBootstrap } from "@/components/credit-hub/system/CreditHub
 import { DeadlineNotificationBanner } from "@/components/legal/DeadlineNotificationBanner";
 import { DemoBannerStrong } from "@/components/legal/DemoBannerStrong";
 import { LegalCoreShell } from "@/components/legal/LegalCoreShell";
-import { LegalDisclaimerFooter } from "@/components/legal/LegalDisclaimerFooter";
-import { LegalGr14Banner } from "@/components/legal/LegalGr14Banner";
+import { LegalAvisoInicial } from "@/components/legal/LegalAvisoInicial";
 import { DisasterModeProvider } from "@/app/providers/DisasterModeProvider";
 
 import { ForgeToaster } from "@/components/forge/ui/Toast";
@@ -17,6 +16,7 @@ import { ModuleGate } from "@/lib/feature-gating/ModuleGate";
 import { useTenant as useCreditHubTenant } from "@/lib/credit-hub/hooks/useTenant";
 import "../credit-hub/forge-globals.css";
 import "@/styles/legal-contrast.css";
+import "@/styles/legal-claro.css";
 
 export function LegalLayoutClient({ children }: { children: ReactNode }) {
   const { tenantSlug } = useCreditHubTenant();
@@ -29,14 +29,14 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
       <>
         <CreditHubI18nBootstrap />
         <div
-          className={`legal-surface flex min-h-0 flex-1 flex-col ${GeistSans.className}`}
+          className={`legal-surface legal-claro flex min-h-0 flex-1 flex-col ${GeistSans.className}`}
           data-portal="legal"
           data-tenant={tenantAttr}
         >
           <CHTenantGuard>
             <ModuleGate module="legal">
               <DisasterModeProvider>
-                <LegalGr14Banner compact />
+                <LegalAvisoInicial />
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
               </DisasterModeProvider>
             </ModuleGate>
@@ -51,7 +51,7 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
     <>
       <CreditHubI18nBootstrap />
       <div
-        className={`legal-surface flex min-h-0 flex-1 flex-col ${GeistSans.className}`}
+        className={`legal-surface legal-claro flex min-h-0 flex-1 flex-col ${GeistSans.className}`}
         data-portal="legal"
         data-tenant={tenantAttr}
       >
@@ -65,18 +65,15 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
           <ModuleGate module="legal">
             <DisasterModeProvider>
               <div className="flex min-h-0 flex-1">
-                <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-zinc-950 text-zinc-100">
+                <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-white text-slate-900">
                   <div className="mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 flex-col px-4 py-5 md:px-6 md:py-6">
-                    <LegalGr14Banner />
+                    <LegalAvisoInicial />
                     <DemoBannerStrong />
                     <DeadlineNotificationBanner />
                     {/* Las pestañas de Legal las pinta ModuleShell (PestanasGrupo) desde el registro; ya no hay barra propia. */}
                     <LegalCoreShell>
                       <div className="min-h-0 flex-1">{children}</div>
                     </LegalCoreShell>
-                    <div className="mt-10 shrink-0">
-                      <LegalDisclaimerFooter />
-                    </div>
                   </div>
                 </div>
               </div>
