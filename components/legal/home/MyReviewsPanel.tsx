@@ -38,17 +38,17 @@ export function MyReviewsPanel({ tenantId, cases }: Props) {
   if (queue.loading) {
     body = <div className="h-16 animate-pulse rounded-lg bg-zinc-800/50" aria-busy />;
   } else if (queue.forbidden) {
-    body = <p className="text-sm text-zinc-500">{m.reviews_forbidden}</p>;
+    body = <p className="text-sm text-slate-500 dark:text-zinc-400">{m.reviews_forbidden}</p>;
   } else if (queue.error) {
-    body = <p className="text-sm text-amber-400">{m.reviews_error}</p>;
+    body = <p className="text-sm text-amber-700 dark:text-amber-400">{m.reviews_error}</p>;
   } else if (!queue.open.length) {
-    body = <p className="text-sm text-zinc-500">{m.reviews_empty}</p>;
+    body = <p className="text-sm text-slate-500 dark:text-zinc-400">{m.reviews_empty}</p>;
   } else {
     const rows = queue.open.slice(0, MAX_ROWS);
     const extra = queue.open.length - rows.length;
     body = (
       <>
-        <ul className="divide-y divide-zinc-800/50 overflow-hidden rounded-xl border border-zinc-800/50 bg-zinc-900/40">
+        <ul className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-100 bg-white dark:divide-zinc-800 dark:border-zinc-800 dark:bg-zinc-950/30">
           {rows.map((item) => {
             const c = byId.get(item.case_id);
             const due = formatDue(item.sla_deadline);
@@ -56,18 +56,18 @@ export function MyReviewsPanel({ tenantId, cases }: Props) {
             return (
               <li key={item.queue_item_id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-zinc-200">
+                  <p className="truncate text-sm font-medium text-slate-900 dark:text-zinc-200">
                     {c ? c.title : m.reviews_case_fallback}
                     {c?.case_number_internal ? (
                       <span className="ml-2 text-xs font-normal text-zinc-500">{c.case_number_internal}</span>
                     ) : null}
                   </p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">
                     {statusLabel(item.status)}
                     {" · "}
-                    <span className={urgent ? "text-amber-400" : undefined}>{priorityLabel(item.priority)}</span>
+                    <span className={urgent ? "text-amber-700 dark:text-amber-400" : undefined}>{priorityLabel(item.priority)}</span>
                     {item.sla_breached ? (
-                      <span className="text-red-400">{" · "}{m.reviews_overdue}</span>
+                      <span className="text-red-700 dark:text-red-400">{" · "}{m.reviews_overdue}</span>
                     ) : due ? (
                       <>{" · "}{m.reviews_due.replace("{date}", due)}</>
                     ) : null}
@@ -75,7 +75,7 @@ export function MyReviewsPanel({ tenantId, cases }: Props) {
                 </div>
                 <Link
                   href={`/legal/cases/${encodeURIComponent(item.case_id)}`}
-                  className="shrink-0 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:border-violet-500/50 hover:text-zinc-100"
+                  className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 dark:border-zinc-700 text-xs text-blue-700 hover:border-blue-300 hover:text-blue-900 dark:text-zinc-300 dark:hover:border-blue-600 dark:hover:text-zinc-100"
                 >
                   {m.reviews_open_case}
                 </Link>
@@ -83,16 +83,16 @@ export function MyReviewsPanel({ tenantId, cases }: Props) {
             );
           })}
         </ul>
-        {extra > 0 ? <p className="mt-2 text-xs text-zinc-500">{m.reviews_more.replace("{n}", String(extra))}</p> : null}
+        {extra > 0 ? <p className="mt-2 text-xs text-slate-500 dark:text-zinc-400">{m.reviews_more.replace("{n}", String(extra))}</p> : null}
         {queue.partial ? <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">Vista parcial: la cola contiene al menos 200 registros. Consulta el expediente para validar el estado.</p> : null}
       </>
     );
   }
 
   return (
-    <section aria-labelledby="legal-reviews" className="rounded-2xl border border-zinc-800/50 bg-zinc-900/20 p-6">
-      <h2 id="legal-reviews" className="text-base font-medium tracking-tight text-zinc-100">{m.reviews_title}</h2>
-      <p className="mt-1 text-sm text-zinc-500">{m.reviews_subtitle}</p>
+    <section aria-labelledby="legal-reviews" className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <h2 id="legal-reviews" className="text-base font-semibold tracking-tight text-slate-900 dark:text-zinc-100">{m.reviews_title}</h2>
+      <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">{m.reviews_subtitle}</p>
       <div className="mt-4">{body}</div>
     </section>
   );
