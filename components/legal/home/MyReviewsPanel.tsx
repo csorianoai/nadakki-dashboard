@@ -84,6 +84,7 @@ export function MyReviewsPanel({ tenantId, cases }: Props) {
           })}
         </ul>
         {extra > 0 ? <p className="mt-2 text-xs text-zinc-500">{m.reviews_more.replace("{n}", String(extra))}</p> : null}
+        {queue.partial ? <p className="mt-2 text-xs text-amber-700 dark:text-amber-300">Vista parcial: la cola contiene al menos 200 registros. Consulta el expediente para validar el estado.</p> : null}
       </>
     );
   }
