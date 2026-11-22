@@ -87,7 +87,7 @@ export function ModuleShell({ modulo, children }: ModuleShellProps) {
         <div className={CLASES.columna}>
           <main id="main-content" className={CLASES.contenido}>
             {conSesion ? <TenantBrandedDocumentTitle /> : null}
-            {modulo && grupoPestanas ? <PestanasGrupo titulo={conGrupos ? grupoPestanas.label : modulo.label} paginas={grupoPestanas.items} pathname={pathname} /> : null}
+            {modulo && grupoPestanas && !modulo.sinPestanas ? <PestanasGrupo titulo={conGrupos ? grupoPestanas.label : modulo.label} paginas={grupoPestanas.items} pathname={pathname} /> : null}
             {!modulo && conSesion && modulos.length === 0 && (pathname ?? "/").replace(/\/+$/, "") === "" ? <SinModulos /> : children}
           </main>
         </div>

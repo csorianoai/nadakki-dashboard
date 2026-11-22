@@ -85,6 +85,12 @@ function TaskLauncherEmpty() {
   );
 }
 
+/** El backend escribe «Investigacion» sin tilde: se compara sin tildes ni mayúsculas. */
+export function mismaSeccion(a: string, b: string): boolean {
+  const n = (x: string) => x.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+  return n(a) === n(b);
+}
+
 export function TaskLauncher({ tasks, loading, error, onRetry }: Props) {
   const m = useLegalHomeMessages();
 
@@ -101,7 +107,7 @@ export function TaskLauncher({ tasks, loading, error, onRetry }: Props) {
           icon={section.icon}
           headerBarClass={section.headerBarClass}
           cardLeftBorderClass={section.cardLeftBorderClass}
-          tasks={tasks.filter((t) => t.section_es === section.sectionEs)}
+          tasks={tasks.filter((t) => mismaSeccion(t.section_es, section.sectionEs))}
         />
       ))}
     </div>
