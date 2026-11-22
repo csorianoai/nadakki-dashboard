@@ -1,5 +1,6 @@
 "use client";
 
+import { TenantLabel } from "@/components/ui/TenantLabel";
 import { useState, useEffect } from "react";
 import { motion } from "@/lib/motion-stub";
 import { CheckCircle, XCircle, Loader2, RefreshCw, Play, AlertTriangle } from "lucide-react";
@@ -68,7 +69,7 @@ export default function AdminQAPage() {
   return (
     <div className="ndk-page ndk-fade-in">
       <NavigationBar backHref="/admin">
-        <span className="text-sm text-gray-400">Tenant: {tenantId ?? "—"}</span>
+        <TenantLabel prefix="Tenant: " className="text-sm text-gray-400" />
         <button
           onClick={fetchAuthStatus}
           disabled={authLoading}
@@ -95,7 +96,7 @@ export default function AdminQAPage() {
         <div className="space-y-6">
           <GlassCard className="p-6">
             <h2 className="text-lg font-bold text-white mb-4">Organización activa</h2>
-            <p className="text-gray-300 font-mono">{tenantId}</p>
+            <p className="text-gray-300 font-mono"><TenantLabel /></p>
           </GlassCard>
 
           <GlassCard className="p-6">

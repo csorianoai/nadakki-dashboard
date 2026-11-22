@@ -430,18 +430,89 @@ export async function postArchive(tenantId: string, caseId: string, body: Record
   return readLegalJson<unknown>(res, "Error al archivar expediente");
 }
 
+/** Metadatos opcionales de un documento subido (van como query params del POST). */
+export interface DocumentUploadMeta {
+  document_type?: string;
+  direction?: "incoming" | "outgoing" | "internal";
+  title?: string;
+  /** AAAA-MM-DD */
+  document_date?: string;
+  /** AAAA-MM-DD; solo si consta la notificación. */
+  notification_date?: string;
+}
+
+/**
+ * Sube un documento. Solo resuelve tras el 201 del backend (archivo cifrado guardado y
+ * registrado); cualquier otro estado lanza LegalApiHttpError con el código y el mensaje.
+ */
 export async function ingestDocument(
   tenantId: string,
   caseId: string,
-  formData: FormData
-): Promise<unknown> {
-  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents`, {
+  formData: FormData,
+  meta: DocumentUploadMeta = {},
+): Promise<Record<string, unknown>> {
+  const q = new URLSearchParams();
+  for (const [k, v] of Object.entries(meta)) if (typeof v === "string" && v.trim()) q.set(k, v.trim());
+  const qs = q.toString();
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents${qs ? `?${qs}` : ""}`, {
     method: "POST",
     headers: { "X-Tenant-ID": tenantId.trim() },
     body: formData,
   });
-  if (!res.ok) throw new Error(`Error al subir documento (${res.status})`);
-  return parseJson<unknown>(res);
+  return readLegalJson<Record<string, unknown>>(res, "No se pudo subir el documento");
+}
+
+export interface DocumentsStorageStatus {
+  disponible: boolean;
+  motivo: string | null;
+  max_mb: number;
+  tipos: string[];
+}
+
+/** null = el backend todavía no tiene el endpoint (se permite intentar; el POST dirá si falla). */
+export async function fetchDocumentsStorage(tenantId: string, caseId: string): Promise<DocumentsStorageStatus | null> {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/documents-storage`, {
+    headers: tenantHeaders(tenantId),
+  });
+  if (res.status === 404 || res.status === 405) return null;
+  return readLegalJson<DocumentsStorageStatus>(res, "No se pudo consultar el almacenamiento de documentos");
+}
+
+export interface AddActorBody {
+  role: string;
+  actor_kind: "persona_fisica" | "persona_juridica" | "institucion";
+  full_name: string;
+  identification_type?: string;
+  identification_number?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+}
+
+/** Agrega una parte a un expediente existente (POST /cases/{id}/actors). */
+export async function addCaseActor(tenantId: string, caseId: string, body: AddActorBody): Promise<Record<string, unknown>> {
+  const limpio = Object.fromEntries(Object.entries(body).filter(([, v]) => typeof v === "string" && v.trim() !== ""));
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/actors`, {
+    method: "POST",
+    headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
+    body: JSON.stringify(limpio),
+  });
+  return readLegalJson<Record<string, unknown>>(res, "No se pudo agregar la parte");
+}
+
+export const REPRESENTACIONES = [
+  "demandante", "demandado", "tercero_interviniente", "querellante", "imputado", "otro", "desconocido",
+] as const;
+export type Representacion = (typeof REPRESENTACIONES)[number];
+
+/** «¿A quién representa el despacho?» (PUT /cases/{id}/representation). */
+export async function putCaseRepresentation(tenantId: string, caseId: string, representa: Representacion): Promise<unknown> {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/representation`, {
+    method: "PUT",
+    headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
+    body: JSON.stringify({ representa }),
+  });
+  return readLegalJson<unknown>(res, "No se pudo guardar a quién representa el despacho");
 }
 
 export async function postGenerateDocument(

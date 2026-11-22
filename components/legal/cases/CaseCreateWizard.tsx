@@ -10,6 +10,8 @@ import { legalCaughtErrorToSpanish } from "@/lib/legal/api-error-es";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { MATERIAS, COVERAGE_BADGE, deriveCaseType } from "@/lib/legal/cases/matter-catalog";
 import { ActorFormCard, type ActorFormData } from "@/components/legal/cases/ActorFormCard";
+import { ETIQUETA_REPRESENTACION } from "@/components/legal/cases/CaseRepresentationCard";
+import { REPRESENTACIONES, type Representacion } from "@/lib/legal/cases/legal-cases-api";
 import { cn } from "@/lib/utils";
 
 type Mode = "evaluacion" | "ingesta";
@@ -68,6 +70,7 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
   const [proceduralStage, setProceduralStage] = useState<ProceduralStage | "">("");
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<CasePriority>("normal");
+  const [representa, setRepresenta] = useState<Representacion | "">("");
   const [actors, setActors] = useState<ActorFormData[]>([
     {
       role: "cliente",
@@ -107,6 +110,7 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
         case_subtype: effectiveSubtype || undefined,
         procedural_stage_at_intake: (proceduralStage as ProceduralStage) || undefined,
         initial_state: mode === "evaluacion" ? "EVALUACION_INICIAL" : "INGESTION",
+        client_roles: representa ? [representa] : [],
         initial_actors: validActors.map((a) => ({
           role: a.role,
           is_primary: a.is_primary,
@@ -140,6 +144,10 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
       }
     }
     if (step === 2) {
+      if (!representa) {
+        setErr("Indica a quién representa el despacho (puede ser «Aún no se sabe»).");
+        return;
+      }
       if (!actors[0].full_name.trim()) {
         setErr(m.wizard.errors.client_required);
         return;
@@ -358,6 +366,25 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
             />
           </div>
 
+          {/* ¿A quién representa el despacho? (postura procesal del cliente) */}
+          <label className="block text-sm font-medium text-zinc-300">
+            ¿A quién representa el despacho? *
+            <select
+              value={representa}
+              onChange={(e) => setRepresenta(e.target.value as Representacion)}
+              className="mt-1 w-full rounded-lg border border-zinc-800/50 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100"
+              data-testid="wizard-representa"
+            >
+              <option value="" disabled>Elegir…</option>
+              {REPRESENTACIONES.map((r) => (
+                <option key={r} value={r}>{ETIQUETA_REPRESENTACION[r]}</option>
+              ))}
+            </select>
+            <span className="mt-1 block text-xs font-normal text-zinc-500">
+              Si aún no se sabe, elige «Aún no se sabe»: no se calcularán plazos de defensa hasta confirmarlo.
+            </span>
+          </label>
+
           {/* Divider */}
           <div className="border-t border-zinc-800/40" />
 
@@ -374,7 +401,7 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
                   actor={actor}
                   onChange={(a) => updateActor(idx + 1, a)}
                   onRemove={() => removeParty(idx + 1)}
-                  collapsed
+                  autoFocus={idx === actors.length - 2 && isActorEmpty(actor)}
                   label={m.wizard.party_label.replace("{n}", String(idx + 2))}
                   roleOptions={[...ROLE_OPTIONS]}
                   messages={m}
@@ -411,6 +438,7 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
             <li>
               Cliente: {actors[0].full_name || "—"} ({(m.wizard.actor_kind as Record<string, string>)[actors[0].actor_kind]})
             </li>
+            <li>Representamos a: {representa ? ETIQUETA_REPRESENTACION[representa] : "—"}</li>
             {additionalPartyCount > 0 ? (
               <li>
                 {m.wizard.summary_additional_parties.replace("{count}", String(additionalPartyCount))}

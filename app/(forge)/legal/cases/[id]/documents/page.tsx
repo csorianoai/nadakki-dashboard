@@ -2,7 +2,6 @@
 
 import { use, useState } from "react";
 import { useLegalCase } from "@/hooks/legal/useLegalCase";
-import { useCaseDocuments } from "@/hooks/legal/useCaseDocuments";
 import { useLegalEffectiveTenantId } from "@/hooks/useLegalCore";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { CaseDetailHeader } from "@/components/legal/cases/CaseDetailHeader";
@@ -13,7 +12,6 @@ import { CaseDocumentExtractedDataReview } from "@/components/legal/cases/CaseDo
 import { DocumentGenerationButton } from "@/components/legal/cases/DocumentGenerationButton";
 import { GeneratedDocumentsList } from "@/components/legal/cases/GeneratedDocumentsList";
 import { GeneratedDocumentViewer } from "@/components/legal/cases/GeneratedDocumentViewer";
-import { LegalDocumentsS3WarningBanner } from "@/components/legal/cases/LegalDocumentsS3WarningBanner";
 import type { CaseDocument } from "@/lib/legal/cases/case-types";
 
 export default function LegalCaseDocumentsPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,7 +19,6 @@ export default function LegalCaseDocumentsPage({ params }: { params: Promise<{ i
   const msgs = useLegalCasesMessages();
   const { effectiveTenantId, tenantHydrated, tenantError } = useLegalEffectiveTenantId();
   const { data: c, isLoading, error, refetch } = useLegalCase(effectiveTenantId, id);
-  const { uploadDocument, uploading } = useCaseDocuments(effectiveTenantId, id);
   const [lifeDoc, setLifeDoc] = useState<CaseDocument | null>(null);
   const [reviewDoc, setReviewDoc] = useState<CaseDocument | null>(null);
   const [genDialogOpen, setGenDialogOpen] = useState(false);
@@ -38,18 +35,7 @@ export default function LegalCaseDocumentsPage({ params }: { params: Promise<{ i
   return (
     <main id="main-content" className="min-h-0 space-y-6">
       <CaseDetailHeader legalCase={c} />
-      <LegalDocumentsS3WarningBanner />
-      <div className="flex flex-wrap items-center gap-3">
-        <CaseDocumentUploader
-          busy={uploading}
-          onFile={async (file) => {
-            const fd = new FormData();
-            fd.append("file", file);
-            await uploadDocument(fd);
-            void refetch();
-          }}
-        />
-      </div>
+      <CaseDocumentUploader tenantId={effectiveTenantId} caseId={id} onUploaded={() => void refetch()} />
       <CaseDocumentsList
         documents={c.documents}
         onSelect={(d) => {

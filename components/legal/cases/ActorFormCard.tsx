@@ -27,6 +27,8 @@ interface ActorFormCardProps {
   onChange: (a: ActorFormData) => void;
   onRemove?: () => void;
   collapsed?: boolean;
+  /** Pone el foco en el nombre al montar (parte recién agregada). */
+  autoFocus?: boolean;
   label: string;
   roleOptions: string[];
   messages: LegalCasesMessages;
@@ -37,6 +39,7 @@ export function ActorFormCard({
   onChange,
   onRemove,
   collapsed: initialCollapsed,
+  autoFocus,
   label,
   roleOptions,
   messages,
@@ -51,13 +54,14 @@ export function ActorFormCard({
 
   return (
     <div className="rounded-lg border border-zinc-800/50 bg-zinc-900/30">
-      {/* Header */}
-      <button
-        type="button"
-        className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-zinc-200"
-        onClick={() => setCollapsed((c) => !c)}
-      >
-        <span className="flex items-center gap-2">
+      {/* Header: el toggle y "quitar" son botones hermanos (antes "quitar" iba anidado dentro del toggle). */}
+      <div className="flex w-full items-center justify-between gap-2 px-4 py-3">
+        <button
+          type="button"
+          aria-expanded={!collapsed}
+          className="flex flex-1 items-center gap-2 text-left text-sm font-medium text-zinc-200"
+          onClick={() => setCollapsed((c) => !c)}
+        >
           <svg
             className={cn(
               "h-4 w-4 text-zinc-500 transition-transform",
@@ -67,6 +71,7 @@ export function ActorFormCard({
             viewBox="0 0 24 24"
             stroke="currentColor"
             strokeWidth={2}
+            aria-hidden
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
           </svg>
@@ -79,31 +84,21 @@ export function ActorFormCard({
                 : ""}
             </span>
           ) : null}
-        </span>
+        </button>
         {onRemove ? (
-          <span
-            role="button"
-            tabIndex={0}
-            className="rounded p-1 text-zinc-500 transition-colors hover:bg-red-950/40 hover:text-red-400"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemove();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                e.stopPropagation();
-                onRemove();
-              }
-            }}
+          <button
+            type="button"
+            aria-label={`${wm.remove_party}: ${label}`}
+            className="rounded p-1 text-zinc-500 transition-colors hover:bg-red-950/40 hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400"
+            onClick={onRemove}
             title={wm.remove_party}
           >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
-          </span>
+          </button>
         ) : null}
-      </button>
+      </div>
 
       {/* Body */}
       {!collapsed ? (
@@ -112,6 +107,7 @@ export function ActorFormCard({
           <label className="block text-sm font-medium text-zinc-300">
             {wm.field_full_name} *
             <input
+              autoFocus={autoFocus}
               value={actor.full_name}
               onChange={(e) => set("full_name", e.target.value)}
               className={inputClass}
