@@ -100,3 +100,31 @@ describe("Investigación sin análisis de IA", () => {
     await waitFor(() => expect(screen.getByLabelText("Escribe tu consulta legal")).toHaveValue("Plazo de preaviso"));
   });
 });
+
+describe("respuesta real (LIVE): sin regresión", () => {
+  it("Contratos LIVE muestra el veredicto y no el aviso", () => {
+    quickCheckState = {
+      loading: false,
+      tenantMissing: false,
+      submit: jest.fn(),
+      result: { llm_mode: "LIVE", decision: { accion: "aprobar", confianza: 0.82, explicacion: "Cláusulas revisadas sin riesgo alto." } },
+    };
+    render(<LegalForgeContractsPage />);
+    expect(screen.queryByTestId("ai-unavailable")).toBeNull();
+    expect(screen.getByText(/Cláusulas revisadas sin riesgo alto/)).toBeInTheDocument();
+  });
+
+  it("Investigación LIVE muestra la respuesta y no el aviso", async () => {
+    runMock.mockResolvedValueOnce({ status: "success", llm_mode: "LIVE", respuesta: "Respuesta del modelo real", citations: [] });
+    render(<LegalResearchClient />);
+    const box = screen.getByLabelText("Escribe tu consulta legal");
+    fireEvent.change(box, { target: { value: "Plazo de preaviso" } });
+    fireEvent.keyDown(box, { key: "Enter" });
+    expect(await screen.findByText(/Respuesta del modelo real/)).toBeInTheDocument();
+    expect(screen.queryByTestId("ai-unavailable")).toBeNull();
+  });
+
+  it("un 503 sin LLM_UNAVAILABLE sigue siendo error, no aviso de IA", () => {
+    expect(isLlmUnavailable({ status: 503, code: "SERVICE_DOWN" })).toBe(false);
+  });
+});
