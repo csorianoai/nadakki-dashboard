@@ -77,23 +77,31 @@ export function normalizeQueueItem(raw: unknown): ValidationQueueItem | null {
   };
 }
 
+async function leerCola(tenantId: string, q: URLSearchParams) {
+  const res = await apiFetch(`${LEGAL_PREFIX}/validation-queue?${q.toString()}`, {
+    headers: tenantHeaders(tenantId),
+  });
+  return readLegalJson<{ items?: unknown[]; total?: unknown; has_more?: unknown }>(
+    res,
+    "Error al cargar la cola de revisión",
+  );
+}
+
 export async function fetchValidationQueue(
   tenantId: string,
   limit = 200,
 ): Promise<ValidationQueueList> {
-  const q = new URLSearchParams({ limit: String(limit), status: OPEN_REVIEW_STATUSES.join(",") });
-  const res = await apiFetch(`${LEGAL_PREFIX}/validation-queue?${q.toString()}`, {
-    headers: tenantHeaders(tenantId),
-  });
-  const raw = await readLegalJson<{ items?: unknown[]; total?: unknown; has_more?: unknown }>(
-    res,
-    "Error al cargar la cola de revisión",
-  );
+  // Backend con #2852: filtra varios estados y devuelve `total`. Un backend anterior
+  // trata `status=a,b,c` como un solo valor (lista vacía, sin `total`): en ese caso se
+  // repite la petición sin filtro y se filtra aquí, como antes, para no mostrar un 0 falso.
+  let raw = await leerCola(tenantId, new URLSearchParams({ limit: String(limit), status: OPEN_REVIEW_STATUSES.join(",") }));
+  const servidorNuevo = typeof raw.total === "number" && Number.isFinite(raw.total);
+  if (!servidorNuevo) raw = await leerCola(tenantId, new URLSearchParams({ limit: String(limit) }));
   const items = (Array.isArray(raw.items) ? raw.items : [])
     .map(normalizeQueueItem)
     .filter((x): x is ValidationQueueItem => x !== null);
-  const total = typeof raw.total === "number" && Number.isFinite(raw.total) ? raw.total : null;
-  const hasMore = typeof raw.has_more === "boolean" ? raw.has_more : items.length >= limit;
+  const total = servidorNuevo ? (raw.total as number) : null;
+  const hasMore = servidorNuevo && typeof raw.has_more === "boolean" ? raw.has_more : items.length >= limit;
   return { items, count: items.length, total, hasMore };
 }
 

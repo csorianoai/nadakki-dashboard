@@ -19,11 +19,11 @@ const http = (status: number, body: unknown) =>
 
 jest.mock("@/hooks/legal/useUpcomingDeadlines", () => ({ useUpcomingDeadlines: jest.fn() }));
 jest.mock("@/hooks/legal/useValidationQueue", () => ({ useValidationQueue: jest.fn(), useValidationQueueSummary: jest.fn() }));
-jest.mock("@/hooks/legal/useHearings", () => ({ useHearingsList: jest.fn() }));
+jest.mock("@/hooks/legal/useHearings", () => ({ useHearingKpis: jest.fn() }));
 jest.mock("next/link", () => ({ __esModule: true, default: ({ href, children, ...p }: { href: string; children: React.ReactNode }) => <a href={href} {...p}>{children}</a> }));
 import { useUpcomingDeadlines } from "@/hooks/legal/useUpcomingDeadlines";
 import { useValidationQueue, useValidationQueueSummary } from "@/hooks/legal/useValidationQueue";
-import { useHearingsList } from "@/hooks/legal/useHearings";
+import { useHearingKpis } from "@/hooks/legal/useHearings";
 
 const plazo = (o: Partial<UpcomingDeadline>): UpcomingDeadline => ({
   deadline_id: "d", case_id: "c1", case_title: "Cobro de pesos QA", case_number_internal: "N-1", deadline_db_id: "X",
@@ -42,9 +42,14 @@ describe("cola de revisión: totales del servidor", () => {
     expect(String(fetchMock.mock.calls[0][0])).toContain("status=pending%2Cassigned%2Cin_review");
   });
 
-  it("backend anterior sin total: total desconocido; parcial solo si la página se llenó", async () => {
-    fetchMock.mockResolvedValueOnce(http(200, { items: [{ queue_item_id: "q", case_id: "c" }], count: 1 }));
-    expect(await fetchValidationQueue("t", 200)).toMatchObject({ total: null, hasMore: false });
+  it("backend anterior (sin total): repite sin filtro de estados para no mostrar un 0 falso", async () => {
+    // Un backend sin #2852 trata status=a,b,c como un valor y devuelve lista vacía.
+    fetchMock
+      .mockResolvedValueOnce(http(200, { items: [], count: 0 }))
+      .mockResolvedValueOnce(http(200, { items: [{ queue_item_id: "q", case_id: "c", status: "pending" }], count: 1 }));
+    const r = await fetchValidationQueue("t", 200);
+    expect(r).toMatchObject({ count: 1, total: null, hasMore: false });
+    expect(String(fetchMock.mock.calls[1][0])).not.toContain("status=");
   });
 
   it("summary inexistente (404) no es un error ni un cero", async () => {
@@ -105,17 +110,19 @@ describe("plazos", () => {
 
 describe("indicadores de Mi despacho", () => {
   const base = () => {
-    (useUpcomingDeadlines as jest.Mock).mockReturnValue({ isLoading: false, error: null, data: { include_overdue: true, deadlines: [plazo({ overdue: true })] } });
-    (useHearingsList as jest.Mock).mockReturnValue({ isLoading: false, error: null, data: { hearings: [], total: 2 } });
+    (useUpcomingDeadlines as jest.Mock).mockReturnValue({ isLoading: false, error: null, data: { include_overdue: true, deadlines: [plazo({ deadline_id: "v", overdue: true }), plazo({ deadline_id: "p" })] } });
+    (useHearingKpis as jest.Mock).mockReturnValue({ isLoading: false, error: null, data: { upcoming_7d: 2, demo_data: false } });
   };
 
   it("revisiones: total del servidor y asignadas a ti cuando hay perfil", () => {
     base();
     (useValidationQueue as jest.Mock).mockReturnValue({ loading: false, forbidden: false, partial: true, openCount: null, open: [] });
-    (useValidationQueueSummary as jest.Mock).mockReturnValue({ loading: false, summary: { total_open: 205, overdue: 0, assigned_to_me: 4, attorney_profile: true } });
+    (useValidationQueueSummary as jest.Mock).mockReturnValue({ loading: false, summary: { total_open: 205, overdue: 3, assigned_to_me: 4, attorney_profile: true } });
     render(<HomeKpiTiles tenantId="t" casesTotal={12} casesLoading={false} />);
     expect(screen.getByTestId("kpi-revisiones")).toHaveTextContent("205");
     expect(screen.getByTestId("kpi-revisiones")).toHaveTextContent("4 asignada(s) a ti");
+    expect(screen.getByTestId("kpi-revisiones")).toHaveTextContent("3 fuera de plazo (SLA)");
+    expect(screen.getByTestId("kpi-plazos")).toHaveTextContent(/^Plazos · próximos 7 días1/);  // el vencido no suma a los 7 días
     expect(screen.getByTestId("kpi-plazos")).toHaveTextContent("1 vencido(s) sin acusar");
     expect(screen.getByTestId("kpi-audiencias")).toHaveTextContent("2");
     expect(screen.getByTestId("kpi-expedientes")).toHaveTextContent("12");
@@ -138,4 +145,14 @@ describe("indicadores de Mi despacho", () => {
     render(<HomeKpiTiles tenantId="t" casesTotal={1} casesLoading={false} />);
     expect(screen.getByTestId("kpi-revisiones")).toHaveTextContent("Sin perfil de abogado");
   });
+});
+
+
+test("audiencias: KPI de demostración no se presenta como dato real", () => {
+  (useUpcomingDeadlines as jest.Mock).mockReturnValue({ isLoading: false, error: null, data: { include_overdue: true, deadlines: [] } });
+  (useValidationQueue as jest.Mock).mockReturnValue({ loading: false, forbidden: false, partial: false, openCount: 0, open: [] });
+  (useValidationQueueSummary as jest.Mock).mockReturnValue({ loading: false, summary: null });
+  (useHearingKpis as jest.Mock).mockReturnValue({ isLoading: false, error: null, data: { upcoming_7d: 9, demo_data: true } });
+  render(<HomeKpiTiles tenantId="t" casesTotal={0} casesLoading={false} />);
+  expect(screen.getByTestId("kpi-audiencias")).toHaveTextContent("—");
 });

@@ -82,7 +82,7 @@ export function PriorityDeadlinesPanel({ tenantId }: { tenantId: string | undefi
               <Link
                 href={`/legal/cases/${encodeURIComponent(d.case_id)}/deadlines`}
                 className="ml-7 shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 sm:ml-0 text-xs font-medium text-blue-700 hover:border-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-zinc-700 dark:text-blue-300"
-                aria-label={`${m.priority_open} — ${d.case_title || d.case_number_internal}`}
+                aria-label={`${m.priority_open} — ${d.case_title || d.case_number_internal || m.reviews_case_fallback}`}
               >
                 {m.priority_open}
               </Link>

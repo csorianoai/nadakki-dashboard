@@ -1,20 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
 import { useLegalHomeMessages } from "@/hooks/useLegalHomeMessages";
 import { useUpcomingDeadlines } from "@/hooks/legal/useUpcomingDeadlines";
 import { useValidationQueue, useValidationQueueSummary } from "@/hooks/legal/useValidationQueue";
-import { useHearingsList } from "@/hooks/legal/useHearings";
+import { useHearingKpis } from "@/hooks/legal/useHearings";
 
 type Props = { tenantId: string | undefined; casesTotal: number | null; casesLoading: boolean };
-
-/** Ventana [ahora, ahora + 7 días] redondeada al minuto (clave de caché estable). */
-function semana(): { from: string; to: string } {
-  const now = new Date();
-  now.setSeconds(0, 0);
-  return { from: now.toISOString(), to: new Date(now.getTime() + 7 * 86_400_000).toISOString() };
-}
 
 function Tile({ label, value, sub, tone, href, testId }: {
   label: string; value: string; sub?: string | null; tone?: "red" | "amber"; href?: string; testId: string;
@@ -42,12 +34,13 @@ export function HomeKpiTiles({ tenantId, casesTotal, casesLoading }: Props) {
   const deadlines = useUpcomingDeadlines(tenantId, 7, false, true);
   const queue = useValidationQueue(tenantId);
   const summary = useValidationQueueSummary(tenantId);
-  const range = useMemo(semana, []);
-  const hearings = useHearingsList(tenantId, { ...range, limit: 5 });
+  const hearings = useHearingKpis(tenantId);
 
   const lista = deadlines.data?.deadlines ?? null;
-  const vencidos = lista ? lista.filter((d) => d.overdue === true).length : 0;
-  const perentorios = lista ? lista.filter((d) => d.is_peremptory).length : 0;
+  // La cifra es "próximos 7 días"; los vencidos (de cualquier antigüedad) van aparte en la línea de abajo.
+  const proximos = lista ? lista.filter((d) => d.overdue !== true) : null;
+  const vencidos = lista ? lista.length - (proximos?.length ?? 0) : 0;
+  const perentorios = proximos ? proximos.filter((d) => d.is_peremptory).length : 0;
   let plazosSub: string | null = null;
   let plazosTone: "red" | "amber" | undefined;
   if (vencidos > 0) {
@@ -63,17 +56,21 @@ export function HomeKpiTiles({ tenantId, casesTotal, casesLoading }: Props) {
   const s = summary.summary;
   const revisionesTotal = s ? s.total_open : queue.openCount;
   let revisionesSub: string | null = null;
+  const partes: string[] = [];
+  if (s && s.overdue > 0) partes.push(m.kpi_reviews_overdue.replace("{n}", String(s.overdue)));
   if (s && s.attorney_profile && s.assigned_to_me !== null) {
-    revisionesSub = m.kpi_assigned_to_me.replace("{n}", String(s.assigned_to_me));
+    partes.push(m.kpi_assigned_to_me.replace("{n}", String(s.assigned_to_me)));
   } else if (s && !s.attorney_profile) {
-    revisionesSub = m.kpi_no_attorney_profile;
+    partes.push(m.kpi_no_attorney_profile);
   } else if (queue.forbidden) {
     revisionesSub = m.kpi_pending_review_forbidden;
   } else if (queue.partial && revisionesTotal === null) {
     revisionesSub = m.kpi_partial;
   }
+  if (partes.length) revisionesSub = partes.join(" · ");
 
-  const audTotal = hearings.data ? hearings.data.total : null;
+  // KPI del servidor: solo audiencias programadas o confirmadas en los próximos 7 días.
+  const audTotal = hearings.data && !hearings.data.demo_data ? hearings.data.upcoming_7d : null;
   const cargando = (b: boolean) => (b ? "…" : null);
 
   return (
@@ -81,7 +78,7 @@ export function HomeKpiTiles({ tenantId, casesTotal, casesLoading }: Props) {
       <Tile
         testId="kpi-plazos"
         label={m.kpi_deadlines_7d}
-        value={cargando(deadlines.isLoading) ?? (lista ? String(lista.length) : "—")}
+        value={cargando(deadlines.isLoading) ?? (proximos ? String(proximos.length) : "—")}
         sub={deadlines.error ? m.kpi_unavailable : plazosSub}
         tone={plazosTone}
         href="#atencion-prioritaria"
@@ -98,7 +95,7 @@ export function HomeKpiTiles({ tenantId, casesTotal, casesLoading }: Props) {
         testId="kpi-audiencias"
         label={m.kpi_hearings_7d}
         value={cargando(hearings.isLoading) ?? (audTotal === null ? "—" : String(audTotal))}
-        sub={hearings.error ? m.kpi_unavailable : null}
+        sub={hearings.error || hearings.data?.demo_data ? m.kpi_unavailable : null}
         href="/legal/audiencias"
       />
       <Tile

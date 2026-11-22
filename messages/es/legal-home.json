@@ -53,7 +53,7 @@
   "modal_close": "Cerrar",
   "result_title": "Resultado",
   "sealed_output_label": "Salida estructurada (auditable)",
-  "kpi_deadlines_7d": "Plazos · 7 días",
+  "kpi_deadlines_7d": "Plazos · próximos 7 días",
   "kpi_peremptory_one": "1 perentorio",
   "kpi_peremptory_many": "{n} perentorios",
   "kpi_pending_review_forbidden": "Disponible para abogados",
@@ -105,5 +105,6 @@
   "reviews_partial": "Vista parcial: se muestran los primeros {n} de la cola. Abre el expediente para ver el estado completo.",
   "reviews_partial_unknown": "Vista parcial: la cola tiene más registros de los que se muestran.",
   "sources_title": "Estado de fuentes y sistema",
-  "sources_note": "La fecha de carga del paquete normativo no acredita vigencia ni cobertura completa. Que el sistema esté operativo no significa que un resultado esté aprobado jurídicamente."
+  "sources_note": "La fecha de carga del paquete normativo no acredita vigencia ni cobertura completa. Que el sistema esté operativo no significa que un resultado esté aprobado jurídicamente.",
+  "kpi_reviews_overdue": "{n} fuera de plazo (SLA)"
 }
