@@ -7,6 +7,7 @@ import { CaseDetailHeader } from "@/components/legal/cases/CaseDetailHeader";
 import { CaseActorsPanel } from "@/components/legal/cases/CaseActorsPanel";
 import { CaseDeadlinesPanel } from "@/components/legal/cases/CaseDeadlinesPanel";
 import { CaseActionsMenu } from "@/components/legal/cases/CaseActionsMenu";
+import { CaseRepresentationCard } from "@/components/legal/cases/CaseRepresentationCard";
 import { deleteLock } from "@/lib/legal/cases/legal-cases-api";
 
 export default function LegalCaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -34,7 +35,13 @@ export default function LegalCaseDetailPage({ params }: { params: Promise<{ id: 
       <CaseDetailHeader legalCase={c} onReleaseLock={() => void onReleaseLock()} />
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-8">
-          <CaseActorsPanel actors={c.actors} />
+          <CaseRepresentationCard
+            tenantId={effectiveTenantId}
+            caseId={id}
+            clientRoles={c.client_roles}
+            onSaved={() => void refetch()}
+          />
+          <CaseActorsPanel actors={c.actors} clientRoles={c.client_roles} />
           <CaseDeadlinesPanel
             deadlines={c.deadlines}
             caseId={id}
@@ -45,7 +52,7 @@ export default function LegalCaseDetailPage({ params }: { params: Promise<{ id: 
           />
         </div>
         <div>
-          <CaseActionsMenu tenantId={effectiveTenantId} caseId={id} />
+          <CaseActionsMenu tenantId={effectiveTenantId} caseId={id} onChanged={() => void refetch()} />
         </div>
       </div>
     </main>

@@ -337,6 +337,9 @@
   },
   "action_labels": {
     "add_actor": "Agregar parte",
+    "upload_document": "Subir documento",
+    "Upload Document": "Subir documento",
+    "compute_deadlines": "Calcular plazos",
     "Add Actor": "Agregar parte",
     "generate_strategies": "Generar estrategias",
     "advance_to_intake": "Avanzar a ingesta",

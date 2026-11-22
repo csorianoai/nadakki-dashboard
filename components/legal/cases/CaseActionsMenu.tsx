@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { AddPartyForm } from "@/components/legal/cases/AddPartyForm";
 import type { AvailableAction, CaseState } from "@/lib/legal/cases/case-types";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { actionDisplayLabel, caseStateLabel } from "@/lib/legal/presentation-labels";
@@ -8,7 +10,19 @@ import { useCaseActions } from "@/hooks/legal/useCaseActions";
 import { useDisasterLevel } from "@/app/providers/DisasterModeProvider";
 import { LegalApiErrorPanel } from "@/components/legal/cases/LegalApiErrorPanel";
 
-export function CaseActionsMenu({ tenantId, caseId }: { tenantId: string; caseId: string }) {
+/**
+ * Acciones que necesitan datos del usuario: no se ejecutan con payload vacío (antes
+ * add_actor daba 500 y upload_document respondía 200 sin hacer nada). Abren su
+ * formulario o llevan a la pantalla donde se completan.
+ */
+const ACCION_CON_PANTALLA: Record<string, string> = {
+  upload_document: "documents",
+  compute_deadlines: "deadlines",
+};
+
+export function CaseActionsMenu({ tenantId, caseId, onChanged }: { tenantId: string; caseId: string; onChanged?: () => void }) {
+  const router = useRouter();
+  const [agregandoParte, setAgregandoParte] = useState(false);
   const m = useLegalCasesMessages();
   const level = useDisasterLevel();
   const { data, isLoading, runAction, runTransition, running } = useCaseActions(tenantId, caseId);
@@ -24,6 +38,15 @@ export function CaseActionsMenu({ tenantId, caseId }: { tenantId: string; caseId
 
   const exec = async (a: AvailableAction) => {
     setErr(null);
+    if (a.action_name === "add_actor") {
+      setAgregandoParte(true);
+      return;
+    }
+    const pantalla = ACCION_CON_PANTALLA[a.action_name];
+    if (pantalla) {
+      router.push(`/legal/cases/${encodeURIComponent(caseId)}/${pantalla}`);
+      return;
+    }
     if (a.requires_confirmation) {
       const ok = typeof window !== "undefined" ? window.confirm(m.actions.confirm_execute) : true;
       if (!ok) return;
@@ -68,6 +91,7 @@ export function CaseActionsMenu({ tenantId, caseId }: { tenantId: string; caseId
                 type="button"
                 disabled={running}
                 className="w-full rounded-forge-sm px-3 py-2 text-left text-sm text-forgeBrand-800 ring-1 ring-forgeBrand-200 hover:bg-forgeBrand-50 disabled:opacity-50"
+                aria-expanded={a.action_name === "add_actor" ? agregandoParte : undefined}
                 onClick={() => void exec(a)}
               >
                 <span className="font-medium">{actionDisplayLabel(m, a)}</span>
@@ -98,6 +122,19 @@ export function CaseActionsMenu({ tenantId, caseId }: { tenantId: string; caseId
               </li>
             ))}
           </ul>
+        </div>
+      ) : null}
+      {agregandoParte ? (
+        <div className="mt-3">
+          <AddPartyForm
+            tenantId={tenantId}
+            caseId={caseId}
+            onDone={() => {
+              setAgregandoParte(false);
+              onChanged?.();
+            }}
+            onCancel={() => setAgregandoParte(false)}
+          />
         </div>
       ) : null}
       {err ? (
