@@ -1,5 +1,6 @@
 "use client";
 
+import { AI_UNAVAILABLE_MARKER, AI_UNAVAILABLE_TITLE } from "@/lib/legal/llm-availability";
 import { MessageSquare, ClipboardCheck, AlertTriangle, Eye, MessageCircle } from "lucide-react";
 import type { AgentRunResponse, Citation } from "@/types/legal";
 import {
@@ -60,7 +61,8 @@ function buildSourcesPill(citations: Citation[]): string {
   if (jurisprudencia) parts.push(`${jurisprudencia} jurisprudencia`);
   if (bibliografica) parts.push(`${bibliografica} bibliográfica${bibliografica > 1 ? "s" : ""}`);
   if (parts.length === 0) return "Sin fuentes estructuradas";
-  return `${parts.join(" · ")} · rigor alto`;
+  // L2a: sin "rigor alto": la base legal no está certificada.
+  return parts.join(" · ");
 }
 
 function renderRecommendationSteps(md: string) {
@@ -101,6 +103,10 @@ export function ResearchDictamenView({
     packStatus: packInfo?.verification_status ?? packInfo?.status,
   });
   const strictRejection = parseStrictModeRejection(run);
+  const runState = run as (AgentRunResponse & { llm_mode?: string; estado?: string }) | undefined;
+  const honestMode = String(runState?.llm_mode ?? "").toUpperCase();
+  const noData = runState?.estado === "sin_datos" || honestMode === "SIN_DATOS";
+  const heuristic = honestMode === "HEURISTICA";
 
   const handleCiteClick = (sourceId: string) => {
     scrollToCitation(sourceId, {
@@ -109,6 +115,18 @@ export function ResearchDictamenView({
       onHighlight: (id) => onHighlightSourceId(id),
     });
   };
+
+  // L2c: sin modelo o salida MOCK: aviso, sin dictamen, riesgo, confianza ni citas.
+  if (content.startsWith(AI_UNAVAILABLE_MARKER)) {
+    return (
+      <div className="lr-content">
+        <div className="lr-query-card" role="status" data-testid="ai-unavailable">
+          <p className="lr-query-text"><strong>{AI_UNAVAILABLE_TITLE}</strong></p>
+          <p className="lr-query-text">{content.slice(AI_UNAVAILABLE_MARKER.length).trim()}</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isError) {
     return (
@@ -120,6 +138,20 @@ export function ResearchDictamenView({
         </div>
         <Ley91Block />
       </div>
+    );
+  }
+
+  if (noData || heuristic) {
+    return (
+      <article className="lr-content lr-dictamen" aria-label="Estado de la respuesta">
+        <LegalContentHonestyBadges badges={honestyBadges} />
+        <p role="status" className="my-4 rounded border border-amber-500/40 p-3 text-sm">
+          {noData
+            ? "No hay datos suficientes para emitir un resultado. Aporte fuentes o consulte a un abogado."
+            : "Resultado heurístico: requiere validación por un abogado y no constituye un dictamen."}
+        </p>
+        <LegalStrictRejectionPanel rejection={strictRejection} />
+      </article>
     );
   }
 

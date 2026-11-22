@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import type { CasePriority, MatterArea, ProceduralStage } from "@/lib/legal/cases/case-types";
 import { createCase } from "@/lib/legal/cases/legal-cases-api";
+import { legalCaughtErrorToSpanish } from "@/lib/legal/api-error-es";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { MATERIAS, COVERAGE_BADGE, deriveCaseType } from "@/lib/legal/cases/matter-catalog";
 import { ActorFormCard, type ActorFormData } from "@/components/legal/cases/ActorFormCard";
@@ -211,6 +212,11 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
         </label>
       </div>
 
+      {mut.isError ? (
+        <p role="alert" className="rounded-lg border border-red-800/50 bg-red-950/30 p-3 text-sm text-red-200">
+          No se pudo crear el expediente. {legalCaughtErrorToSpanish(mut.error)}
+        </p>
+      ) : null}
       {err ? (
         <p className="mt-3 text-sm text-red-400" role="alert">
           {err}

@@ -90,8 +90,8 @@ export async function createCase(tenantId: string, body: CreateCasePayload): Pro
     headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`Error al crear expediente (${res.status})`);
-  const raw = await parseJson<unknown>(res);
+  // L2a: conserva status y detail del backend (rol, unidad, capacidad) para mostrarlos.
+  const raw = await readLegalJson<unknown>(res, "Error al crear expediente");
   const c = normalizeCase(raw);
   if (!c) throw new Error("Respuesta de creación inválida");
   return c;
@@ -189,8 +189,7 @@ export async function fetchStrategies(tenantId: string, caseId: string) {
   const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/strategies`, {
     headers: tenantHeaders(tenantId),
   });
-  if (!res.ok) throw new Error(`Error al cargar estrategias (${res.status})`);
-  return parseJson<unknown>(res);
+  return readLegalJson<unknown>(res, "Error al cargar estrategias");
 }
 
 export async function postStrategiesSelect(

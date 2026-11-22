@@ -10,12 +10,14 @@ export function CaseStrategyMultiSelect({
   onChange,
   onSubmit,
   busy,
+  emptyMessage = "No hay estrategias disponibles para este expediente.",
 }: {
   strategies: CaseStrategy[];
   selectedIds: string[];
   onChange: (ids: string[]) => void;
   onSubmit: () => void;
   busy?: boolean;
+  emptyMessage?: string;
 }) {
   const m = useLegalCasesMessages();
   // L2b: el backend aplica una sola estrategia (StrategySelectRequest.strategy_id).
@@ -32,6 +34,7 @@ export function CaseStrategyMultiSelect({
   return (
     <div className="space-y-4">
       <p className="text-sm text-forgeGray-600">{m.strategy.multi_select_hint}</p>
+      {strategies.length === 0 ? <p role="status" className="text-sm text-forgeGray-600">{emptyMessage}</p> : null}
       <div className="grid gap-3 md:grid-cols-2">
         {strategies.map((s) => (
           <div key={s.strategy_id} className="relative">
@@ -53,14 +56,14 @@ export function CaseStrategyMultiSelect({
           seleccionadas no se guardarán.
         </p>
       ) : null}
-      <button
+      {strategies.length > 0 ? <button
         type="button"
         disabled={busy || selectedIds.length === 0}
         className="rounded-forge-sm bg-forgeBrand-600 px-4 py-2 text-sm font-medium text-forgeGray-50 hover:bg-forgeBrand-700 disabled:opacity-50"
         onClick={onSubmit}
       >
         {m.strategy.select_multiple.replace("{count}", String(selectedIds.length))}
-      </button>
+      </button> : null}
     </div>
   );
 }
