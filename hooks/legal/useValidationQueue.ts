@@ -13,6 +13,8 @@ export interface ValidationQueueState {
   open: ValidationQueueItem[];
   /** null = no se sabe (cargando, sin permiso o error): nunca se muestra como 0. */
   openCount: number | null;
+  /** La API devuelve una página de hasta 200 sin total global. */
+  partial: boolean;
   loading: boolean;
   /** true si el usuario no tiene un rol de abogado para ver la cola (401/403). */
   forbidden: boolean;
@@ -31,9 +33,11 @@ export function useValidationQueue(tenantId: string | undefined): ValidationQueu
   const forbidden =
     q.error instanceof LegalApiHttpError && (q.error.status === 401 || q.error.status === 403);
   const open = q.data ? openReviewItems(q.data.items) : [];
+  const partial = Boolean(q.data && q.data.items.length >= 200);
   return {
     open,
-    openCount: q.data ? open.length : null,
+    openCount: q.data && !partial ? open.length : null,
+    partial,
     loading: q.isLoading,
     forbidden,
     error: Boolean(q.error) && !forbidden,
