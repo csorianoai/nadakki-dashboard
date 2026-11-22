@@ -3,7 +3,8 @@
 import { useMemo, useState } from "react";
 import type { CasePriority, CaseState, LegalCase } from "@/lib/legal/cases/case-types";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
-import { CaseCard } from "@/components/legal/cases/CaseCard";
+import { CaseWorkTable } from "@/components/legal/cases/CaseWorkTable";
+import { useTrabajoExpedientes } from "@/hooks/legal/useTrabajoExpedientes";
 
 function CaseListSkeleton() {
   return (
@@ -20,7 +21,10 @@ export function CaseList({
   loading,
   error,
   onRetry,
+  tenantId,
 }: {
+  /** Tenant para unir plazos y cola de revisión; sin él, esas columnas muestran «—». */
+  tenantId?: string;
   cases: LegalCase[];
   loading?: boolean;
   error?: Error | boolean | null;
@@ -44,6 +48,7 @@ export function CaseList({
       return true;
     });
   }, [cases, state, priority, type, q]);
+  const trabajo = useTrabajoExpedientes(tenantId, filtered, { incluirCerrados: true });
 
   if (loading) {
     return (
@@ -73,9 +78,9 @@ export function CaseList({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       <div
-        className="rounded-2xl border border-zinc-800/50 bg-zinc-900/40 p-6 backdrop-blur-sm"
+        className="rounded-xl border border-zinc-800/50 bg-zinc-900/40 px-4 py-3"
         role="search"
         aria-label={m.list.filters.search}
       >
@@ -89,7 +94,7 @@ export function CaseList({
             <span className="font-medium text-zinc-100">{filtered.length}</span>
           </span>
         </div>
-        <div className="mt-6 flex flex-wrap items-end gap-4">
+        <div className="mt-3 flex flex-wrap items-end gap-3">
           <label className="flex min-w-[12rem] flex-col gap-1 text-xs font-medium uppercase tracking-wider text-zinc-500">
             {m.list.filters.search}
             <input
@@ -151,13 +156,14 @@ export function CaseList({
           {m.list.empty}
         </p>
       ) : (
-        <ul className="grid gap-4 md:grid-cols-2">
-          {filtered.map((c) => (
-            <li key={c.case_id}>
-              <CaseCard legalCase={c} />
-            </li>
-          ))}
-        </ul>
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+          <CaseWorkTable
+            filas={trabajo.filas}
+            plazosDisponibles={trabajo.plazosDisponibles}
+            revisionesDisponibles={trabajo.revisionesDisponibles}
+            titulo="Expedientes"
+          />
+        </div>
       )}
     </div>
   );

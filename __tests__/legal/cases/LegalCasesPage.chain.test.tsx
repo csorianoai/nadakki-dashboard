@@ -16,6 +16,13 @@ jest.mock("next/link", () => ({
 }));
 jest.mock("@/hooks/useLegalCore", () => ({ useLegalEffectiveTenantId: () => mockTenant() }));
 
+// La unión con plazos y cola (columnas del centro de trabajo) se prueba en inicio-centro-trabajo.test.tsx;
+// aquí solo se mide la carga de expedientes.
+jest.mock("@/hooks/legal/useTrabajoExpedientes", () => {
+  const { filasDeTrabajo } = jest.requireActual("@/lib/legal/home/trabajo-expedientes");
+  return { useTrabajoExpedientes: (_t: string, casos: unknown[]) => ({ filas: filasDeTrabajo(casos, null, null, { incluirCerrados: true }), plazosDisponibles: false, revisionesDisponibles: false }) };
+});
+
 import LegalCasesListPage from "@/app/(forge)/legal/cases/page";
 
 const tenantOk = { effectiveTenantId: "tenant-qa", tenantHydrated: true, tenantError: null };

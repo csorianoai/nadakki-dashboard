@@ -289,7 +289,10 @@ export default function OnboardingAgent() {
   if (!isOpen) {
     return (
       <button
+        type="button"
         onClick={() => setIsOpen(true)}
+        aria-label="Abrir asistente de Nadakki"
+        title="Abrir asistente de Nadakki"
         style={{
           position: "fixed",
           bottom: "24px",

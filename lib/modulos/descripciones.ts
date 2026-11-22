@@ -49,7 +49,8 @@ export const DESCRIPCIONES: Record<string, string> = {
   "mkt-resultados-/marketing/attribution": "Atribución: agentes de la categoría que asignan el mérito de cada venta a su canal.",
   "mkt-resultados-/intelligence": "Análisis de mercado y de la competencia para decidir dónde invertir.",
   // Legal
-  "legal-home": "Portada de Legal: accesos rápidos y asistencia legal automatizada.",
+  "legal-home": "Mi despacho: plazos, expedientes, revisiones y acciones rápidas de IA.",
+  "legal-asistente": "Catálogo completo de tareas de IA del despacho, con búsqueda.",
   "legal-cases": "Lista de expedientes del despacho, con acceso al detalle de cada caso.",
   "legal-cases-new": "Asistente para abrir un expediente nuevo con sus partes y datos.",
   "legal-contracts": "Revisa un contrato: cláusulas riesgosas, validación legal y cumplimiento por área de práctica.",
