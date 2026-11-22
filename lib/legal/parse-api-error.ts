@@ -47,6 +47,9 @@ export function extractLegalApiDetail(raw: string): string {
     const err = j.error as Record<string, unknown> | undefined;
     if (err && typeof err.message === "string") return err.message;
     if (typeof j.message === "string") return j.message;
+    // Cuerpos del Core Legal (p. ej. EstrategiasNoDisponibles): {code, error: "<CODIGO>", motivo} o {mensaje}.
+    if (typeof j.motivo === "string" && j.motivo.trim()) return j.motivo;
+    if (typeof j.mensaje === "string" && j.mensaje.trim()) return j.mensaje;
   } catch {
     /* plain text */
   }
