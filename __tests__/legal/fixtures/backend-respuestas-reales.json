@@ -1,0 +1,80 @@
+{
+  "_fuente": "Respuestas reales del backend nadakki-ai-suite@f8ae909b8611 (FastAPI TestClient), 2026-11-22. Generado; no editar a mano.",
+  "library_status_401": {
+    "status": 401,
+    "body": {
+      "detail": "missing_auth"
+    }
+  },
+  "library_status_503": {
+    "status": 503,
+    "body": {
+      "detail": "La biblioteca no esta configurada o no esta disponible."
+    }
+  },
+  "library_status_200_vacia": {
+    "status": 200,
+    "body": {
+      "service": "legal_library",
+      "status": "sin_datos",
+      "alcance": "compartida",
+      "documentos": 0,
+      "chunks": 0,
+      "con_embedding": 0,
+      "sin_embedding": 0,
+      "mensaje": "No hay documentos cargados en la biblioteca compartida."
+    }
+  },
+  "strategies_generate_503_LLM_UNAVAILABLE": {
+    "status": 503,
+    "body": {
+      "code": "LLM_UNAVAILABLE",
+      "error": "LLM_UNAVAILABLE",
+      "estado": "error",
+      "motivo": "El modelo no esta disponible. No se generaron estrategias.",
+      "strategies": [],
+      "count": 0,
+      "requiere_revision_abogado": true,
+      "aviso_legal": "Asistencia informativa. Requiere revision por un abogado autorizado."
+    }
+  },
+  "strategies_generate_504_LLM_TIMEOUT": {
+    "status": 504,
+    "body": {
+      "code": "LLM_TIMEOUT",
+      "error": "LLM_TIMEOUT",
+      "estado": "error",
+      "motivo": "El modelo supero el tiempo de espera.",
+      "strategies": [],
+      "count": 0,
+      "requiere_revision_abogado": true,
+      "aviso_legal": "Asistencia informativa. Requiere revision por un abogado autorizado."
+    }
+  },
+  "strategies_generate_502_LLM_INVALID_RESPONSE": {
+    "status": 502,
+    "body": {
+      "code": "LLM_INVALID_RESPONSE",
+      "error": "LLM_INVALID_RESPONSE",
+      "estado": "error",
+      "motivo": "El modelo devolvio estrategias o referencias no validas.",
+      "strategies": [],
+      "count": 0,
+      "requiere_revision_abogado": true,
+      "aviso_legal": "Asistencia informativa. Requiere revision por un abogado autorizado."
+    }
+  },
+  "strategies_generate_200_SIN_DATOS": {
+    "status": 200,
+    "body": {
+      "code": "SIN_DATOS",
+      "error": "SIN_DATOS",
+      "estado": "sin_datos",
+      "motivo": "Faltan el tipo de caso y una descripcion de los hechos.",
+      "strategies": [],
+      "count": 0,
+      "requiere_revision_abogado": true,
+      "aviso_legal": "Asistencia informativa. Requiere revision por un abogado autorizado."
+    }
+  }
+}

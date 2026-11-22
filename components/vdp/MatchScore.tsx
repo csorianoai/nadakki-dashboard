@@ -4,7 +4,8 @@ import { HoverTooltip } from "@/components/ui/HoverTooltip";
 
 const CIRC = 100.53;
 
-export function MatchScore({ match }: { match: number }) {
+export function MatchScore({ match }: { match?: number }) {
+  if (match == null) return null;
   const dash = (match / 100) * CIRC;
 
   return (

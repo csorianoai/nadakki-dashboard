@@ -296,7 +296,18 @@ export function modulosVisibles(u: ContextoUsuario): ModuloConfig[] {
       .filter((s) => s.acceso !== "realtor" || u.realtorOk === true)
       .map((s) => s.id),
   );
-  return MODULOS.filter((m) => ids.has(m.seccion));
+  return MODULOS.filter((m) => ids.has(m.seccion)).map((m) => conEntrada(m, u));
+}
+
+/**
+ * Entrada del módulo para este usuario. Si la raíz es solo del superadmin (Administración: /admin) y el usuario no lo es
+ * (tenant_admin), entra por la PRIMERA página del módulo que su rol abre (misma criba que menuVisible), no por «Acceso
+ * no autorizado». No cambia quién ve el módulo ni ningún permiso; el superadmin conserva la raíz.
+ */
+function conEntrada(m: ModuloConfig, u: ContextoUsuario): ModuloConfig {
+  if (!m.pantallaGrupoSoloSuperadmin || u.roles.some((r) => r.role_key === "platform_superadmin")) return m;
+  const primera = menuVisible(m, u).flatMap((g) => g.items).find((i) => !!i.href && !i.superAdminOnly);
+  return primera ? { ...m, raiz: sinQuery(primera.href) } : m;
 }
 
 /** Menú del módulo para este usuario: se pasa por el MISMO filtro (módulo del tenant, rol, interruptores). */

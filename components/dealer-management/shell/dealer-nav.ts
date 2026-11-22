@@ -18,6 +18,7 @@ import {
   BarChart3,
   BookOpen,
   Bell,
+  BookUser,
   Building2,
   Cable,
   Calculator,
@@ -48,6 +49,8 @@ export type DealerNavItem = {
   icon: LucideIcon;
   /** Clave del catalogo 097. `null` = siempre visible (no depende del plan). */
   capability: string | null;
+  /** Claves adicionales que TAMBIEN deben estar permitidas (la pantalla las exige todas). */
+  alsoRequires?: readonly string[];
 };
 
 export type DealerNavGroup = {
@@ -63,6 +66,9 @@ export const DEALER_NAV_GROUPS: DealerNavGroup[] = [
     items: [
       { href: "/autos/dealer", label: "Inicio", icon: LayoutDashboard, capability: null },
       { href: "/autos/dealer/inventario", label: "Inventario", icon: Car, capability: "autos.inventory.list" },
+      // Los 9 endpoints de /api/v1/autos/contacts* exigen autos.leads.crm (backend services/access/route_registry.py):
+      // el menú pide la misma, o un plan con inventario y sin CRM vería la entrada y recibiría 403.
+      { href: "/autos/dealer/contactos", label: "Contactos", icon: BookUser, capability: "autos.leads.crm" },
       { href: "/autos/dealer/publicar-rapido", label: "Publicar", icon: PackagePlus, capability: "autos.inventory.create" },
       { href: "/autos/dealer/leads", label: "Leads", icon: Users, capability: "autos.leads.crm" },
       // El onboarding de Mapaal vive en el Centro Operativo (decision de Cesar).
@@ -77,7 +83,8 @@ export const DEALER_NAV_GROUPS: DealerNavGroup[] = [
     id: "finanzas",
     label: "Finanzas",
     items: [
-      { href: "/autos/dealer/finanzas", label: "Finanzas por vehículo", icon: Wallet, capability: "autos.inventory.list" },
+      { href: "/autos/dealer/finanzas", label: "Finanzas por vehículo", icon: Wallet, capability: "accounting.ledger.entries", alsoRequires: ["autos.inventory.list"] },
+      { href: "/autos/dealer/finanzas/inventario", label: "Finanzas del inventario", icon: BarChart3, capability: "accounting.ledger.entries", alsoRequires: ["autos.inventory.list"] },
       { href: "/contable", label: "Contabilidad", icon: ReceiptText, capability: "accounting.ledger.entries" },
       { href: "/contable/plan-cuentas", label: "Plan de cuentas", icon: ListTree, capability: "accounting.ledger.entries" },
       { href: "/contable/libro-mayor", label: "Libro mayor", icon: BookOpen, capability: "accounting.ledger.entries" },
@@ -149,7 +156,10 @@ export function isDealerNavItemOpenable(href: string): boolean {
 export function visibleDealerNavGroups(allows: (capability: string | null) => boolean): DealerNavGroup[] {
   return DEALER_NAV_GROUPS.map((group) => ({
     ...group,
-    items: group.items.filter((item) => isDealerNavItemOpenable(item.href) && allows(item.capability)),
+    items: group.items.filter(
+      (item) =>
+        isDealerNavItemOpenable(item.href) && allows(item.capability) && (item.alsoRequires ?? []).every((key) => allows(key)),
+    ),
   })).filter((group) => group.items.length > 0);
 }
 
@@ -157,7 +167,9 @@ export function visibleDealerNavGroups(allows: (capability: string | null) => bo
 export const DEALER_NAV_CAPABILITY_KEYS = Array.from(
   new Set(
     DEALER_NAV_GROUPS.flatMap((group) =>
-      group.items.map((item) => item.capability).filter((key): key is string => key !== null),
+      group.items
+        .flatMap((item) => [item.capability, ...(item.alsoRequires ?? [])])
+        .filter((key): key is string => key !== null),
     ),
   ),
 );

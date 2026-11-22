@@ -16,9 +16,10 @@ export function QualityBadge({
   status,
   className,
 }: {
-  status: keyof typeof LABELS;
+  status: keyof typeof LABELS | null;
   className?: string;
 }) {
+  if (!status) return null;
   return (
     <span
       className={cn(

@@ -6,6 +6,8 @@ export type CalEvent = {
   id: string;
   day: number;
   start: string; // "HH:MM"
+  /** Fin en hora de pared de la zona del evento ("HH:MM", de ends_at). Sin ends_at legible no se inventa. */
+  end?: string;
   title: { es: string; en: string };
   kind: EventKind;
   place: string;

@@ -1,0 +1,115 @@
+// =====================================================================================
+// PLANTILLA DE EDIFICIO — copia este archivo como <slug>.jsonc para cada torre real.
+// Este archivo es un EJEMPLO FICTICIO: "sample": true lo hace visible SOLO en vista previa.
+//
+// Reglas:
+//  - Cada bloque lleva "source" (fuente) y "date" (fecha AAAA-MM-DD de la fuente). Se muestran en la página.
+//  - Cualquier dato puede llevar su propia fuente/fecha: en vez de  "floors": 52
+//    escribe  "floors": { "value": 52, "source": "Permiso de construcción", "date": "2016-03-01" }.
+//  - Un dato en null o un bloque ausente se OCULTA. Nunca rellenes con estimaciones.
+//  - En producción la página solo existe si están completos, con fuente y fecha:
+//    summary (año, pisos, unidades), hoa (al menos una fila), rules (alquiler y mascotas)
+//    y structural (inspección obligatoria y estudio de reservas). Si falta algo, la página no se publica.
+//  - Describe el edificio, nunca al comprador o inquilino ideal.
+// =====================================================================================
+{
+  "slug": "ejemplo-edificio-uno",          // URL: /es/edificios/<slug> y /en/buildings/<slug>
+  "sample": true,                          // true = ejemplo, solo vista previa. Bórralo en edificios reales.
+  "name": "Edificio Ejemplo Uno",          // Nombre comercial exacto de la torre
+  "zone": "sunny-isles-beach",             // Debe coincidir con un slug de content/zones.json
+  "address": null,                         // Dirección pública del edificio (opcional)
+  "oceanfront": true,                      // true = frente al mar; false = Intracoastal/bahía/otro
+  "order": 1,                              // Orden en portada y directorio (menor = primero)
+  "featured": true,                        // true = aparece en las 6 tarjetas de la portada
+  "photo": null,                           // Ruta de foto propia o con licencia, p. ej. "/img/edificios/x.jpg"
+  "geo": { "lat": 25.94, "lng": -80.12 },  // Coordenadas para el mapa ligero (opcional)
+
+  // Rango de precios de venta reciente (tarjeta del directorio y de la portada)
+  "priceRange": { "value": { "min": 1200000, "max": 4500000 }, "source": "MLS — ejemplo", "date": "2026-10-31" },
+
+  // 1. RESUMEN (obligatorio para publicar: yearBuilt, floors, units + source + date)
+  "summary": {
+    "yearBuilt": 2016,
+    "floors": 52,
+    "units": 210,
+    "architect": null,                     // Solo si se conoce con fuente
+    "developer": null,
+    "source": "Registro del condado — ejemplo",
+    "date": "2026-10-15"
+  },
+
+  // 2. CUOTA DE MANTENIMIENTO por tamaño de unidad (obligatorio para publicar: al menos una fila)
+  "hoa": {
+    "rows": [
+      { "size": { "es": "1 hab. · 900–1.100 ft²", "en": "1 bd · 900–1,100 sq ft" }, "monthly": "$1,150 – $1,400" },
+      { "size": { "es": "2 hab. · 1.300–1.600 ft²", "en": "2 bd · 1,300–1,600 sq ft" }, "monthly": "$1,650 – $2,000" },
+      { "size": { "es": "3 hab. · 1.850–2.400 ft²", "en": "3 bd · 1,850–2,400 sq ft" }, "monthly": "$2,300 – $3,000" }
+    ],
+    "perSqft": 1.25,                       // Cuota mensual por ft² (para el filtro del directorio)
+    "includes": { "es": ["Seguro del edificio", "Agua", "Internet y TV básica"], "en": ["Building insurance", "Water", "Basic internet and TV"] },
+    "source": "Presupuesto anual de la asociación — ejemplo",
+    "date": "2026-01-01"
+  },
+
+  // 3. REGLAS DE ALQUILER Y MASCOTAS (obligatorio para publicar: rental.minimumTerm y pets.allowed)
+  "rules": {
+    "rental": {
+      "minimumTerm": "6m",                 // "30d" | "6m" | "1y" | "none" (no se permite alquilar)
+      "timesPerYear": 2,                   // Veces que se puede alquilar al año (null si no aplica)
+      "approvalRequired": true,            // La asociación aprueba al inquilino
+      "notes": { "es": "Solicitud y entrevista con la asociación antes de la mudanza.", "en": "Association application and interview before move-in." }
+    },
+    "pets": {
+      "allowed": true,                     // true | false
+      "notes": { "es": "Hasta 2 mascotas por unidad, con registro.", "en": "Up to 2 pets per unit, with registration." }
+    },
+    "source": "Declaración y reglamento del condominio — ejemplo",
+    "date": "2026-02-10"
+  },
+
+  // 4. SEGURIDAD ESTRUCTURAL — ley de condominios de Florida
+  //    (obligatorio para publicar: milestoneInspection.status y sirs.status)
+  //    status: "completed" | "in_progress" | "pending" | "not_required_yet"
+  "structural": {
+    "milestoneInspection": { "status": "completed", "phase": { "es": "Fase 1", "en": "Phase 1" }, "completedOn": "2025-05-14" },
+    "sirs": { "status": "completed", "completedOn": "2025-03-01" },   // Estudio de reservas para integridad estructural (SIRS)
+    "specialAssessment": null,             // Derrama aprobada, si existe: { "es": "...", "en": "..." }
+    "source": "Actas y documentos de la asociación — ejemplo",
+    "date": "2026-06-30"
+  },
+
+  // 5. AMENIDADES
+  "amenities": {
+    "items": { "es": ["Acceso directo a la playa", "Piscina frente al mar", "Gimnasio", "Spa", "Valet 24 horas"], "en": ["Direct beach access", "Oceanfront pool", "Fitness center", "Spa", "24-hour valet"] },
+    "source": "Visita al edificio — ejemplo",
+    "date": "2026-09-20"
+  },
+
+  // 6. VISTAS Y ORIENTACIÓN por línea de unidad
+  "lines": {
+    "rows": [
+      { "line": "01", "beds": 3, "sqft": "2,100", "orientation": { "es": "Noreste", "en": "Northeast" }, "views": { "es": "Océano y costa norte", "en": "Ocean and north coast" } },
+      { "line": "02", "beds": 2, "sqft": "1,450", "orientation": { "es": "Este", "en": "East" }, "views": { "es": "Océano directo", "en": "Direct ocean" } },
+      { "line": "05", "beds": 3, "sqft": "2,250", "orientation": { "es": "Sureste", "en": "Southeast" }, "views": { "es": "Océano y skyline", "en": "Ocean and skyline" } }
+    ],
+    "source": "Planos de venta — ejemplo",
+    "date": "2016-01-01"
+  },
+
+  // 7. VENTAS RECIENTES (precio por ft² = price / sqft, calculado en la página)
+  "sales": {
+    "rows": [
+      { "month": "2026-09", "line": "02", "beds": 2, "sqft": 1450, "price": 1690000 },
+      { "month": "2026-07", "line": "01", "beds": 3, "sqft": 2100, "price": 2480000 },
+      { "month": "2026-05", "line": "05", "beds": 3, "sqft": 2250, "price": 2700000 }
+    ],
+    "source": "MLS — ejemplo",
+    "date": "2026-10-31"
+  },
+
+  // 8. PREGUNTAS FRECUENTES (opcional)
+  "faq": [
+    { "q": { "es": "¿Se puede alquilar por temporada?", "en": "Can units be rented seasonally?" },
+      "a": { "es": "El mínimo es de 6 meses, hasta 2 veces al año, con aprobación de la asociación (según el reglamento citado).", "en": "The minimum is 6 months, up to twice a year, with association approval (per the cited rules)." } }
+  ]
+}

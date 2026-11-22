@@ -13,7 +13,7 @@ const DEFAULT_EVENTS = [
 ] as const;
 
 export function HistorialAI({ vehicle }: { vehicle: Vehicle }) {
-  const photos = photoCount(vehicle.id);
+  const photos = photoCount(vehicle);
   const [events, setEvents] = useState<string[]>(DEFAULT_EVENTS.map((e) => e.label));
 
   useEffect(() => {
@@ -53,14 +53,12 @@ export function HistorialAI({ vehicle }: { vehicle: Vehicle }) {
             <Shield className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
             VIN validado en registros oficiales DGII
           </li>
-          <li className="flex items-start gap-2">
-            <Shield className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
-            {photos} fotos verificadas sin manipulación
-          </li>
-          <li className="flex items-start gap-2">
-            <Shield className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
-            Dealer con {vehicle.rating} estrellas y 342 ventas
-          </li>
+          {photos ? (
+            <li className="flex items-start gap-2">
+              <Shield className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
+              {photos} fotos verificadas sin manipulación
+            </li>
+          ) : null}
           <li className="flex items-start gap-2">
             <Shield className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden />
             Sin señales de fraude detectadas

@@ -2,7 +2,7 @@
 
 import { DEFAULT_FILTER_STATE, type AiSignal, type FilterState } from "@/lib/search-types";
 import { clearAllFilters } from "@/lib/search-filters";
-import { fmtRD } from "@/lib/format";
+import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
 
 const AI_CHIP_LABELS: Record<AiSignal, string> = {
   "precio-justo": "Precio Justo",
@@ -37,6 +37,7 @@ export function ActiveChips({
   state: FilterState;
   onChange: (next: FilterState) => void;
 }) {
+  const fmt = useFmtPrecio();
   const chips: { key: string; label: string; remove: () => void }[] = [];
 
   state.brands.forEach((brand) =>
@@ -108,7 +109,7 @@ export function ActiveChips({
   if (state.usePayment || state.maxMonthly !== DEFAULT_FILTER_STATE.maxMonthly) {
     chips.push({
       key: "monthly",
-      label: `≤ ${fmtRD(state.maxMonthly)}/mes`,
+      label: `≤ ${fmt(state.maxMonthly)}/mes`,
       remove: () =>
         onChange({
           ...state,

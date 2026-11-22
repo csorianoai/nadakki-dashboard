@@ -17,6 +17,9 @@ const BROKER_DESK: MenuItem = { id: "bandeja-broker", label: "Bandeja del broker
 const BAR_ONLY_ROWS: readonly MenuItem[] = [
   { id: "alta", label: "Alta", group: "CRECER", href: "/realtor/alta" },
   { id: "agente-web", label: "Agente web", group: "CRECER", href: "/realtor/agente-web" },
+  // Nadakki Sites, panel «Mi web» (release dashboard#1268; César, 17-nov-2026). Fuera de /realtor: la pantalla es fail-closed
+  // (app/mi-web/layout.tsx: sin NEXT_PUBLIC_SITES_PANEL="1" no pinta nada ni llama a la red).
+  { id: "mi-web", label: "Mi web", group: "CRECER", href: "/mi-web" },
 ];
 
 function build(): MenuGroup[] {

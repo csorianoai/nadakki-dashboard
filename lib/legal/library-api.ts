@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/api/fetch-client";
+import { readLegalJson } from "@/lib/legal/parse-api-error";
 
 const LEGAL_PREFIX = "/api/legal";
 
@@ -8,8 +9,7 @@ function tenantHeaders(tenantId: string): HeadersInit {
 
 export async function fetchLibraryStatus(tenantId: string) {
   const res = await apiFetch(`${LEGAL_PREFIX}/library/status`, { headers: tenantHeaders(tenantId) });
-  if (!res.ok) throw new Error(`Error al cargar biblioteca (${res.status})`);
-  return res.json() as Promise<Record<string, unknown>>;
+  return readLegalJson<Record<string, unknown>>(res, "Error al cargar biblioteca");
 }
 
 export async function fetchLibrarySearch(tenantId: string, q: string) {
@@ -17,6 +17,5 @@ export async function fetchLibrarySearch(tenantId: string, q: string) {
   const res = await apiFetch(`${LEGAL_PREFIX}/library/search?${params.toString()}`, {
     headers: tenantHeaders(tenantId),
   });
-  if (!res.ok) throw new Error(`Error en búsqueda de biblioteca (${res.status})`);
-  return res.json() as Promise<{ results?: unknown[] }>;
+  return readLegalJson<{ results?: unknown[] }>(res, "Error en búsqueda de biblioteca");
 }

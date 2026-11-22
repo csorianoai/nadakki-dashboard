@@ -1,32 +1,17 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { sesion } from "../sesion";
 
 /**
  * O2-P-SMART-CALENDAR sobre el armazón de RE-SHELL: /realtor/smart-calendar (DEMO) frente a la referencia DL10A con el umbral
  * de UMBRAL.md, más el caso sin DEMO (servidor 3101), el acceso denegado y el tenant ajeno.
  */
 
-const B = "http://backend.invalid";
 const THRESHOLD = 0.12;
 const NODEMO = "http://127.0.0.1:3101";
 const REF = join(__dirname, "../../../docs/design/realtor/DL10A/ref/smart-calendar.png");
 
-async function sesion(page: Page, acceso: number) {
-  await page.route("**/api/**", (route) => route.fulfill({ json: {} }));
-  await page.route(`${B}/**`, (route) => route.fulfill({ json: {} }));
-  await page.route(`${B}/api/v2/auth/refresh`, (route) =>
-    route.fulfill({ json: { access_token: "a.b.c", refresh_token: "r", expires_in: 3600 } }));
-  const tenant = { id: "t1", slug: "qa", display_name: "QA", subscribed_cores: ["real_estate"] };
-  await page.route(`${B}/api/v2/auth/me`, (route) =>
-    route.fulfill({ json: {
-      user: { id: "u1", email: "qa@nadakki.test", name: "QA", is_active: true, mfa_enabled: false },
-      current_tenant: tenant, all_tenants: [tenant], active_roles: [],
-    } }));
-  await page.route(/\/api\/v1\/realestate\/acceso/, (route) =>
-    route.fulfill({ status: acceso, json: acceso === 200 ? { ok: true } : { detail: "forbidden" } }));
-  await page.addInitScript(() => localStorage.setItem("nadakki_refresh_token_v2", "r"));
-}
 
 test("positivo con DEMO: marca, semana, eventos y filtro por tipo", async ({ page }) => {
   await sesion(page, 200);
@@ -50,7 +35,15 @@ test("negativo sin DEMO: «Sin datos todavía», ninguna cifra ni marca DEMO", a
   await expect(page.getByTestId("kind-counts")).toHaveCount(0);
   await expect(page.getByTestId("demo-banner")).toHaveCount(0);
   await expect(page.getByTestId("demo-pill")).toHaveCount(0);
-  expect(await page.getByTestId("smart-calendar-panel").innerText()).not.toMatch(/\d/);
+  // Ninguna cifra fuera del rótulo de fechas de la semana (F2: «26 oct – 1 nov 2026» no es un dato del backend).
+  const sinRango = await page.getByTestId("smart-calendar-panel").evaluate((el) => {
+    const c = el.cloneNode(true) as HTMLElement;
+    c.querySelector('[data-testid="week-range"]')?.remove();
+    return c.innerText ?? c.textContent ?? "";
+  });
+  expect(sinRango).not.toMatch(/\d/);
+  await expect(page.getByTestId("smart-calendar-empty")).toHaveCount(1);
+  await expect(page.getByTestId("day-col")).toHaveCount(0);
 });
 
 // Cuerpo con la forma de C-RE-OLA3 (CalendarEvent): registros SYNTH del tenant QA, un evento cancelado que no debe verse.
@@ -83,6 +76,59 @@ test("datos reales (sin DEMO): eventos del contrato, cancelados fuera y sin tena
   for (const p of pedidos) expect(p.toLowerCase()).not.toMatch(/x-tenant|tenant_id|tenant=/);
 });
 
+test("F2 sin DEMO: semana con fechas, hoy, menú «…» con teclado, panel lateral y navegación de semana", async ({ page }) => {
+  const desde: string[] = [];
+  page.on("request", (r) => {
+    if (r.url().includes("/realestate/calendar/events")) desde.push(new URL(r.url()).searchParams.get("from") ?? "");
+  });
+  await sesion(page, 200);
+  await page.route(/\/api\/v1\/realestate\/calendar\/events/, (route) => route.fulfill({ json: semanaReal() }));
+  await page.goto(`${NODEMO}/realtor/smart-calendar`);
+  await expect(page.getByTestId("cal-event")).toHaveCount(3, { timeout: 30_000 });
+  await expect(page.getByTestId("day-col")).toHaveCount(7);
+  await expect(page.locator('[data-testid="day-col"][aria-current="date"]')).toHaveCount(1);
+  await expect(page.getByTestId("now-line")).toHaveCount(1);
+  await expect(page.getByTestId("week-range")).toContainText(/\d{4}/);
+  const menu = page.getByTestId("visit-menu").first();
+  await expect(menu).toHaveAttribute("aria-haspopup", "menu");
+  await menu.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("menu")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(menu).toBeFocused();
+  await page.getByTestId("visit-open").click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await expect(page.getByLabel("Título")).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByTestId("visit-open")).toBeFocused();
+  const antes = desde.length;
+  await page.getByRole("button", { name: "Semana siguiente" }).click();
+  await expect.poll(() => desde.length).toBeGreaterThan(antes);
+  expect(new Set(desde.slice(antes)).size).toBe(1);
+  expect(desde.slice(antes)[0]).not.toBe(desde[0]);
+});
+
+for (const ancho of [768, 390]) {
+  test(`F2 responsive a ${ancho} px: la semana desplaza su contenedor, no el panel`, async ({ page }) => {
+    await page.setViewportSize({ width: ancho, height: 900 });
+    await sesion(page, 200);
+    await page.goto("/realtor/smart-calendar");
+    await expect(page.getByTestId("cal-event")).toHaveCount(6, { timeout: 30_000 });
+    // La semana desplaza su propio contenedor (week-scroll); el panel no se desborda. La barra lateral de 288 px del
+    // armazón (fuera de esta zona) sigue fija a 390 px: el ancho de la página no se mide aquí.
+    const desborde = await page.getByTestId("smart-calendar-panel").evaluate((el) => el.scrollWidth - el.clientWidth);
+    expect(desborde).toBeLessThanOrEqual(1);
+    const col = await page.getByTestId("day-col").first().evaluate((el) => el.getBoundingClientRect().width);
+    if (ancho === 768) expect(col).toBeGreaterThanOrEqual(146);
+    else {
+      const dir = await page.getByTestId("week-grid").evaluate((el) => getComputedStyle(el).flexDirection);
+      expect(dir).toBe("column");
+    }
+  });
+}
+
 test("sin DEMO con 503 o lista vacía: sigue «Sin datos todavía»", async ({ page }) => {
   await sesion(page, 200);
   await page.route(/\/api\/v1\/realestate\/calendar\/events/, (route) => route.fulfill({ status: 503, json: { detail: "down" } }));
@@ -111,7 +157,9 @@ test("tenant ajeno: ninguna petición del cliente lleva tenant", async ({ page }
   await page.goto("/realtor/smart-calendar");
   await expect(page.getByTestId("smart-calendar-panel")).toBeVisible({ timeout: 30_000 });
   expect(peticiones.length).toBeGreaterThan(0);
-  for (const p of peticiones) expect(p.toLowerCase()).not.toMatch(/tenant/);
+  // Traslado ROP-UX-HORA-TENANT: GET /alta/tenant/profile es ruta del backend (el tenant sale del token); se quita
+  // solo esa ruta exacta antes de buscar «tenant». Cabeceras y cualquier otra URL siguen igual de vigiladas.
+  for (const p of peticiones) expect(p.toLowerCase().replace("/api/v1/realestate/alta/tenant/profile ", " ")).not.toMatch(/tenant/);
 });
 
 test("captura a 1440×900 de /realtor/smart-calendar (DEMO) frente a la referencia DL10A", async ({ page }, info) => {

@@ -1,0 +1,72 @@
+{
+  "slug": "7200-collins",
+  "sample": false,
+  "authorized": true,
+  "order": 5,
+  "sourceId": "1992",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/1992/7200-collins",
+  "name": "7200 Collins",
+  "area": "Miami Beach",
+  "zone": "miami-beach",
+  "address": "7200 Collins Ave, Miami Beach, FL 33141",
+  "devType": "condo",
+  "status": "preconstruction",
+  "deliveryYear": 2027,
+  "delivery": {
+    "es": "Entrega estimada: 2027",
+    "en": "Estimated delivery: 2027"
+  },
+  "priceFrom": 540000,
+  "beds": "1 – 2",
+  "units": 222,
+  "floors": 12,
+  "sqft": "375 – 1,011",
+  "developer": null,
+  "architect": null,
+  "interiorDesigner": "Adriana Hoyos",
+  "landscape": null,
+  "description": {
+    "es": [
+      "7200 Collins es un condominio en preconstrucción en Miami Beach, en 7200 Collins Ave, Miami Beach, FL 33141. Contempla 222 residencias en 12 pisos, de 1 – 2 habitaciones y de 375 – 1,011 sq ft.",
+      "Equipo: interiorismo de Adriana Hoyos. Entrega estimada: 2027. Precios desde $540,000."
+    ],
+    "en": [
+      "7200 Collins is a condominium in pre-construction in Miami Beach, at 7200 Collins Ave, Miami Beach, FL 33141. It comprises 222 residences over 12 floors, with 1 – 2 bedrooms and of 375 – 1,011 sq ft.",
+      "Team: interiors by Adriana Hoyos. Estimated delivery: 2027. Prices from $540,000."
+    ]
+  },
+  "interior": null,
+  "amenities": {
+    "es": [
+      "Gran vestíbulo",
+      "Salón social",
+      "Conserjería y recepción",
+      "Restaurantes y tiendas seleccionados",
+      "Club de playa 7200 Collins"
+    ],
+    "en": [
+      "Grand lobby",
+      "Lounge",
+      "Concierge and reception",
+      "Curated restaurants and shops",
+      "7200 Collins Beach Club"
+    ]
+  },
+  "images": [
+    "dev-7200-collins-01",
+    "dev-7200-collins-02",
+    "dev-7200-collins-03",
+    "dev-7200-collins-04",
+    "dev-7200-collins-05",
+    "dev-7200-collins-06",
+    "dev-7200-collins-07",
+    "dev-7200-collins-08"
+  ],
+  "heroImages": [
+    "dev-7200-collins-01"
+  ],
+  "geo": {
+    "lat": 25.8572213,
+    "lng": -80.1206249
+  }
+}

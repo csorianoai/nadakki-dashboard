@@ -123,6 +123,9 @@ const nextConfig = {
   // Solo la evidencia Playwright de Realtor construye una segunda copia (sin DEMO); por defecto es .next.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   reactStrictMode: true,
+  // Solo afecta a `next dev`: el servidor local de la evidencia Playwright (CI) se abre por 127.0.0.1 y Next 16 bloquea
+  // por defecto los recursos /_next/* de ese origen (la pagina no hidrata). Produccion lo ignora.
+  allowedDevOrigins: ["127.0.0.1"],
   images: {
     remotePatterns: [
       {

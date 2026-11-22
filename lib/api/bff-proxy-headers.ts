@@ -26,6 +26,14 @@ export function buildBffUpstreamHeaders(
 
   if (tenantId) headers["X-Tenant-ID"] = tenantId;
 
+  // Dominio publico del portal (mapaal.nadakki.com): el backend acota el buscador al tenant de ese dominio (F4A-1, F-4) y,
+  // detras de este BFF, su `Host` es el del propio backend. Sale SOLO del host real de la peticion; un X-Portal-Host del
+  // cliente no se reenvia.
+  const portalHost = (req.headers.get("x-forwarded-host") || req.headers.get("host") || "")
+    .split(",")[0]
+    .trim();
+  if (portalHost) headers["X-Portal-Host"] = portalHost;
+
   const auth = req.headers.get("Authorization") || req.headers.get("authorization");
   if (auth) headers["Authorization"] = auth;
 

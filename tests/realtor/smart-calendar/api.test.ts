@@ -7,7 +7,7 @@ jest.mock("@/lib/api/fetch-client", () => ({
 }));
 
 const ev = (over: Record<string, unknown> = {}) => ({
-  id: "00000000-0000-4000-8000-000000003001", tenant_id: "t", kind: "showing", title: "SYNTH Visita unidad 4B", status: "scheduled",
+  id: "00000000-0000-4000-8000-000000003001", tenant_id: "t", kind: "showing", title: "Visita · 18555 Collins Ave #2104, Sunny Isles", status: "scheduled",
   starts_at: "2026-11-02T15:00:00Z", ends_at: "2026-11-02T15:45:00Z", timezone: "America/New_York", all_day: false,
   organizer_user_id: "u", ...over,
 });
@@ -16,11 +16,18 @@ const res = (status: number, json: unknown) => ({ status, json: async () => json
 beforeEach(() => mockApiFetch.mockReset());
 
 describe("mapEvents", () => {
-  it("traduce tipo, día y hora de pared en la zona del evento", () => {
+  it("traduce tipo, día, hora de pared de inicio y de fin (ends_at) en la zona del evento", () => {
+    const t = "Visita · 18555 Collins Ave #2104, Sunny Isles";
     expect(mapEvents([ev()])).toEqual([
-      { id: "00000000-0000-4000-8000-000000003001", day: 0, start: "10:00", title: { es: "SYNTH Visita unidad 4B", en: "SYNTH Visita unidad 4B" }, kind: "visita", place: "" },
+      { id: "00000000-0000-4000-8000-000000003001", day: 0, start: "10:00", end: "10:45", title: { es: t, en: t }, kind: "visita", place: "" },
     ]);
+    expect(mapEvents([ev()])[0]).toHaveProperty("end", "10:45");
     expect(mapEvents([ev({ kind: "signing" })])[0].kind).toBe("cita");
+  });
+  it("ends_at ilegible: no se inventa un fin (el evento se conserva sin end)", () => {
+    const [e] = mapEvents([ev({ ends_at: "no" })]);
+    expect(e.start).toBe("10:00");
+    expect(e.end).toBeUndefined();
   });
   it("descarta canceladas y filas inválidas", () => {
     expect(mapEvents([ev({ status: "cancelled" }), ev({ kind: "x" }), ev({ title: "" }), ev({ timezone: "No/Zona" }), null, ev({ starts_at: "no" })])).toEqual([]);

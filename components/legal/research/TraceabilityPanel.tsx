@@ -64,11 +64,10 @@ function MonitorPanel({ mon }: { mon?: AgentMonitor }) {
   );
 }
 
-function AuditPanel({ run, tenantId }: { run: AgentRunResponse; tenantId: string }) {
+function AuditPanel({ run }: { run: AgentRunResponse }) {
   return (
     <div className="space-y-2 text-sm">
       <p className="font-mono text-xs break-all text-zinc-300">request_id: {run.request_id}</p>
-      <p className="font-mono text-xs text-zinc-400">tenant: {run.tenant_id || tenantId}</p>
       {run.latency_ms != null ? (
         <p className="text-xs text-[var(--legal-text-secondary)]">latency_ms: {run.latency_ms}</p>
       ) : null}
@@ -147,7 +146,7 @@ export function TraceabilityPanel({
       ) : tab === "monitor" ? (
         <MonitorPanel mon={run.monitor} />
       ) : (
-        <AuditPanel run={run} tenantId={tenantId} />
+        <AuditPanel run={run} />
       )}
     </section>
   );

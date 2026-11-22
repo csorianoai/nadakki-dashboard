@@ -1,0 +1,64 @@
+{
+  "slug": "villa-17",
+  "sample": false,
+  "authorized": true,
+  "order": 14,
+  "sourceId": "2050",
+  "sourceUrl": "https://www.invierteenmiami.net/project-details/2050/villa-17",
+  "name": "Villa 17",
+  "area": "South Beach",
+  "zone": "miami-beach",
+  "address": "1709 Jefferson Ave, Miami Beach, FL 33139",
+  "devType": "townhome",
+  "status": null,
+  "deliveryYear": 2026,
+  "delivery": {
+    "es": "Entrega estimada: 2026",
+    "en": "Estimated delivery: 2026"
+  },
+  "priceFrom": 3500000,
+  "beds": "4",
+  "units": 10,
+  "floors": 4,
+  "sqft": "3,391 – 4,303",
+  "developer": null,
+  "architect": null,
+  "interiorDesigner": null,
+  "landscape": null,
+  "description": {
+    "es": [
+      "Villa 17 es un proyecto de townhouses en South Beach, en 1709 Jefferson Ave, Miami Beach, FL 33139. Contempla 10 residencias en 4 pisos, de 4 habitaciones y de 3,391 – 4,303 sq ft.",
+      "Entrega estimada: 2026. Precios desde $3,500,000."
+    ],
+    "en": [
+      "Villa 17 is a townhome project in South Beach, at 1709 Jefferson Ave, Miami Beach, FL 33139. It comprises 10 residences over 4 floors, with 4 bedrooms and of 3,391 – 4,303 sq ft.",
+      "Estimated delivery: 2026. Prices from $3,500,000."
+    ]
+  },
+  "interior": {
+    "es": [
+      "Cuatro niveles interiores y una azotea privada",
+      "Garaje privado climatizado para dos coches"
+    ],
+    "en": [
+      "Four interior levels plus a private rooftop",
+      "Private climate-controlled two-car garage"
+    ]
+  },
+  "amenities": null,
+  "images": [
+    "dev-villa-17-01",
+    "dev-villa-17-02",
+    "dev-villa-17-03",
+    "dev-villa-17-04",
+    "dev-villa-17-05",
+    "dev-villa-17-06"
+  ],
+  "heroImages": [
+    "dev-villa-17-01"
+  ],
+  "geo": {
+    "lat": 25.792261,
+    "lng": -80.137569
+  }
+}

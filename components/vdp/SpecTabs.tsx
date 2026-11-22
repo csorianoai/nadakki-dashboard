@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fmtKm } from "@/lib/format";
 import type { Vehicle } from "@/lib/vehicles";
-import { HistorialAI } from "@/components/vdp/HistorialAI";
 
-const SPECS = (v: Vehicle) => [
+const SPECS = (v: Vehicle): string[][] => [
   ["Marca", v.make],
   ["Modelo", v.model],
   ["Año", String(v.year)],
@@ -17,8 +16,8 @@ const SPECS = (v: Vehicle) => [
   ["Tipo", v.type],
   ["Condición", v.badge],
   ["Provincia", v.loc],
-  ["Vendedor", v.dealerName],
-];
+  ...(v.dealerName ? [["Vendedor", v.dealerName]] : []),
+].filter(([, val]) => Boolean(val));
 
 export function SpecTabs({ vehicle }: { vehicle: Vehicle }) {
   return (
@@ -26,9 +25,8 @@ export function SpecTabs({ vehicle }: { vehicle: Vehicle }) {
       <TabsList className="h-auto w-full justify-start gap-0 rounded-none border-b border-nk-border bg-transparent p-0">
         {[
           { value: "specs", label: "Especificaciones" },
-          { value: "history", label: "Historial" },
           { value: "location", label: "Ubicación" },
-          { value: "dealer", label: "Dealer" },
+          ...(vehicle.dealerName ? [{ value: "dealer", label: "Dealer" }] : []),
         ].map(({ value, label }) => (
           <TabsTrigger
             key={value}
@@ -51,10 +49,6 @@ export function SpecTabs({ vehicle }: { vehicle: Vehicle }) {
         </dl>
       </TabsContent>
 
-      <TabsContent value="history" className="mt-4">
-        <HistorialAI vehicle={vehicle} />
-      </TabsContent>
-
       <TabsContent value="location" className="mt-4">
         <div className="space-y-4">
           <div
@@ -64,9 +58,9 @@ export function SpecTabs({ vehicle }: { vehicle: Vehicle }) {
             Mapa — próximamente
           </div>
           <p className="text-sm text-nk-fg">
-            <strong>{vehicle.dealerName}</strong>
-            <br />
-            {vehicle.loc}, República Dominicana
+            {vehicle.dealerName ? <strong>{vehicle.dealerName}</strong> : null}
+            {vehicle.dealerName ? <br /> : null}
+            {vehicle.loc}
           </p>
         </div>
       </TabsContent>
@@ -74,13 +68,15 @@ export function SpecTabs({ vehicle }: { vehicle: Vehicle }) {
       <TabsContent value="dealer" className="mt-4">
         <div className="rounded-r border border-nk-border bg-nk-surface p-4 shadow-nk-sm">
           <h3 className="font-manrope text-lg font-bold">{vehicle.dealerName}</h3>
-          <p className="mt-1 flex items-center gap-1 text-sm text-nk-fg-muted">
-            <Star className="h-4 w-4 fill-nk-warning text-nk-warning" aria-hidden />
-            {vehicle.rating.toFixed(1)} · {vehicle.reviews} reseñas
-          </p>
-          <p className="mt-2 text-sm text-nk-fg-muted">
-            Responde en ~{vehicle.avgResp}
-          </p>
+          {vehicle.rating != null && vehicle.reviews != null ? (
+            <p className="mt-1 flex items-center gap-1 text-sm text-nk-fg-muted">
+              <Star className="h-4 w-4 fill-nk-warning text-nk-warning" aria-hidden />
+              {vehicle.rating.toFixed(1)} · {vehicle.reviews} reseñas
+            </p>
+          ) : null}
+          {vehicle.avgResp ? (
+            <p className="mt-2 text-sm text-nk-fg-muted">Responde en ~{vehicle.avgResp}</p>
+          ) : null}
           <Button variant="brand" className="mt-4 w-full sm:w-auto">
             Contactar
           </Button>

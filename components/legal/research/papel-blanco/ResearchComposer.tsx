@@ -26,9 +26,10 @@ export function ResearchComposer({ value, onChange, onSubmit, disabled, maxChars
             disabled={disabled}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={(e) => {
-              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+              // L2a: Enter envía; Shift+Enter hace salto de línea (y no durante composición IME).
+              if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
                 e.preventDefault();
-                onSubmit();
+                if (!disabled && value.trim()) onSubmit();
               }
               if (e.key === "Escape") onChange("");
             }}

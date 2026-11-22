@@ -15,21 +15,45 @@
  * error tampoco (fail-closed). El 403 del backend sigue siendo la autoridad.
  */
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AccessApiError } from "@/lib/access/client";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { resolveDealerAccessContext, selectedDealerIdentity } from "@/lib/dealer/access-context";
 import { VehicleManualForm } from "@/components/dealer-management/VehicleManualForm";
+import { ContactoSelector } from "@/app/autos/dealer/contactos/ContactoSelector";
+import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
+import { localeDeTenant } from "@/lib/dealer-management/formato";
+import { createVehiclePurchase, type PurchaseForm } from "@/lib/dealer-management/vehicle-purchase";
 import {
   VEHICLE_INITIAL_STATUS,
   VEHICLE_WRITE_CAPABILITY,
-  createVehicleManual,
   vehicleIdFrom,
   type VehicleManualForm as VehicleForm,
 } from "@/lib/dealer-management/vehicle-manual";
 import { DetalleTecnico } from "../DetalleTecnico";
+
+/** Selector del contacto vendedor (F4C-7): solo elige uno existente, nunca crea contactos. */
+function VendedorSelector({ value, onChange }: { value: string; onChange: (id: string) => void }) {
+  const [nombre, setNombre] = useState<string | null>(null);
+  return (
+    <div className="space-y-2">
+      {value ? (
+        <p data-testid="vendedor-elegido" className="text-sm text-nk-fg">
+          Vendedor elegido: {nombre ?? value}
+        </p>
+      ) : null}
+      <ContactoSelector
+        rol="vendedor"
+        onSelect={(c) => {
+          setNombre(c.display_name);
+          onChange(c.id);
+        }}
+      />
+    </div>
+  );
+}
 
 function nuevaIdempotencyKey(): string | undefined {
   const api = typeof globalThis.crypto === "undefined" ? null : globalThis.crypto;
@@ -43,17 +67,40 @@ export default function DealerVehicleNuevoPage() {
   const decision = access.data?.results[VEHICLE_WRITE_CAPABILITY];
   const allowed = !access.isLoading && !access.error && decision?.allowed === true;
 
+  const branding = useDealerManagementBranding();
+  const monedaFuncional = branding.data ? localeDeTenant(branding.data).currency : null;
+
   const [busy, setBusy] = useState(false);
   const [reasonCode, setReasonCode] = useState<string | null>(null);
   const [ack, setAck] = useState<string | null>(null);
+  // Una clave por intento de alta: se reutiliza mientras el contenido sea el mismo y se descarta tras un 201.
+  const intento = useRef<{ contenido: string; key: string } | null>(null);
+  const enCurso = useRef(false);
 
-  async function onSubmit(form: VehicleForm) {
-    if (!context) return;
+  async function onSubmit(form: VehicleForm, purchase?: PurchaseForm) {
+    if (!context || enCurso.current) return;
+    // La compra es obligatoria en el alta: sin ella no se envia nada (fail-closed).
+    if (!purchase) {
+      setReasonCode("DEFAULT_DENY");
+      return;
+    }
+    const contenido = JSON.stringify([form, purchase]);
+    if (intento.current?.contenido !== contenido) {
+      const nueva = nuevaIdempotencyKey();
+      intento.current = nueva ? { contenido, key: nueva } : null;
+    }
+    const key = intento.current?.key;
+    if (!key) {
+      setReasonCode("DEFAULT_DENY");
+      return;
+    }
+    enCurso.current = true;
     setBusy(true);
     setReasonCode(null);
     setAck(null);
     try {
-      const body = await createVehicleManual(context, form, nuevaIdempotencyKey());
+      const body = await createVehiclePurchase(context, form, purchase, monedaFuncional, key);
+      intento.current = null;
       const id = vehicleIdFrom(body);
       if (id) {
         setAck(`Vehículo creado: ${id}`);
@@ -68,6 +115,7 @@ export default function DealerVehicleNuevoPage() {
         setReasonCode("DEFAULT_DENY");
       }
     } finally {
+      enCurso.current = false;
       setBusy(false);
     }
   }
@@ -124,6 +172,8 @@ export default function DealerVehicleNuevoPage() {
           busy={busy}
           errorReasonCode={reasonCode}
           ack={ack}
+          withPurchase
+          sellerSelector={(props) => <VendedorSelector value={props.value} onChange={props.onChange} />}
           onSubmit={onSubmit}
         />
       )}
