@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Genera el harness estatico de la pantalla patron (HTML + CSS compilado con la config real de Tailwind y los tokens forge).
+# Uso:  OUT=/tmp/cc-harness bash app/marketing/command-center/ejecutivo/tests/build-harness.sh
+set -euo pipefail
+OUT="${OUT:-/tmp/cc-harness}"
+mkdir -p "$OUT"
+COMMAND_CENTER_HARNESS_OUT="$OUT" npx jest app/marketing/command-center/ejecutivo/tests/harness --silent
+{ cat styles/forge-tokens-v2.css components/analytics/kit/tema.css; printf '\n@tailwind base;\n@tailwind components;\n@tailwind utilities;\n'; } > "$OUT/in.css"
+npx tailwindcss -c tailwind.config.js -i "$OUT/in.css" -o "$OUT/kit.css" --content "$OUT/*.html"
+echo "HARNESS_OK $OUT"

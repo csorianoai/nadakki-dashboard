@@ -24,7 +24,7 @@ describe("TaskLauncher", () => {
     render(wrap(<TaskLauncher tasks={TASK_FIXTURES} loading={false} error={null} />));
     expect(screen.getByRole("heading", { name: "Contratos" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Litigios" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Compliance" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Cumplimiento" })).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Investigación" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Iniciar tarea: Revisar contrato" })).toBeInTheDocument();
   });

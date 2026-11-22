@@ -4,7 +4,10 @@
  */
 
 import { type SuiteResult } from "@/lib/api/suiteOps";
+import { apiFetch } from "@/lib/api/fetch-client";
 
+// El backend exige JWT de plataforma en /api/v1/ops/google-ads-agent/* (CORE-MARKETING mkt1-t1, #2537): todas las llamadas
+// van por apiFetch, que pone el Authorization y reintenta una vez con el token renovado.
 const BASE = "";
 const PREFIX = "/api/v1/ops/google-ads-agent/checks";
 
@@ -66,7 +69,7 @@ export async function postGoogleAdsAgentCheckRun(
         ? { initiated_by: String(initiatedBy).trim() }
         : {}),
     });
-    const res = await fetch(`${BASE}${PREFIX}/run`, {
+    const res = await apiFetch(`${BASE}${PREFIX}/run`, {
       method: "POST",
       headers: {
         Accept: "application/json",
@@ -101,7 +104,7 @@ export async function getGoogleAdsAgentCheckLatest(
   tenantId?: string | null
 ): Promise<SuiteResult<Record<string, unknown> | null>> {
   try {
-    const res = await fetch(`${BASE}${PREFIX}/latest`, {
+    const res = await apiFetch(`${BASE}${PREFIX}/latest`, {
       cache: "no-store",
       headers: { Accept: "application/json", ...tenantHeaders(tenantId) },
     });
@@ -133,7 +136,7 @@ export async function getGoogleAdsAgentCheckHistory(
 ): Promise<SuiteResult<Record<string, unknown>>> {
   try {
     const q = new URLSearchParams({ limit: String(limit) });
-    const res = await fetch(`${BASE}${PREFIX}/history?${q.toString()}`, {
+    const res = await apiFetch(`${BASE}${PREFIX}/history?${q.toString()}`, {
       cache: "no-store",
       headers: { Accept: "application/json", ...tenantHeaders(tenantId) },
     });
@@ -156,7 +159,7 @@ export async function getGoogleAdsAgentCheckByRunId(
   tenantId?: string | null
 ): Promise<SuiteResult<Record<string, unknown>>> {
   try {
-    const res = await fetch(`${BASE}${PREFIX}/${encodeURIComponent(runId)}`, {
+    const res = await apiFetch(`${BASE}${PREFIX}/${encodeURIComponent(runId)}`, {
       cache: "no-store",
       headers: { Accept: "application/json", ...tenantHeaders(tenantId) },
     });

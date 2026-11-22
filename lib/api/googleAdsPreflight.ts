@@ -4,6 +4,7 @@
  */
 
 import type { SuiteResult } from "@/lib/api/suiteOps";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 const BASE = "";
 
@@ -40,7 +41,7 @@ export async function postGoogleAdsPreflight(
   payload: Record<string, unknown> = {}
 ): Promise<SuiteResult<GoogleAdsPreflightResult>> {
   try {
-    const res = await fetch(
+    const res = await apiFetch(
       `${BASE}/api/v1/tenants/${encodeURIComponent(tenantId)}/google-ads/preflight`,
       {
         method: "POST",

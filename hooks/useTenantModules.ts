@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTenant } from "@/contexts/TenantContext";
 import { useAuth } from "@/hooks/useAuth";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 export interface TenantModule {
   slug: string;
@@ -62,7 +63,7 @@ function coerceTenantModulesResponse(json: unknown): TenantModulesResponse {
 }
 
 async function fetchTenantModules(tenantId: string): Promise<TenantModulesResponse> {
-  const res = await fetch(`/api/v1/tenants/${encodeURIComponent(tenantId)}/modules`, {
+  const res = await apiFetch(`/api/v1/tenants/${encodeURIComponent(tenantId)}/modules`, {
     headers: { "X-Tenant-ID": tenantId.trim() },
   });
   if (!res.ok) {

@@ -832,7 +832,7 @@ export async function fetchSocialStatus(tenantId: string) {
 }
 
 // Solo se abren URLs de autorización de los proveedores; cualquier otra respuesta se descarta.
-const OAUTH_HOSTS = /^https:\/\/(accounts\.google\.com|www\.facebook\.com)\//;
+const OAUTH_HOSTS = /^https:\/\/(accounts\.google\.com|www\.facebook\.com|www\.tiktok\.com)\//;
 
 /**
  * Pide al backend, con la sesión, la URL de autorización OAuth del tenant (Google o Meta).
@@ -866,3 +866,34 @@ export async function disconnectPlatform(platform: string, tenantId: string) {
 
 
 
+
+/** Límite de TikTok para un video como borrador (Content Posting API). */
+export const TIKTOK_MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+
+/**
+ * Sube un video como borrador al inbox de TikTok del tenant (POST /auth/tiktok/publish).
+ * No fija Content-Type: el navegador añade el boundary de multipart.
+ */
+export async function uploadTikTokDraft(
+  file: File
+): Promise<{ ok: true; publishId: string } | { ok: false; error: string }> {
+  const body = new FormData();
+  body.append("video", file, file.name);
+  try {
+    const r = await fetch(`${BACKEND_URL}/auth/tiktok/publish`, {
+      method: "POST",
+      headers: authHeaders({ Accept: "application/json" }),
+      body,
+    });
+    const j = (await r.json().catch(() => ({}))) as { publish_id?: unknown; detail?: unknown };
+    if (!r.ok) {
+      return { ok: false, error: typeof j.detail === "string" ? j.detail : `HTTP ${r.status}` };
+    }
+    if (typeof j.publish_id !== "string" || !j.publish_id) {
+      return { ok: false, error: "Respuesta inválida del servidor" };
+    }
+    return { ok: true, publishId: j.publish_id };
+  } catch (e) {
+    return { ok: false, error: (e as Error)?.message ?? "Error de red" };
+  }
+}

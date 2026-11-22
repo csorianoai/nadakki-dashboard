@@ -21,6 +21,7 @@ import NavigationBar from "@/components/ui/NavigationBar";
 import GlassCard from "@/components/ui/GlassCard";
 import { useTenant } from "@/contexts/TenantContext";
 import { fetchSocialStatus } from "@/lib/api/marketing";
+import { apiFetch } from "@/lib/api/fetch-client";
 import { useEstadoGoogle } from "@/components/google-ads/useEstadoGoogle";
 import type { EstadoGoogleAds } from "@/components/google-ads/ConectarGoogleAds";
 
@@ -79,7 +80,7 @@ function deriveConnState(rows: SocialRow[], key: "meta", statusError: boolean): 
 
 async function fetchSendgridState(tenantId: string): Promise<SendgridState> {
   try {
-    const r = await fetch(`/api/v1/tenants/${encodeURIComponent(tenantId)}/config`, {
+    const r = await apiFetch(`/api/v1/tenants/${encodeURIComponent(tenantId)}/config`, {
       method: "GET",
       headers: { Accept: "application/json", "X-Tenant-ID": tenantId },
     });

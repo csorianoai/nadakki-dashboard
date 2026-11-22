@@ -59,7 +59,7 @@ export default function SicPage() {
       <div className="mt-8 rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
         <h3 className="text-sm font-600 text-zinc-300 mb-2">Acceso rápido</h3>
         <p className="text-zinc-500 text-sm mb-4">
-          Vista integral, Decision Replay y Memo Ejecutivo disponibles en cada expediente.
+          Vista integral y Memo Ejecutivo disponibles en cada expediente.
         </p>
         <div className="flex gap-2">
           <Link href="/sic/expedientes" className="text-violet-400 hover:underline text-sm">

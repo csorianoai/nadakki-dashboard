@@ -437,6 +437,7 @@ export async function fetchExportacionesGlobal(
   return data.exportaciones ?? data.data ?? (Array.isArray(data) ? data : []);
 }
 
+// Sin ruta en el backend; retiradas de la UI, pendiente decision de producto.
 export async function fetchEvidencia(
   evidenciaId: string,
   tenantId: string,
@@ -514,6 +515,7 @@ export interface ComparacionVersiones {
   };
 }
 
+// Sin ruta en el backend; retiradas de la UI, pendiente decision de producto.
 export async function compararVersiones(
   expedienteId: string,
   tenantId: string,
@@ -537,6 +539,7 @@ export interface OverrideRequest {
   justificacion: string;
 }
 
+// Sin ruta en el backend; retiradas de la UI, pendiente decision de producto.
 export async function cambiarEstado(
   expedienteId: string,
   tenantId: string,
@@ -555,6 +558,7 @@ export async function cambiarEstado(
   return res.json();
 }
 
+// Sin ruta en el backend; retiradas de la UI, pendiente decision de producto.
 export async function enviarOverride(
   expedienteId: string,
   tenantId: string,
@@ -711,6 +715,7 @@ export interface ReplayData {
   timeline?: { fecha?: string; evento?: string; actor?: string }[];
 }
 
+// Sin ruta en el backend; retiradas de la UI, pendiente decision de producto.
 export async function fetchReplay(
   expedienteId: string,
   tenantId: string

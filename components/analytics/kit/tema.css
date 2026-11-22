@@ -1,0 +1,258 @@
+/**
+ * Tokens semanticos del kit de analitica (Nadakki Analytics, Ola 0), en CLARO y en OSCURO ("azul noche").
+ *
+ * Mecanismo de tema: el que YA usa el dashboard (styles/forge-tokens-v2.css): `data-theme="dark"` en .forge-app o en cualquier
+ * ancestro (html/body). No hay un mecanismo paralelo. Claro por defecto (:root) y tambien con data-theme="light".
+ *
+ * Claro: cada token se mapea al token --forge-* equivalente (con su hex como respaldo) para conservar la identidad y la marca
+ * del tenant. Oscuro: valores propios del diseno aprobado (la escala de grises de Forge no se remapea en oscuro, por eso los
+ * componentes del kit NO usan forgeGray-*; solo estos tokens).
+ *
+ * Los componentes del kit no llevan colores fijos: todo sale de --kit-*. Las clases .kit-* de abajo son la unica capa que los
+ * consume (los tests lo comprueban: ni hex ni forgeGray-* en components/analytics/kit).
+ */
+
+:root,
+[data-theme="light"] {
+  /* Superficies */
+  --kit-fondo: var(--forge-surface-page, #f7f8fa);
+  --kit-superficie: var(--forge-surface-card, #ffffff);
+  --kit-hundida: var(--forge-gray-50, #f7f8fa);
+  --kit-hundida-2: var(--forge-gray-100, #eef1f4);
+  /* Texto (AA 4.5:1 sobre --kit-superficie y --kit-hundida) */
+  --kit-texto: var(--forge-gray-800, #1a2540);
+  --kit-texto-2: var(--forge-gray-600, #3d4759);
+  --kit-texto-3: var(--forge-gray-500, #5a6478);
+  --kit-texto-tenue: #6b7689; /* inactivo / glifo de orden: >= 4,5:1 sobre blanco (forgeGray-400 daba 2,96:1) */
+  /* Bordes */
+  --kit-borde: var(--forge-gray-200, #dde3ea);
+  --kit-borde-suave: var(--forge-gray-100, #eef1f4);
+  --kit-borde-control: #7a8596; /* >= 3:1 (WCAG 1.4.11) en campos y botones */
+  /* Acento */
+  --kit-acento: var(--forge-brand-500, #2e5f97);
+  --kit-acento-texto: var(--forge-brand-700, #163660);
+  --kit-acento-fondo: var(--forge-brand-600, #1e477a);
+  --kit-sobre-acento: #ffffff;
+  --kit-foco: var(--forge-brand-600, #1e477a);
+  /* Estados: ok / atencion / error / pendiente (texto, fondo, borde) */
+  --kit-ok: var(--forge-success-700, #0a5a2e);
+  --kit-ok-fondo: var(--forge-success-50, #ecfdf5);
+  --kit-ok-borde: #7cc8a0;
+  --kit-atencion: var(--forge-warning-700, #8c5a14);
+  --kit-atencion-fondo: var(--forge-warning-50, #fffbeb);
+  --kit-atencion-borde: #e0b865;
+  --kit-error: var(--forge-danger-700, #8a1816);
+  --kit-error-fondo: var(--forge-danger-50, #fef2f2);
+  --kit-error-borde: #e29a98;
+  --kit-error-barra: var(--forge-danger-500, #b5201e);
+  --kit-pendiente: var(--forge-gray-700, #2a3447);
+  --kit-pendiente-fondo: var(--forge-gray-100, #eef1f4);
+  --kit-pendiente-borde: var(--forge-gray-300, #c2cbd6);
+  /* Series de graficos (>= 3:1 sobre --kit-superficie) */
+  --kit-viz-1: var(--forge-viz-1, #2e5f97);
+  --kit-viz-2: var(--forge-viz-2, #0a7ea4);
+  --kit-viz-3: var(--forge-viz-3, #0f7a3e);
+  --kit-viz-4: #9a6f00; /* forgeViz-4 (#c8940a) daba 2,73:1 sobre blanco */
+  --kit-viz-5: var(--forge-viz-5, #8a4fbf);
+  --kit-viz-6: var(--forge-viz-6, #b5201e);
+  --kit-otros: #6b7689;
+  --kit-sobre-serie: #ffffff; /* numero sobre el color de la serie (leyenda del donut) */
+  /* Mapa de calor: fondo y texto por nivel (el valor siempre va escrito) */
+  --kit-calor-0: var(--forge-brand-50, #f0f4fa);
+  --kit-calor-1: var(--forge-brand-100, #dce6f2);
+  --kit-calor-2: var(--forge-brand-200, #b6c8e0);
+  --kit-calor-3: var(--forge-brand-300, #8aa5c9);
+  --kit-calor-4: var(--forge-brand-700, #163660);
+  --kit-calor-texto-0: var(--forge-gray-900, #0f1729);
+  --kit-calor-texto-1: var(--forge-gray-900, #0f1729);
+  --kit-calor-texto-2: var(--forge-gray-900, #0f1729);
+  --kit-calor-texto-3: var(--forge-gray-900, #0f1729);
+  --kit-calor-texto-4: #ffffff;
+}
+
+[data-theme="dark"] {
+  /* Azul noche (diseno aprobado por Cesar, 10-nov-2026) */
+  --kit-fondo: #0a101c;
+  --kit-superficie: #111a2b;
+  --kit-hundida: #0d1526;
+  --kit-hundida-2: #16213a;
+  --kit-texto: #e8edf5;
+  --kit-texto-2: #b7c3d8;
+  --kit-texto-3: #9aa8bf;
+  --kit-texto-tenue: #8796b0;
+  --kit-borde: #1c2944;
+  --kit-borde-suave: #16213a;
+  --kit-borde-control: #5b6c8f;
+  --kit-acento: #4c8dff;
+  --kit-acento-texto: #8fb6ff;
+  --kit-acento-fondo: #2b4c8c;
+  --kit-sobre-acento: #ffffff;
+  --kit-foco: #8fb6ff;
+  --kit-ok: #5fd9aa;
+  --kit-ok-fondo: #0f3a2c;
+  --kit-ok-borde: #1d5c47;
+  --kit-atencion: #ffc769;
+  --kit-atencion-fondo: #3a2a0a;
+  --kit-atencion-borde: #6b4a12;
+  --kit-error: #ff9e96;
+  --kit-error-fondo: #2a1311;
+  --kit-error-borde: #5c2622;
+  --kit-error-barra: #ff8a80;
+  --kit-pendiente: #b7c3d8;
+  --kit-pendiente-fondo: #1a2540;
+  --kit-pendiente-borde: #2e3b57;
+  --kit-viz-1: #4c8dff;
+  --kit-viz-2: #38bdf8;
+  --kit-viz-3: #34c38f;
+  --kit-viz-4: #f59e0b;
+  --kit-viz-5: #8b7cff;
+  --kit-viz-6: #ff8a80;
+  --kit-otros: #8796b0;
+  --kit-sobre-serie: #0a101c;
+  --kit-calor-0: #16213a;
+  --kit-calor-1: #1d2f55;
+  --kit-calor-2: #254172;
+  --kit-calor-3: #2f5594;
+  --kit-calor-4: #4c8dff;
+  --kit-calor-texto-0: #e8edf5;
+  --kit-calor-texto-1: #e8edf5;
+  --kit-calor-texto-2: #ffffff;
+  --kit-calor-texto-3: #ffffff;
+  --kit-calor-texto-4: #0a101c;
+}
+
+/*
+ * Compatibilidad con los componentes base de Forge que el kit COMPONE sin editarlos (KpiCard, DataTable, EmptyState,
+ * Skeleton, Tabs): usan forgeGray-*, forgeBrand-* y forgeSurface-* fijos, y Forge no remapea esas escalas en oscuro.
+ * Dentro de un raiz .kit-tema se remapean las variables --forge-* de esa escala; fuera del kit no cambia nada.
+ */
+.kit-tema {
+  --forge-gray-400: var(--kit-texto-tenue); /* glifo de orden "↕" del DataTable y botones inactivos: >= 3:1 */
+}
+[data-theme="dark"] .kit-tema {
+  --forge-gray-50: var(--kit-hundida);
+  --forge-gray-100: var(--kit-hundida-2);
+  --forge-gray-200: var(--kit-borde);
+  --forge-gray-300: var(--kit-pendiente-borde);
+  --forge-gray-400: var(--kit-texto-tenue);
+  --forge-gray-500: var(--kit-texto-3);
+  --forge-gray-600: var(--kit-texto-2);
+  --forge-gray-700: #d3dceb;
+  --forge-gray-800: var(--kit-texto);
+  --forge-gray-900: #f4f7fb;
+  --forge-surface-page: var(--kit-fondo);
+  --forge-surface-card: var(--kit-superficie);
+  --forge-surface-raised: var(--kit-hundida-2);
+  --forge-surface-sunken: var(--kit-hundida);
+  --forge-brand-50: var(--kit-calor-0);
+  --forge-brand-100: var(--kit-calor-1);
+  --forge-brand-500: var(--kit-acento);
+  --forge-brand-600: var(--kit-acento-texto);
+  --forge-brand-700: var(--kit-acento-texto);
+  --forge-success-50: var(--kit-ok-fondo);
+  --forge-success-700: var(--kit-ok);
+  --forge-warning-50: var(--kit-atencion-fondo);
+  --forge-warning-700: var(--kit-atencion);
+  --forge-danger-50: var(--kit-error-fondo);
+  --forge-danger-500: var(--kit-error-barra);
+  --forge-danger-700: var(--kit-error);
+}
+
+/* Objetivos tactiles de 44 px en los controles de los componentes base compuestos (WCAG 2.5.5 AAA; minimo 24 px de AA 2.5.8). */
+.kit-tema [role="tab"] {
+  min-height: 44px;
+}
+.kit-tema th > button {
+  min-height: 44px;
+  margin-block: -0.75rem;
+}
+
+/* --- Texto --- */
+.kit-txt { color: var(--kit-texto); }
+.kit-txt-2 { color: var(--kit-texto-2); }
+.kit-txt-3 { color: var(--kit-texto-3); }
+.kit-txt-tenue { color: var(--kit-texto-tenue); }
+.kit-txt-acento { color: var(--kit-acento-texto); }
+.kit-txt-ok { color: var(--kit-ok); }
+.kit-txt-atencion { color: var(--kit-atencion); }
+.kit-txt-error { color: var(--kit-error); }
+.kit-txt-sobre-acento { color: var(--kit-sobre-acento); }
+
+/* --- Fondos --- */
+.kit-fondo { background-color: var(--kit-fondo); color: var(--kit-texto); }
+.kit-bg-sup { background-color: var(--kit-superficie); }
+.kit-bg-hundida { background-color: var(--kit-hundida); }
+.kit-bg-hundida-2 { background-color: var(--kit-hundida-2); }
+.kit-bg-acento { background-color: var(--kit-acento-fondo); }
+.kit-bg-error { background-color: var(--kit-error-barra); }
+.kit-bg-otros { background-color: var(--kit-otros); }
+.kit-bg-cero { background-color: var(--kit-texto-3); }
+.kit-hover-hundida:hover { background-color: var(--kit-hundida); }
+
+/* --- Bordes --- */
+.kit-bd { border-color: var(--kit-borde); }
+.kit-bd-suave { border-color: var(--kit-borde-suave); }
+.kit-bd-control { border-color: var(--kit-borde-control); }
+.kit-bd-acento { border-color: var(--kit-acento-fondo); }
+
+/* --- Foco visible --- */
+.kit-foco:focus-visible {
+  outline: 2px solid var(--kit-foco);
+  outline-offset: 2px;
+}
+
+/* --- Control (boton / campo): borde de 3:1, inactivo legible --- */
+.kit-ctl {
+  background-color: var(--kit-superficie);
+  border-color: var(--kit-borde-control);
+  color: var(--kit-texto);
+}
+.kit-ctl:hover:not(:disabled) { background-color: var(--kit-hundida); }
+.kit-ctl:disabled { color: var(--kit-texto-tenue); cursor: not-allowed; }
+[data-theme="dark"] .kit-ctl { color-scheme: dark; } /* selector y calendario nativos en oscuro */
+.kit-ctl-activo {
+  background-color: var(--kit-acento-fondo);
+  border-color: var(--kit-acento-fondo);
+  color: var(--kit-sobre-acento);
+}
+
+/* --- Chip de estado pendiente --- */
+.kit-chip-pendiente {
+  background-color: var(--kit-pendiente-fondo);
+  border-color: var(--kit-pendiente-borde);
+  color: var(--kit-pendiente);
+}
+
+/* --- SVG --- */
+.kit-fill-txt { fill: var(--kit-texto); }
+.kit-fill-txt-2 { fill: var(--kit-texto-2); }
+.kit-fill-sup { fill: var(--kit-superficie); }
+.kit-fill-error { fill: var(--kit-error-barra); }
+.kit-stroke-grid { stroke: var(--kit-borde); }
+.kit-stroke-cero { stroke: var(--kit-texto-3); }
+.kit-stroke-anterior { stroke: var(--kit-texto-3); }
+.kit-stroke-otros { stroke: var(--kit-otros); }
+.kit-stroke-foco:focus-visible { stroke: var(--kit-foco); stroke-width: 3; }
+.kit-fill-viz-1 { fill: var(--kit-viz-1); }
+.kit-stroke-viz-1 { stroke: var(--kit-viz-1); }
+.kit-stroke-viz-2 { stroke: var(--kit-viz-2); }
+.kit-stroke-viz-3 { stroke: var(--kit-viz-3); }
+.kit-stroke-viz-4 { stroke: var(--kit-viz-4); }
+.kit-stroke-viz-5 { stroke: var(--kit-viz-5); }
+.kit-stroke-viz-6 { stroke: var(--kit-viz-6); }
+.kit-bg-viz-1 { background-color: var(--kit-viz-1); }
+.kit-bg-viz-2 { background-color: var(--kit-viz-2); }
+.kit-bg-viz-3 { background-color: var(--kit-viz-3); }
+.kit-bg-viz-4 { background-color: var(--kit-viz-4); }
+.kit-bg-viz-5 { background-color: var(--kit-viz-5); }
+.kit-bg-viz-6 { background-color: var(--kit-viz-6); }
+
+/* --- Mapa de calor --- */
+.kit-calor-0 { background-color: var(--kit-calor-0); color: var(--kit-calor-texto-0); }
+.kit-calor-1 { background-color: var(--kit-calor-1); color: var(--kit-calor-texto-1); }
+.kit-calor-2 { background-color: var(--kit-calor-2); color: var(--kit-calor-texto-2); }
+.kit-calor-3 { background-color: var(--kit-calor-3); color: var(--kit-calor-texto-3); }
+.kit-calor-4 { background-color: var(--kit-calor-4); color: var(--kit-calor-texto-4); }
+
+/* Contador sobre la leyenda del donut (texto sobre el color de la serie) */
+.kit-sobre-serie { color: var(--kit-sobre-serie); }
