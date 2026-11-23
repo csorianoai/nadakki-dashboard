@@ -104,7 +104,7 @@ describe("Lista de plazos", () => {
 
   it("nombra el plazo del tribunal por lo que hay que hacer y el del catálogo por su acto", () => {
     expect(nombreDelPlazo(base)).toBe("Depositar escrito de réplica");
-    expect(nombreDelPlazo({ ...base, deadline_category: "CIVIL", deadline_sub_category: "apelacion" })).toBe("Apelacion");
+    expect(nombreDelPlazo({ ...base, deadline_category: "CIVIL", deadline_sub_category: "apelacion" })).toBe("Apelación");
   });
 
   it("sin plazos lo dice; «Marcar cumplido» envía complete_deadline", async () => {
@@ -148,5 +148,23 @@ describe("Cambio de estado sin ventana del navegador", () => {
     await userEvent.type(screen.getByLabelText(/Motivo para pasar/), "Se notificó la sentencia");
     await userEvent.click(confirmar);
     expect(runTransition).toHaveBeenCalledWith({ newState: "TRIAGE", reason: "Se notificó la sentencia" });
+  });
+});
+
+describe("pulido ronda 2", () => {
+  const base = {
+    deadline_id: "d2", deadline_db_id: "CIVIL-APELACION-001", deadline_category: "CIVIL", deadline_sub_category: "apelacion",
+    trigger_event: "x", trigger_date: "2026-11-18", auto_calculated_deadline_date: "2026-12-21", has_human_override: false,
+    effective_deadline_date: "2026-12-21", status: "completed", legal_basis: "Art. 443 CPC", is_peremptory: true, is_extendable: false,
+  } as CaseDeadline;
+  it("acto con tilde y, si está cumplido, sin botones de IA ni estrategia", () => {
+    expect(nombreDelPlazo(base)).toBe("Apelación");
+    wrap(<CaseDeadlinesPanel deadlines={[base]} caseId="c1" tenantId="t" />);
+    expect(screen.queryByRole("link", { name: "Preparar escrito con IA" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Marcar cumplido" })).toBeNull();
+  });
+  it("el plazo del tribunal dice «Fijado por el tribunal»", () => {
+    wrap(<CaseDeadlinesPanel deadlines={[{ ...base, deadline_category: "TRIBUNAL", notes: "Depositar réplica", status: "active" }]} caseId="c1" tenantId="t" />);
+    expect(screen.getByText("Fijado por el tribunal")).toBeInTheDocument();
   });
 });

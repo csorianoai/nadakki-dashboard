@@ -36,6 +36,8 @@ export function CaseActionsMenu({ tenantId, caseId, onChanged }: { tenantId: str
   const [motivo, setMotivo] = useState("");
 
   const actions: AvailableAction[] = (data?.available_actions ?? []).filter((a) => {
+    // «Marcar plazo cumplido» se hace en cada plazo, no desde este panel (QA ronda 2).
+    if (a.action_name === "complete_deadline") return false;
     if (level === "CRITICAL_FALLBACK" && a.consumes_llm_tokens) return false;
     if (level === "LLM_DEGRADED" && a.consumes_llm_tokens) return false;
     return true;
