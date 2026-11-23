@@ -64,6 +64,11 @@ describe("unión expedientes + plazos + cola", () => {
     expect(rutaContinuar(c!)).toBe("/legal/cases/c/deadlines");
     expect(rutaContinuar(a!)).toBe("/legal/cases/a");
   });
+
+  it("sin plazo pero con documentos por revisar, Continuar abre Documentos", () => {
+    const [f] = filasDeTrabajo([caso({ case_id: "x" })], [], [item("x")]);
+    expect(rutaContinuar(f!)).toBe("/legal/cases/x/documents");
+  });
 });
 
 describe("tabla centro de trabajo", () => {
@@ -76,12 +81,16 @@ describe("tabla centro de trabajo", () => {
     expect(within(fila).getByText("Regla verificada")).toBeInTheDocument();
     expect(within(fila).getByText("1 documento por revisar")).toBeInTheDocument();
     expect(within(fila).getByRole("link", { name: /Continuar con Cobro QA/ })).toHaveAttribute("href", "/legal/cases/b/deadlines");
+    // móvil: la tarjeta también lleva plazo y Continuar sin desplazamiento horizontal
+    const tarjetas = screen.getAllByRole("list", { name: "T" })[0]!;
+    expect(within(tarjetas).getByRole("link", { name: /Continuar con Cobro QA/ })).toHaveAttribute("href", "/legal/cases/b/deadlines");
   });
 
   it("sin datos de plazos ni permiso de cola: «—», sin inventar ceros", () => {
     const filas = filasDeTrabajo([caso({ case_id: "a", title: "X" })], null, null);
     render(<CaseWorkTable filas={filas} plazosDisponibles={false} revisionesDisponibles={false} titulo="T" />);
-    expect(screen.getAllByText("—").length).toBe(2);
+    // tabla (escritorio) + tarjeta (móvil): «—» en plazo y pendiente de la tabla y en el plazo de la tarjeta
+    expect(screen.getAllByText("—").length).toBe(3);
     expect(screen.queryByText(/Nada en revisión/)).toBeNull();
   });
 });
@@ -110,6 +119,13 @@ describe("institución y navegación", () => {
     expect(nombreInstitucion(undefined, "Banco X")).toBe("Banco X");
   });
 
+  it("menú de Legal en dos bloques con título fijo (Espacio jurídico / Herramientas) y sin pantalla de grupo", () => {
+    const legal = MODULOS.find((m) => m.id === "legal")!;
+    expect(legal.menu.map((g) => g.label)).toEqual(["Espacio jurídico", "Herramientas"]);
+    expect(legal.menu[1]!.items.map((i) => i.href)).toEqual(["/legal/contracts", "/legal/research", "/legal/library", "/legal/audit", "/legal/config"]);
+    expect(legal.sinPantallaGrupo).toBe(true);
+  });
+
   it("Legal no pinta barra de pestañas y su menú lateral conserva todas las URLs y añade el Asistente IA", () => {
     const legal = MODULOS.find((m) => m.id === "legal")!;
     expect(legal.sinPestanas).toBe(true);
@@ -118,5 +134,21 @@ describe("institución y navegación", () => {
     for (const h of ["/legal", "/legal/cases", "/legal/cases/new", "/legal/audiencias", "/legal/asistente", "/legal/contracts", "/legal/research", "/legal/library", "/legal/audit", "/legal/config"]) {
       expect(hrefs).toContain(h);
     }
+  });
+});
+
+describe("expediente: plazos legibles y migas en español", () => {
+  it("el plazo muestra el acto, no el código interno, y los días en singular", () => {
+    const { CaseDeadlinesPanel, restantes } = jest.requireActual("@/components/legal/cases/CaseDeadlinesPanel");
+    expect(restantes(1, "Vencido")).toBe("1 día restante");
+    expect(restantes(0, "Vencido")).toBe("vence hoy");
+    expect(restantes(-2, "Vencido")).toBe("Vencido");
+    expect(typeof CaseDeadlinesPanel).toBe("function");
+  });
+
+  it("las pantallas internas del expediente tienen miga en español", () => {
+    const { migasDe } = jest.requireActual("@/lib/migas");
+    expect(migasDe("/legal/cases/c1/deadlines").map((m: { label: string }) => m.label)).toContain("Plazos");
+    expect(migasDe("/legal/cases/c1/snapshots").map((m: { label: string }) => m.label)).toContain("Versiones");
   });
 });

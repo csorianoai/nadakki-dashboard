@@ -120,7 +120,7 @@ describe("indicadores de Mi despacho", () => {
     (useValidationQueueSummary as jest.Mock).mockReturnValue({ loading: false, summary: { total_open: 205, overdue: 3, assigned_to_me: 4, attorney_profile: true } });
     render(<HomeKpiTiles tenantId="t" casesTotal={12} casesLoading={false} />);
     expect(screen.getByTestId("kpi-revisiones")).toHaveTextContent("205");
-    expect(screen.getByTestId("kpi-revisiones")).toHaveTextContent("4 asignada(s) a ti");
+    expect(screen.getByTestId("kpi-revisiones")).toHaveTextContent("4 asignadas a ti");
     expect(screen.getByTestId("kpi-revisiones")).toHaveTextContent("3 fuera de plazo (SLA)");
     expect(screen.getByTestId("kpi-plazos")).toHaveTextContent(/^Plazos · próximos 7 días1/);  // el vencido no suma a los 7 días
     expect(screen.getByTestId("kpi-plazos")).toHaveTextContent("1 vencido(s) sin acusar");

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import type { LegalCase } from "@/lib/legal/cases/case-types";
 import { MATERIAS } from "@/lib/legal/cases/matter-catalog";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
@@ -99,22 +98,21 @@ export function CaseDetailHeader({
   const deadlineCount = (legalCase.deadlines ?? []).filter((d) => d.status === "active").length;
 
   return (
-    <header className="space-y-6">
-      <div className="relative overflow-hidden rounded-2xl border border-zinc-800/50 bg-gradient-to-br from-zinc-900/80 via-zinc-950 to-zinc-900 p-6 backdrop-blur-md md:p-8">
-        <div className="pointer-events-none absolute right-0 top-0 h-40 w-40 rounded-full bg-violet-600/5 blur-3xl" />
+    <header className="space-y-4">
+      {/* Cabecera compacta (Legal OS / Clio): el contenido de la pestaña —plazos, documentos— queda sobre el pliegue. */}
+      <div className="relative rounded-xl border border-slate-200 bg-white px-5 py-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <div className="relative flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0 flex-1 space-y-2">
+          <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <CaseStateIndicator state={legalCase.state} />
               <CasePriorityBadge priority={legalCase.priority} />
               <CaseRiskBadge profile={legalCase.risk_profile} />
             </div>
-            <h1 className="text-2xl font-medium tracking-tight text-zinc-100 md:text-3xl">{legalCase.title}</h1>
-            <p className="text-sm tabular-nums text-zinc-400">
+            <h1 className="text-xl font-semibold tracking-tight text-slate-900 dark:text-zinc-100">{legalCase.title}</h1>
+            <p className="text-sm tabular-nums text-slate-600 dark:text-zinc-400">
               {legalCase.case_number_internal} · {typeLabel}
             </p>
-            <p className="text-xs text-zinc-500">{m.compliance.ley_91}</p>
-            <div className="flex flex-wrap gap-4 pt-2 text-sm tabular-nums text-zinc-400">
+            <div className="flex flex-wrap gap-4 text-sm tabular-nums text-slate-600 dark:text-zinc-400">
               <span>
                 {m.overview.docs_count}{" "}
                 <span className="font-medium text-zinc-200">{docCount}</span>
@@ -124,6 +122,7 @@ export function CaseDetailHeader({
                 <span className="font-medium text-zinc-200">{deadlineCount}</span>
               </span>
             </div>
+            <p className="text-[11px] text-slate-500 dark:text-zinc-500">{m.compliance.ley_91}</p>
           </div>
         </div>
         <CaseConflictCheckBanner actors={legalCase.actors} />
@@ -131,33 +130,24 @@ export function CaseDetailHeader({
         {legalCase.confidence ? <CaseConfidenceMeter confidence={legalCase.confidence} /> : null}
       </div>
 
-      <nav aria-label="Secciones del expediente" className="-mx-1 flex flex-wrap gap-1 border-b border-zinc-800/50 pb-1">
+      <nav data-compacto="" aria-label="Secciones del expediente" className="flex flex-wrap gap-x-1 border-b border-slate-200 dark:border-zinc-800">
         {navItems.map((item) => {
           const active = isActive(item);
           return (
             <Link
               key={item.href}
               href={item.href}
+              aria-current={active ? "page" : undefined}
               className={cn(
-                "relative rounded-lg px-3 py-2 text-sm font-medium tracking-tight transition-colors",
-                active ? "text-zinc-100" : "text-zinc-500 hover:bg-zinc-900/80 hover:text-zinc-300",
-                item.danger && !active ? "hover:text-red-300" : "",
-                item.danger && active ? "text-red-400" : ""
+                "-mb-px border-b-2 px-3 py-2 text-sm transition-colors",
+                active
+                  ? item.danger
+                    ? "border-red-700 font-semibold text-red-800"
+                    : "border-blue-700 font-semibold text-blue-800 dark:text-blue-300"
+                  : "border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900 dark:text-zinc-400",
               )}
             >
-              {active ? (
-                <motion.span
-                  layoutId="case-detail-tab-bg"
-                  className={cn(
-                    "absolute inset-0 -z-10 rounded-lg ring-1",
-                    item.danger
-                      ? "bg-red-950/40 ring-red-500/30"
-                      : "bg-gradient-to-br from-violet-600/25 to-indigo-600/15 ring-violet-500/25"
-                  )}
-                  transition={{ type: "spring", stiffness: 380, damping: 34 }}
-                />
-              ) : null}
-              <span className="relative z-10">{item.label}</span>
+              {item.label}
             </Link>
           );
         })}

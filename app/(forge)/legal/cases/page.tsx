@@ -32,15 +32,14 @@ export default function LegalCasesListPage() {
   }
 
   return (
-    <main id="main-content" className="min-h-0 space-y-8">
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-zinc-800/50 pb-6">
+    <main id="main-content" className="min-h-0 space-y-4">
+      <header data-compacto="" className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{m.nav.cases}</p>
-          <h1 className="mt-1 text-2xl font-medium tracking-tight text-zinc-100 md:text-3xl">{m.list.title}</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-zinc-100">{m.list.title}</h1>
         </div>
         <Link
           href="/legal/cases/new"
-          className="inline-flex items-center rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-400"
+          className="inline-flex items-center rounded-lg bg-blue-700 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500"
         >
           {m.list.create_button}
         </Link>
