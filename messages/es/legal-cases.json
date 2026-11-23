@@ -340,6 +340,8 @@
     "upload_document": "Subir documento",
     "Upload Document": "Subir documento",
     "compute_deadlines": "Calcular plazos",
+    "add_manual_deadline": "Registrar plazo fijado por el tribunal",
+    "complete_deadline": "Marcar plazo cumplido",
     "Add Actor": "Agregar parte",
     "generate_strategies": "Generar estrategias",
     "advance_to_intake": "Avanzar a ingesta",

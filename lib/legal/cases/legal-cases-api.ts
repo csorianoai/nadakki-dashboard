@@ -161,6 +161,28 @@ export async function fetchDeadlines(tenantId: string, caseId: string) {
   return { deadlines };
 }
 
+/** Plazo del catálogo que aplica al expediente (GET /deadlines/catalog). */
+export interface PlazoDelCatalogo {
+  deadline_db_id: string;
+  categoria: string;
+  procedimiento: string | null;
+  descripcion: string | null;
+  corre_desde: string;
+  valor: number;
+  unidad: string;
+  base_legal: string;
+  perentorio: boolean;
+  notas: string | null;
+}
+
+export async function fetchDeadlineCatalog(tenantId: string, caseId: string): Promise<PlazoDelCatalogo[]> {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/deadlines/catalog`, {
+    headers: tenantHeaders(tenantId),
+  });
+  const raw = await readLegalJson<{ plazos?: PlazoDelCatalogo[] }>(res, "Error al cargar el catálogo de plazos");
+  return Array.isArray(raw?.plazos) ? raw.plazos : [];
+}
+
 export async function postDeadlineOverride(
   tenantId: string,
   caseId: string,

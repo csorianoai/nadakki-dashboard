@@ -35,6 +35,11 @@ export function extractLegalApiDetail(raw: string): string {
   try {
     const j = JSON.parse(raw) as Record<string, unknown>;
     if (typeof j.detail === "string") return j.detail;
+    // {detail: {codigo, mensaje}}: errores 422 del Core Legal (plazos, partes, archivo).
+    if (j.detail && typeof j.detail === "object" && !Array.isArray(j.detail)) {
+      const m = (j.detail as Record<string, unknown>).mensaje;
+      if (typeof m === "string" && m.trim()) return m;
+    }
     if (Array.isArray(j.detail)) {
       return j.detail
         .map((d) =>
