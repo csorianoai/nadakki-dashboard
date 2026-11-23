@@ -83,10 +83,16 @@ export interface CaseStrategy {
   description: string;
   legal_basis: string;
   rationale: string;
-  expected_strength: number;
+  /** Ausente en las estrategias del modelo: traen `confianza` (sin porcentajes inventados). */
+  expected_strength?: number;
   risks: string[];
   selected: boolean;
   status: "proposed" | "selected" | "executing" | "completed" | "abandoned";
+  /** Campos de las estrategias generadas por el modelo (backend strategy_engine). */
+  title?: string;
+  objetivo?: string;
+  confianza?: "alta" | "media" | "baja";
+  pasos?: string[];
 }
 
 export interface CaseDocument {
