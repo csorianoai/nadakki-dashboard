@@ -40,7 +40,13 @@ export function MyReviewsPanel({ tenantId, cases }: Props) {
   if (queue.loading) {
     body = <div className="h-16 animate-pulse rounded-lg bg-slate-100 dark:bg-zinc-800/60" aria-busy="true" />;
   } else if (queue.forbidden) {
-    body = <p className="text-sm text-slate-500 dark:text-zinc-400">{m.reviews_forbidden}</p>;
+    body = (
+      <div className="space-y-2 text-sm text-slate-600 dark:text-zinc-400" data-testid="revisiones-sin-rol">
+        <p>{m.reviews_forbidden}</p>
+        <p>{m.reviews_forbidden_alt}</p>
+        <Link href="/legal/cases" className="inline-flex rounded-md border border-slate-200 px-2.5 py-1 text-xs font-semibold text-blue-800 hover:border-blue-300 dark:border-zinc-700 dark:text-blue-300">{m.reviews_forbidden_cta}</Link>
+      </div>
+    );
   } else if (queue.error) {
     body = <p className="text-sm text-amber-700 dark:text-amber-400">{m.reviews_error}</p>;
   } else if (!queue.open.length) {

@@ -196,7 +196,14 @@ describe("pestañas del grupo", () => {
     expect(screen.getAllByTestId("pestana-grupo").filter((t) => t.hasAttribute("aria-current")).map((t) => t.textContent)).toEqual(["Facturación"]);
   });
 
-  test.each([["legal", "/legal/cases/new", "Nuevo expediente"], ["proyectos", "/proyectos/dashboards/pm", "Panel del gerente de proyecto"]])(
+  test("legal (Legal OS, César 22-nov): sin pestañas; el menú lateral es la única navegación y conserva todas las páginas", () => {
+    pathname = "/legal/cases/new";
+    render(conSesion(<ModuleShell modulo={mod("legal")}>x</ModuleShell>));
+    expect(screen.queryAllByTestId("pestana-grupo")).toHaveLength(0);
+    expect(mod("legal").sinPestanas).toBe(true);
+  });
+
+  test.each([["proyectos", "/proyectos/dashboards/pm", "Panel del gerente de proyecto"]])(
     "%s (menú plano): las pestañas muestran todas las páginas del módulo",
     (id, url, activa) => {
       pathname = url;

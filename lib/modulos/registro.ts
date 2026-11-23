@@ -207,6 +207,8 @@ export const MODULOS: ModuloConfig[] = [
     menu: desdeSeccion("legal-hub", "Legal"),
     acento: "#a78bfa",
     carcasa: "comun",
+    // Legal OS (César, 22-nov): una sola navegación, la lateral; dentro del expediente sigue su navegación propia.
+    sinPestanas: true,
   },
   {
     id: "proyectos",
