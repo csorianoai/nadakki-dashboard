@@ -45,7 +45,7 @@ export default function LegalCasesListPage() {
           {m.list.create_button}
         </Link>
       </header>
-      <CaseList cases={data?.cases ?? []} loading={isLoading} error={isError} onRetry={() => void refetch()} />
+      <CaseList tenantId={effectiveTenantId} cases={data?.cases ?? []} loading={isLoading} error={isError} onRetry={() => void refetch()} />
     </main>
   );
 }

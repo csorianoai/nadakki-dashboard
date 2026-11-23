@@ -55,6 +55,8 @@ export type ModuloConfig = {
   pantallaGrupoSoloSuperadmin?: boolean;
   /** El módulo usa ModuleShell pero no tiene páginas `<raiz>/grupo/<id>` (Crédito): el menú se queda en grupos plegables. */
   sinPantallaGrupo?: boolean;
+  /** Sin barra de pestañas sobre el contenido: el menú lateral es la única navegación del módulo (Legal OS). */
+  sinPestanas?: boolean;
   id: string;
   label: string;
   icono: LucideIcon;
