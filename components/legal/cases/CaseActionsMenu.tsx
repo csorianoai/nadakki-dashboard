@@ -29,6 +29,7 @@ export function CaseActionsMenu({ tenantId, caseId, onChanged }: { tenantId: str
   const level = useDisasterLevel();
   const { data, isLoading, runAction, runTransition, running } = useCaseActions(tenantId, caseId);
   const [err, setErr] = useState<unknown>(null);
+  const [aviso, setAviso] = useState<string | null>(null);
   const [pendiente, setPendiente] = useState<
     { tipo: "estado"; estado: CaseState } | { tipo: "accion"; accion: AvailableAction } | null
   >(null);
@@ -62,8 +63,18 @@ export function CaseActionsMenu({ tenantId, caseId, onChanged }: { tenantId: str
   };
 
   const ejecutarAccion = async (a: AvailableAction) => {
+    setAviso(null);
     try {
-      await runAction({ actionName: a.action_name, payload: {} });
+      const r = (await runAction({ actionName: a.action_name, payload: {} })) as
+        | { estado?: string; motivo?: string; count?: number }
+        | null
+        | undefined;
+      // QA 23-nov: «Generar estrategias» respondía 200 con estado sin_datos y la pantalla no decía nada.
+      if (r && (r.estado === "sin_datos" || r.estado === "error") && r.motivo) {
+        setAviso(`No se generaron estrategias: ${r.motivo}`);
+      } else if (a.action_name === "generate_strategies" && typeof r?.count === "number") {
+        setAviso(r.count > 0 ? `Se generaron ${r.count} estrategias. Revísalas en la pestaña Estrategia.` : "No se generaron estrategias.");
+      }
     } catch (e: unknown) {
       setErr(e);
     }
@@ -142,6 +153,11 @@ export function CaseActionsMenu({ tenantId, caseId, onChanged }: { tenantId: str
             ))}
           </ul>
         </div>
+      ) : null}
+      {aviso ? (
+        <p role="status" className="mt-3 rounded-forge-sm bg-amber-50 px-3 py-2 text-xs text-amber-900">
+          {aviso}
+        </p>
       ) : null}
       {pendiente ? (
         <div role="group" aria-label="Confirmar" className="mt-3 rounded-forge-sm border border-blue-200 bg-blue-50 p-3 text-sm">

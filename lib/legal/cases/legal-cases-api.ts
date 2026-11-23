@@ -207,6 +207,16 @@ export async function postDeadlineOverride(
   return parseJson<unknown>(res);
 }
 
+/** Hechos del caso (PATCH /classification con description y motivo; queda auditado). */
+export async function patchCaseFacts(tenantId: string, caseId: string, description: string, motivo: string): Promise<unknown> {
+  const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/classification`, {
+    method: "PATCH",
+    headers: { ...tenantHeaders(tenantId), "Content-Type": "application/json" },
+    body: JSON.stringify({ description, correction_reason: motivo }),
+  });
+  return readLegalJson<unknown>(res, "No se pudieron guardar los hechos");
+}
+
 export async function fetchStrategies(tenantId: string, caseId: string) {
   const res = await apiFetch(`${LEGAL_PREFIX}/cases/${encodeURIComponent(caseId)}/strategies`, {
     headers: tenantHeaders(tenantId),

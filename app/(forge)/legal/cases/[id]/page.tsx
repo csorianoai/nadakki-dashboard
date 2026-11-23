@@ -8,6 +8,7 @@ import { CaseActorsPanel } from "@/components/legal/cases/CaseActorsPanel";
 import { CaseDeadlinesPanel } from "@/components/legal/cases/CaseDeadlinesPanel";
 import { CaseActionsMenu } from "@/components/legal/cases/CaseActionsMenu";
 import { CaseRepresentationCard } from "@/components/legal/cases/CaseRepresentationCard";
+import { CaseFactsCard } from "@/components/legal/cases/CaseFactsCard";
 import { deleteLock } from "@/lib/legal/cases/legal-cases-api";
 
 export default function LegalCaseDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -41,6 +42,7 @@ export default function LegalCaseDetailPage({ params }: { params: Promise<{ id: 
             clientRoles={c.client_roles}
             onSaved={() => void refetch()}
           />
+          <CaseFactsCard tenantId={effectiveTenantId} caseId={id} description={c.description} onSaved={() => void refetch()} />
           <CaseActorsPanel actors={c.actors} clientRoles={c.client_roles} />
           <CaseDeadlinesPanel
             deadlines={c.deadlines}

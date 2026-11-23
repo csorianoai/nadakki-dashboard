@@ -69,6 +69,7 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
   const [customSubtype, setCustomSubtype] = useState("");
   const [proceduralStage, setProceduralStage] = useState<ProceduralStage | "">("");
   const [title, setTitle] = useState("");
+  const [hechos, setHechos] = useState("");
   const [priority, setPriority] = useState<CasePriority>("normal");
   const [representa, setRepresenta] = useState<Representacion | "">("");
   const [actors, setActors] = useState<ActorFormData[]>([
@@ -105,6 +106,8 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
       return createCase(tenantId, {
         case_type: derivedCaseType ?? (matterArea || "unknown"),
         title: title.trim(),
+        // QA 23-nov: sin hechos, «Generar estrategias» respondía SIN_DATOS.
+        description: hechos.trim() || undefined,
         priority,
         matter_area: (matterArea as MatterArea) || undefined,
         case_subtype: effectiveSubtype || undefined,
@@ -326,6 +329,20 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
           <label className="block text-sm font-medium text-zinc-300">
             Título del expediente
             <input value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} />
+          </label>
+
+          {/* Hechos: los usan las estrategias y los escritos con IA. */}
+          <label className="block text-sm font-medium text-zinc-300">
+            Hechos del caso (opcional)
+            <textarea
+              value={hechos}
+              onChange={(e) => setHechos(e.target.value)}
+              rows={4}
+              maxLength={8000}
+              placeholder="Qué pasó, cuándo, montos y lo que pide el cliente. Puedes completarlo después en el expediente."
+              className={inputClass}
+            />
+            <span className="mt-1 block text-xs text-zinc-500">Las estrategias con IA necesitan al menos un párrafo de hechos.</span>
           </label>
 
           {/* Prioridad */}
