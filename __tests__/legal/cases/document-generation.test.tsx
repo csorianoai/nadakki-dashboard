@@ -90,6 +90,24 @@ describe("legal-cases-api — generación de documentos (fetch)", () => {
     expect(url).toBe("/api/legal/cases/c1/documents/generated/d1");
     expect(new Headers(init.headers).get("X-Tenant-ID")).toBe("t1");
   });
+
+  it("fetchGeneratedDocument lee el texto de generated_text y la validación del ciclo de vida", async () => {
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      text: async () =>
+        JSON.stringify({
+          document_id: "d1",
+          document_type: "demanda_civil_cobro_pesos",
+          generated_text: "# Demanda\n\nTexto del escrito",
+          attorney_validated: false,
+          lifecycle_status: "reviewed_by_attorney",
+        }),
+    });
+    const doc = await fetchGeneratedDocument("t1", "c1", "d1");
+    expect(doc.content).toBe("# Demanda\n\nTexto del escrito");
+    expect(doc.attorney_validated).toBe(true);
+    expect(doc.lifecycle_status).toBe("reviewed_by_attorney");
+  });
 });
 
 describe("useGenerateDocument", () => {

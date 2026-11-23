@@ -606,11 +606,21 @@ export async function fetchGeneratedDocument(
   const raw = await parseJson<Record<string, unknown>>(res);
   const document_id = typeof raw.document_id === "string" ? raw.document_id : docId;
   const document_type = typeof raw.document_type === "string" ? raw.document_type : "";
-  const content = typeof raw.content === "string" ? raw.content : "";
-  const attorney_validated = Boolean(raw.attorney_validated);
+  // El backend devuelve el texto en `generated_text` (QA 23-nov: el visor salía vacío).
+  const content =
+    typeof raw.content === "string" && raw.content
+      ? raw.content
+      : typeof raw.generated_text === "string"
+        ? raw.generated_text
+        : "";
+  const lifecycle_status = typeof raw.lifecycle_status === "string" ? raw.lifecycle_status : undefined;
+  const attorney_validated =
+    Boolean(raw.attorney_validated) ||
+    lifecycle_status === "reviewed_by_attorney" ||
+    lifecycle_status === "finalized";
   const generated_at = typeof raw.generated_at === "string" ? raw.generated_at : undefined;
   const citations = raw.citations;
-  return { document_id, document_type, content, attorney_validated, generated_at, citations };
+  return { document_id, document_type, content, attorney_validated, generated_at, citations, lifecycle_status };
 }
 
 // ─── Deadline Notifications (Phase 3) ───────────────────────────────

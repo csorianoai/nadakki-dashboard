@@ -175,15 +175,7 @@ export function GeneratedDocumentViewer({ tenantId, caseId, docId, open, onClose
                 >
                   {mGen.copy}
                 </button>
-                <button
-                  type="button"
-                  className="inline-flex rounded-forge-sm px-4 py-2 text-sm text-forgeGray-500 ring-1 ring-forgeGray-200"
-                  disabled
-                  title={mGen.mark_validated_disabled}
-                  aria-label={mGen.mark_validated_placeholder}
-                >
-                  {mGen.mark_validated_placeholder}
-                </button>
+                <p className="self-center text-xs text-forgeGray-600">{mGen.mark_validated_disabled}</p>
               </div>
 
               <div
@@ -192,7 +184,7 @@ export function GeneratedDocumentViewer({ tenantId, caseId, docId, open, onClose
                 {data.content ? (
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{data.content}</ReactMarkdown>
                 ) : (
-                  <p className="text-sm text-forgeGray-500">{mList.empty}</p>
+                  <p className="text-sm text-forgeGray-500">{mList.viewer_no_text}</p>
                 )}
               </div>
 

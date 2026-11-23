@@ -300,6 +300,7 @@
     "viewer_error": "No se pudo cargar el documento generado.",
     "viewer_retry": "Volver a intentar",
     "viewer_close": "Cerrar",
+    "viewer_no_text": "Este documento no tiene texto guardado.",
     "copy_no_content": "No hay texto para copiar."
   },
   "generate_document": {
@@ -322,7 +323,7 @@
     "copy": "Copiar al portapapeles",
     "copied": "Copiado al portapapeles",
     "mark_validated_placeholder": "Marcar como validado por abogado",
-    "mark_validated_disabled": "Próximamente: marcar desde el sistema de validación.",
+    "mark_validated_disabled": "Para marcarlo como revisado por abogado o finalizarlo, usa «Gestionar» en la lista de documentos del expediente.",
     "metadata_validation": "Validación legal:",
     "metadata_validation_yes": "Sí",
     "metadata_validation_no": "No",

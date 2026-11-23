@@ -278,6 +278,8 @@ export interface GeneratedDocumentDetail {
   attorney_validated: boolean;
   generated_at?: string;
   citations?: unknown;
+  /** draft | reviewed_by_attorney | finalized … (lo marca el abogado en «Gestionar»). */
+  lifecycle_status?: string;
 }
 
 export interface GeneratedDocumentsListResponse {
