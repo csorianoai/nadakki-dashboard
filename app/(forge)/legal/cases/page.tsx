@@ -33,7 +33,7 @@ export default function LegalCasesListPage() {
 
   return (
     <main id="main-content" className="min-h-0 space-y-4">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header data-compacto="" className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-zinc-100">{m.list.title}</h1>
         </div>

@@ -76,7 +76,7 @@ export function HomeKpiTiles({ tenantId, casesTotal, casesLoading, compacto = fa
   const cargando = (b: boolean) => (b ? "…" : null);
 
   return (
-    <div className={`grid grid-cols-2 gap-3 ${compacto ? "content-start" : "lg:grid-cols-4"}`} data-testid="mi-despacho-kpis">
+    <div className={`grid grid-cols-2 gap-3 ${compacto ? "content-start" : "lg:grid-cols-4"}`} data-testid="mi-despacho-kpis" data-compacto="">
       <Tile
         testId="kpi-plazos"
         label={m.kpi_deadlines_7d}

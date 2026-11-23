@@ -104,7 +104,7 @@ export function MyReviewsPanel({ tenantId, cases }: Props) {
   }
 
   return (
-    <section aria-labelledby="legal-reviews" className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <section data-compacto="" aria-labelledby="legal-reviews" className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <h2 id="legal-reviews" className="text-base font-semibold tracking-tight text-slate-900 dark:text-zinc-100">{m.reviews_title}</h2>
       <p className="mt-1 text-sm text-slate-500 dark:text-zinc-400">{m.reviews_subtitle}</p>
       <div className="mt-4">{body}</div>

@@ -130,7 +130,7 @@ export function CaseDetailHeader({
         {legalCase.confidence ? <CaseConfidenceMeter confidence={legalCase.confidence} /> : null}
       </div>
 
-      <nav aria-label="Secciones del expediente" className="flex flex-wrap gap-x-1 border-b border-slate-200 dark:border-zinc-800">
+      <nav data-compacto="" aria-label="Secciones del expediente" className="flex flex-wrap gap-x-1 border-b border-slate-200 dark:border-zinc-800">
         {navItems.map((item) => {
           const active = isActive(item);
           return (

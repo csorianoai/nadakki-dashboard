@@ -11,7 +11,7 @@ import { CaseWorkTable } from "@/components/legal/cases/CaseWorkTable";
 import { MyReviewsPanel } from "@/components/legal/home/MyReviewsPanel";
 import { UpcomingHearingsPanel } from "@/components/legal/home/UpcomingHearingsPanel";
 import { HomeKpiTiles } from "@/components/legal/home/HomeKpiTiles";
-import { PriorityDeadlinesPanel } from "@/components/legal/home/PriorityDeadlinesPanel";
+import { PriorityInbox } from "@/components/legal/home/PriorityInbox";
 import { QuickAiActions } from "@/components/legal/home/QuickAiActions";
 import { useLegalHomeMessages } from "@/hooks/useLegalHomeMessages";
 import { useLegalTasks } from "@/hooks/useLegalTasks";
@@ -61,7 +61,7 @@ export default function LegalHomeContent() {
 
   return (
     <div id="main-content" className="mx-auto flex w-full min-w-0 max-w-[1600px] flex-col gap-4 pb-24">
-      <header className="flex flex-wrap items-start justify-between gap-3">
+      <header data-compacto="" className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-zinc-100">{m.title}</h1>
           <p className="mt-0.5 text-sm text-slate-600 dark:text-zinc-400">
@@ -82,7 +82,7 @@ export default function LegalHomeContent() {
 
       {/* Prioridades primero (orden aprobado) y, a su derecha, los indicadores en 2×2: sin franja vacía. */}
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px] [&>*]:min-w-0">
-        <PriorityDeadlinesPanel tenantId={effectiveTenantId} />
+        <PriorityInbox tenantId={effectiveTenantId} casos={casos} />
         <HomeKpiTiles
           tenantId={effectiveTenantId}
           casesTotal={typeof casesQ.data?.total === "number" ? casesQ.data.total : null}
@@ -91,7 +91,7 @@ export default function LegalHomeContent() {
         />
       </div>
 
-      <section aria-labelledby="legal-active-cases" className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+      <section data-compacto="" aria-labelledby="legal-active-cases" className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-zinc-800">
           <h2 id="legal-active-cases" className="text-[15px] font-semibold text-slate-900 dark:text-zinc-100">Mis expedientes recientes</h2>
           <Link href="/legal/cases" className="text-xs font-semibold text-blue-700 hover:underline dark:text-blue-300">Ver todos</Link>
@@ -114,7 +114,7 @@ export default function LegalHomeContent() {
 
       <div className="grid items-start gap-4 lg:grid-cols-[1.2fr_1fr] [&>*]:min-w-0">
         <QuickAiActions tasks={tasks} loading={loading} error={Boolean(error)} onRetry={() => void refetch()} />
-        <section aria-labelledby="legal-recent" className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <section data-compacto="" aria-labelledby="legal-recent" className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-zinc-800">
             <h2 id="legal-recent" className="text-[15px] font-semibold text-slate-900 dark:text-zinc-100">{m.recent_activity}</h2>
             <Link href="/legal/audit" className="text-xs font-semibold text-blue-700 hover:underline dark:text-blue-300">Ver auditoría</Link>
