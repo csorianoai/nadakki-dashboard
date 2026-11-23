@@ -2,6 +2,7 @@
 
 import type { HearingListFilters } from "@/lib/legal/hearings/hearings-types";
 import { humanizeToken } from "@/lib/legal/hearings/hearings-format";
+import { SelectorExpediente } from "@/components/legal/hearings/SelectorExpediente";
 
 /**
  * Filter bar. Param names match the OpenAPI exactly: from, to, case_id, status,
@@ -14,12 +15,13 @@ type Props = {
   hearingTypes: string[];
   onChange: (next: HearingListFilters) => void;
   disabled?: boolean;
+  tenantId?: string;
 };
 
 const inputCls =
   "w-full rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-100 outline-none focus-visible:ring-2 focus-visible:ring-violet-500";
 
-export function HearingFilters({ filters, statuses, hearingTypes, onChange, disabled }: Props) {
+export function HearingFilters({ filters, statuses, hearingTypes, onChange, disabled, tenantId }: Props) {
   const set = (patch: Partial<HearingListFilters>) => onChange({ ...filters, ...patch });
 
   return (
@@ -85,15 +87,14 @@ export function HearingFilters({ filters, statuses, hearingTypes, onChange, disa
       </label>
 
       <label className="flex flex-col gap-1 text-xs text-zinc-400">
-        Expediente (case_id)
-        <input
-          type="text"
+        Expediente
+        <SelectorExpediente
+          tenantId={tenantId}
           className={inputCls}
           value={filters.case_id ?? ""}
           disabled={disabled}
-          placeholder="ID de expediente"
-          aria-label="Filtrar por expediente"
-          onChange={(e) => set({ case_id: e.target.value || undefined })}
+          etiquetaVacia="Todos"
+          onChange={(v) => set({ case_id: v || undefined })}
         />
       </label>
     </div>

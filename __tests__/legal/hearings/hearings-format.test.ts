@@ -33,7 +33,7 @@ function h(id: string, date: string): HearingOut {
 
 describe("hearings-format", () => {
   it("humanizeToken turns enum tokens into readable labels", () => {
-    expect(humanizeToken("AUDIENCIA_FONDO")).toBe("Audiencia Fondo");
+    expect(humanizeToken("AUDIENCIA_FONDO")).toBe("Audiencia de fondo");
     expect(humanizeToken("")).toBe("—");
   });
 

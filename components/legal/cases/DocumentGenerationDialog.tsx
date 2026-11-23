@@ -7,6 +7,19 @@ import { useGenerateDocument } from "@/hooks/legal/useDocumentGeneration";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { toast } from "@/components/forge/ui/Toast";
 
+/** Mensaje para el abogado (QA 23-nov: se mostraba «capability_denied:…:TARGET_CORE_NOT_READY»). */
+export function mensajeGeneracion(e: unknown, porDefecto: string): string {
+  const txt = e instanceof Error ? e.message : "";
+  if (/TARGET_CORE_NOT_READY/.test(txt)) {
+    return "La generación de documentos con IA aún no está habilitada en este despacho. No se generó nada.";
+  }
+  if (/capability_denied|\(403\)/.test(txt)) {
+    return "Tu plan o tu rol no permite generar documentos con IA. No se generó nada.";
+  }
+  if (/\(5\d\d\)/.test(txt)) return "El servicio de generación no respondió. No se generó nada; intenta más tarde.";
+  return txt || porDefecto;
+}
+
 type Props = {
   tenantId: string;
   caseId: string;
@@ -21,6 +34,8 @@ export function DocumentGenerationDialog({ tenantId, caseId, open, onClose }: Pr
   const [docType, setDocType] = useState<LegalGeneratedDocumentType>("demanda_civil_cobro_pesos");
   const [instructions, setInstructions] = useState("");
   const [jsonExtra, setJsonExtra] = useState("");
+  // El error queda en el diálogo: el aviso flotante desaparece en segundos.
+  const [error, setError] = useState<string | null>(null);
 
   if (!open) return null;
 
@@ -44,6 +59,7 @@ export function DocumentGenerationDialog({ tenantId, caseId, open, onClose }: Pr
       }
     }
     const parameters: Record<string, unknown> = { instrucciones: trimmed, ...extra };
+    setError(null);
     try {
       await mutateAsync({ document_type: docType, parameters });
       toast.success(m.success);
@@ -51,7 +67,8 @@ export function DocumentGenerationDialog({ tenantId, caseId, open, onClose }: Pr
       setJsonExtra("");
       onClose();
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : m.error_generate;
+      const msg = mensajeGeneracion(e, m.error_generate);
+      setError(msg);
       toast.error(msg);
     }
   };
@@ -70,6 +87,11 @@ export function DocumentGenerationDialog({ tenantId, caseId, open, onClose }: Pr
           {m.dialog_title}
         </h2>
         <p className="mt-2 text-sm text-forgeGray-600">{m.dialog_description}</p>
+        {error ? (
+          <p role="alert" className="mt-2 rounded-forge-sm bg-red-50 px-3 py-2 text-sm text-red-800">
+            {error}
+          </p>
+        ) : null}
 
         <div className="mt-4 space-y-4">
           <label htmlFor="gen-doc-type" className="block text-sm font-medium text-forgeGray-800">

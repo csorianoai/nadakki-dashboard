@@ -103,6 +103,7 @@ export function HearingsDashboard() {
         hearingTypes={hearingTypes}
         onChange={setFilters}
         disabled={config.isLoading}
+        tenantId={effectiveTenantId}
       />
 
       <div className="flex items-center justify-end gap-1 rounded-lg border border-zinc-800/70 bg-zinc-900/30 p-1 sm:w-fit">
