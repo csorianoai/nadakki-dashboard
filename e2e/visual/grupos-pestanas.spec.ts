@@ -85,15 +85,18 @@ test.describe("escritorio 1440x900", () => {
     await expect(page.locator("nav[aria-label^='Páginas de']")).toHaveCount(1);
   });
 
-  test("Legal (menú plano): sin pantalla de grupo, pestañas con todas las páginas y una sola barra", async ({ page }) => {
+  test("Legal (Legal OS, César 22-nov): sin barra de pestañas; el menú lateral es la única navegación", async ({ page }) => {
     await sesion(page);
     await page.goto("/legal/cases");
-    const barra = page.getByTestId("pestanas-grupo");
-    await expect(barra).toBeVisible({ timeout: 30_000 });
-    await expect(barra.getByTestId("pestana-grupo")).toHaveCount(9);
-    await expect(barra.locator('a[aria-current="page"]')).toHaveText("Expedientes");
+    const menu = page.getByTestId("menu-modulo");
+    await expect(menu).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByTestId("pestanas-grupo")).toHaveCount(0);
+    await expect(menu.locator('a[aria-current="page"]')).toHaveText(/Expedientes/);
+    for (const href of ["/legal", "/legal/cases", "/legal/cases/new", "/legal/audiencias", "/legal/asistente", "/legal/contracts", "/legal/research", "/legal/library", "/legal/audit", "/legal/config"]) {
+      await expect(menu.locator(`a[href="${href}"]`)).toHaveCount(1);
+    }
     await expect(page.locator("nav[aria-label='Legal']")).toHaveCount(0);   // la barra propia anterior (LegalSubNav) ya no se pinta
-    await expect(page.getByTestId("menu-modulo").locator("[data-testid^='menu-grupo-enlace-']")).toHaveCount(0);
+    await expect(menu.locator("[data-testid^='menu-grupo-enlace-']")).toHaveCount(0);
   });
 });
 
