@@ -79,8 +79,10 @@ export function filasDeTrabajo(
     });
 }
 
-/** Dónde continuar: los plazos si hay uno vencido o próximo; si no, el resumen del expediente. */
+/** Dónde continuar: el plazo si hay uno vencido o próximo; si no, los documentos por revisar; si no, el expediente. */
 export function rutaContinuar(f: FilaTrabajo): string {
   const id = encodeURIComponent(f.caso.case_id);
-  return f.plazo ? `/legal/cases/${id}/deadlines` : `/legal/cases/${id}`;
+  if (f.plazo) return `/legal/cases/${id}/deadlines`;
+  if (f.revisionesPendientes) return `/legal/cases/${id}/documents`;
+  return `/legal/cases/${id}`;
 }

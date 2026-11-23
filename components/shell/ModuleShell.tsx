@@ -83,7 +83,7 @@ export function ModuleShell({ modulo, children }: ModuleShellProps) {
     const grupoPestanas = !modulo || enPantallaGrupo ? null : conGrupos ? grupoDeRuta(grupos, pathname) : (grupos.filter(grupoEnlazable).length === 1 ? grupos.find(grupoEnlazable)! : null);
     return (
       <div className={CLASES.cuerpo}>
-        <ModuleSidebar titulo={modulo?.label ?? "Suite"} moduloId={modulo?.id ?? null} grupos={grupos} pathname={pathname} abierto={cajon} onCerrar={cerrar} plano={!modulo} modulo={conGrupos ? modulo : null} />
+        <ModuleSidebar titulo={modulo?.label ?? "Suite"} moduloId={modulo?.id ?? null} grupos={grupos} pathname={pathname} abierto={cajon} onCerrar={cerrar} plano={!modulo || Boolean(modulo.sinPestanas)} modulo={conGrupos ? modulo : null} />
         <div className={CLASES.columna}>
           <main id="main-content" className={CLASES.contenido}>
             {conSesion ? <TenantBrandedDocumentTitle /> : null}

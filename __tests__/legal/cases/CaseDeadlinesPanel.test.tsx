@@ -29,7 +29,8 @@ const d = {
 describe("CaseDeadlinesPanel", () => {
   it("muestra plazo activo", () => {
     render(<CaseDeadlinesPanel deadlines={[d]} caseId="c1" tenantId="t1" />);
-    expect(screen.getByText("X")).toBeInTheDocument();
+    expect(screen.getByText(d.deadline_category || "X", { exact: false })).toBeInTheDocument();  // el acto, no el código interno
+    expect(screen.getByText("Perentorio")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Modificar plazo/i })).toBeInTheDocument();
   });
 });
