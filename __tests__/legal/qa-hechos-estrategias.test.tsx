@@ -59,3 +59,14 @@ it("«Generar estrategias» con SIN_DATOS muestra el motivo", async () => {
   await userEvent.click(screen.getByRole("button", { name: /Generar estrategias/ }));
   expect(await screen.findByRole("status")).toHaveTextContent("No se generaron estrategias: Faltan");
 });
+
+describe("mensajes de generación de documentos", () => {
+  const { mensajeGeneracion } = jest.requireActual("@/components/legal/cases/DocumentGenerationDialog");
+  it("traduce el bloqueo por preparación del core y no muestra el código interno", () => {
+    const m = mensajeGeneracion(new Error("Error (403): capability_denied:legal.documents.generate:TARGET_CORE_NOT_READY"), "x");
+    expect(m).toMatch(/aún no está habilitada/);
+    expect(m).not.toMatch(/capability_denied/);
+    expect(mensajeGeneracion(new Error("Error (403): capability_denied:legal.documents.generate:UPGRADE_REQUIRED"), "x")).toMatch(/plan o tu rol/);
+    expect(mensajeGeneracion(new Error("Error (502): bad gateway"), "x")).toMatch(/no respondió/);
+  });
+});
