@@ -83,10 +83,16 @@ export interface CaseStrategy {
   description: string;
   legal_basis: string;
   rationale: string;
-  expected_strength: number;
+  /** Ausente en las estrategias del modelo: traen `confianza` (sin porcentajes inventados). */
+  expected_strength?: number;
   risks: string[];
   selected: boolean;
   status: "proposed" | "selected" | "executing" | "completed" | "abandoned";
+  /** Campos de las estrategias generadas por el modelo (backend strategy_engine). */
+  title?: string;
+  objetivo?: string;
+  confianza?: "alta" | "media" | "baja";
+  pasos?: string[];
 }
 
 export interface CaseDocument {
@@ -98,6 +104,8 @@ export interface CaseDocument {
   uploaded_at: string;
   extracted_data?: Record<string, unknown>;
   extracted_data_human_verified: boolean;
+  /** «ai_generated» en los escritos generados por IA. */
+  document_subtype?: string | null;
 }
 
 export interface RiskProfile {
@@ -278,6 +286,8 @@ export interface GeneratedDocumentDetail {
   attorney_validated: boolean;
   generated_at?: string;
   citations?: unknown;
+  /** draft | reviewed_by_attorney | finalized … (lo marca el abogado en «Gestionar»). */
+  lifecycle_status?: string;
 }
 
 export interface GeneratedDocumentsListResponse {

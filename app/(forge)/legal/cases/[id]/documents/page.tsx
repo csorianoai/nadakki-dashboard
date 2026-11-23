@@ -14,6 +14,18 @@ import { GeneratedDocumentsList } from "@/components/legal/cases/GeneratedDocume
 import { GeneratedDocumentViewer } from "@/components/legal/cases/GeneratedDocumentViewer";
 import type { CaseDocument } from "@/lib/legal/cases/case-types";
 
+/**
+ * Solo los documentos subidos llevan datos extraídos que el abogado debe verificar.
+ * Un escrito generado por IA guarda su texto en extracted_data (generated_text): antes
+ * «Gestionar» abría un formulario de verificación vacío y nunca la revisión del abogado.
+ */
+function necesitaVerificarDatos(d: CaseDocument): boolean {
+  const extra = d.extracted_data;
+  if (!extra || d.extracted_data_human_verified) return false;
+  if (d.document_subtype === "ai_generated" || "generated_text" in extra) return false;
+  return true;
+}
+
 export default function LegalCaseDocumentsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const msgs = useLegalCasesMessages();
@@ -39,7 +51,7 @@ export default function LegalCaseDocumentsPage({ params }: { params: Promise<{ i
       <CaseDocumentsList
         documents={c.documents}
         onSelect={(d) => {
-          if (!d.extracted_data_human_verified && d.extracted_data) setReviewDoc(d);
+          if (necesitaVerificarDatos(d)) setReviewDoc(d);
           else setLifeDoc(d);
         }}
       />
