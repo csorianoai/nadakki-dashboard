@@ -53,7 +53,7 @@ export function CaseWorkTable({ filas, plazosDisponibles, revisionesDisponibles,
   return (
     <>
     {/* Móvil: tarjetas apiladas; plazo y «Continuar» siempre a la vista (la tabla obligaba a desplazar en horizontal). */}
-    <ul className="divide-y divide-slate-100 sm:hidden dark:divide-zinc-800" aria-label={titulo}>
+    <ul data-compacto="" className="divide-y divide-slate-100 sm:hidden dark:divide-zinc-800" aria-label={titulo}>
       {filas.map((f) => {
         const c = f.caso;
         const pend = f.revisionesPendientes;
@@ -78,7 +78,7 @@ export function CaseWorkTable({ filas, plazosDisponibles, revisionesDisponibles,
         );
       })}
     </ul>
-    <div className="hidden overflow-x-auto sm:block">
+    <div data-compacto="" className="hidden overflow-x-auto sm:block">
       <table className="w-full text-left text-[13px]" aria-label={titulo}>
         <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-zinc-950 dark:text-zinc-400">
           <tr>

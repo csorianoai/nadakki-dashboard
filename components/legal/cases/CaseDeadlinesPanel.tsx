@@ -34,7 +34,7 @@ export function CaseDeadlinesPanel({
   return (
     <div>
       <h2 className="mb-3 text-sm font-semibold text-forgeGray-900">{m.deadlines.title}</h2>
-      <ul className="space-y-3">
+      <ul data-compacto="" className="space-y-3">
         {(deadlines ?? []).map((d) => {
           const days = daysUntil(d.effective_deadline_date);
           return (
@@ -60,7 +60,11 @@ export function CaseDeadlinesPanel({
                 {/* Próxima acción: preparar el escrito o revisar la estrategia; corregir el plazo queda como secundaria.
                     (Las tareas de IA aún no reciben el expediente como contexto: el abogado lo indica en la tarea.) */}
                 <div className="flex flex-wrap items-center gap-2">
-                  <Link href="/legal/asistente" className="rounded-forge-sm bg-blue-700 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-800">
+                  <Link
+                    href="/legal/asistente"
+                    aria-describedby={`ia-sin-contexto-${d.deadline_id}`}
+                    className="rounded-forge-sm bg-blue-700 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-800"
+                  >
                     Preparar escrito con IA
                   </Link>
                   <Link href={`/legal/cases/${encodeURIComponent(caseId)}/strategy`} className="rounded-forge-sm border border-blue-200 px-2.5 py-1 text-xs font-semibold text-blue-800 hover:bg-blue-50">
@@ -73,6 +77,9 @@ export function CaseDeadlinesPanel({
                 >
                   {m.deadlines.override}
                 </button>
+                <p id={`ia-sin-contexto-${d.deadline_id}`} className="w-full text-[11px] text-slate-500 sm:text-right">
+                  El asistente no recibe este expediente: indica tú los datos del caso en la tarea.
+                </p>
                 </div>
               </div>
             </li>

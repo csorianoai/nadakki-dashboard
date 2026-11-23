@@ -97,7 +97,7 @@ export function PriorityDeadlinesPanel({ tenantId }: { tenantId: string | undefi
   }
 
   return (
-    <section id="atencion-prioritaria" aria-labelledby="legal-priority" className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <section data-compacto="" id="atencion-prioritaria" aria-labelledby="legal-priority" className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <h2 id="legal-priority" className="text-base font-semibold tracking-tight text-slate-900 dark:text-zinc-100">{m.priority_title}</h2>
       <p className="mt-1 text-sm text-slate-600 dark:text-zinc-400">{m.priority_subtitle}</p>
       <div className="mt-4">{body}</div>

@@ -37,7 +37,7 @@ export function QuickAiActions({ tasks, loading, error, onRetry }: Props) {
   const lista = accionesRapidas(tasks, (t) => tenantSatisfiesTaskFeatures(t, isFeatureEnabled));
 
   return (
-    <section aria-labelledby="legal-ai-quick" className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <section data-compacto="" aria-labelledby="legal-ai-quick" className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-zinc-800">
         <h2 id="legal-ai-quick" className="flex items-center gap-2 text-[15px] font-semibold text-slate-900 dark:text-zinc-100">
           <Sparkles className="h-4 w-4 text-blue-700 dark:text-blue-300" aria-hidden />Acciones rápidas de IA

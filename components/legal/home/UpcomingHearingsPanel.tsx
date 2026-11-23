@@ -69,7 +69,7 @@ export function UpcomingHearingsPanel({ tenantId }: Props) {
   }
 
   return (
-    <section aria-labelledby="legal-hearings" className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <section data-compacto="" aria-labelledby="legal-hearings" className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex items-baseline justify-between gap-3">
         <h2 id="legal-hearings" className="text-base font-semibold tracking-tight text-slate-900 dark:text-zinc-100">{m.hearings_title}</h2>
         <Link href="/legal/audiencias" className="text-xs font-medium text-blue-700 hover:text-blue-900 dark:text-blue-300 dark:hover:text-blue-200">

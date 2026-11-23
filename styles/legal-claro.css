@@ -142,13 +142,12 @@
 .legal-surface.legal-claro [class*="bg-gradient-to-"].text-white:hover { background-color: #3730a3 !important; }
 
 /* ── Legal OS (César, 22-nov): fidelidad Clio / maqueta V3 ── */
-/* Con ratón o trackpad, enlaces y botones del área legal no se estiran a 44 px (regla global de app/globals.css
-   pensada para pantallas táctiles): tablas y listas quedan compactas. En táctil se conserva el área de 44 px. */
+/* Con ratón o trackpad, los controles de las vistas compactas marcadas con [data-compacto] (paneles de Mi despacho,
+   tabla de expedientes, plazos y pestañas del expediente) no se estiran a 44 px por la regla global de
+   app/globals.css, pensada para pantallas táctiles. Formularios, modales y el resto de la Suite no cambian;
+   en táctil (pointer: coarse, también en dispositivos híbridos) se conservan los 44 px. */
 @media (pointer: fine) {
-  .legal-surface.legal-claro a, .legal-surface.legal-claro button, .legal-surface.legal-claro [role="button"],
-  [data-testid="menu-modulo"][data-modulo="legal"] a, [data-testid="menu-modulo"][data-modulo="legal"] button {
-    min-height: 0; min-width: 0;
-  }
+  .legal-surface.legal-claro [data-compacto] :is(a, button, [role="button"]) { min-height: 0; min-width: 0; }
 }
 /* Menú lateral: íconos monocromos y elemento activo en azul institucional (como la maqueta V3 y Clio). */
 [data-testid="menu-modulo"][data-modulo="legal"] a svg { color: #64748b !important; }
