@@ -41,6 +41,6 @@ describe("CaseList", () => {
 
   it("renderiza tarjetas cuando hay expedientes", () => {
     render(qc(<CaseList cases={[baseCase({ case_id: "a", title: "Uno" })]} loading={false} error={null} />));
-    expect(screen.getByRole("link", { name: "Uno" })).toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Uno" }).length).toBeGreaterThan(0);  // tabla (escritorio) y tarjeta (móvil)
   });
 });

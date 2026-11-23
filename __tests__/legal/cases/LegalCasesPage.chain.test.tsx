@@ -105,7 +105,7 @@ describe("Legal › Expedientes (cadena real de carga)", () => {
       })
     );
     renderPage();
-    expect(await screen.findByText("Expediente de prueba")).toBeInTheDocument();
+    expect((await screen.findAllByText("Expediente de prueba")).length).toBeGreaterThan(0);  // tabla y tarjeta móvil
     expect(screen.queryByRole("alert")).toBeNull();
   });
 

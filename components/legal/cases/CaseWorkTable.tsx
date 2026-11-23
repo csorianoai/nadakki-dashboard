@@ -51,9 +51,36 @@ type Props = {
  */
 export function CaseWorkTable({ filas, plazosDisponibles, revisionesDisponibles, titulo }: Props) {
   return (
-    <div className="overflow-x-auto">
+    <>
+    {/* Móvil: tarjetas apiladas; plazo y «Continuar» siempre a la vista (la tabla obligaba a desplazar en horizontal). */}
+    <ul data-compacto="" className="divide-y divide-slate-100 sm:hidden dark:divide-zinc-800" aria-label={titulo}>
+      {filas.map((f) => {
+        const c = f.caso;
+        const pend = f.revisionesPendientes;
+        return (
+          <li key={c.case_id} className="px-4 py-3">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <Link href={`/legal/cases/${encodeURIComponent(c.case_id)}`} className="line-clamp-2 text-sm font-semibold text-blue-800 hover:underline dark:text-blue-300">{c.title}</Link>
+                <p className="mt-0.5 text-[11px] text-slate-500 dark:text-zinc-400">
+                  {c.case_number_internal || "Sin número interno"} · {ESTADOS[c.state] ?? c.state} · {PRIORIDADES[c.priority] ?? "—"}
+                </p>
+              </div>
+              <Link href={rutaContinuar(f)} className="inline-flex min-h-[44px] shrink-0 items-center rounded-md border border-blue-200 px-3 text-xs font-semibold text-blue-800 dark:border-blue-800 dark:text-blue-300">
+                Continuar<span className="sr-only"> con {c.title}</span>
+              </Link>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+              <CeldaPlazo fila={f} disponible={plazosDisponibles} />
+              {revisionesDisponibles && pend ? <span className="font-medium text-amber-800 dark:text-amber-300">{pend === 1 ? "1 documento por revisar" : `${pend} documentos por revisar`}</span> : null}
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+    <div data-compacto="" className="hidden overflow-x-auto sm:block">
       <table className="w-full text-left text-[13px]" aria-label={titulo}>
-        <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-zinc-950/50 dark:text-zinc-400">
+        <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-zinc-950 dark:text-zinc-400">
           <tr>
             <th scope="col" className="px-4 py-2.5">Expediente</th>
             <th scope="col" className="hidden px-3 py-2.5 sm:table-cell">Estado</th>
@@ -69,7 +96,7 @@ export function CaseWorkTable({ filas, plazosDisponibles, revisionesDisponibles,
             const c = f.caso;
             const pend = f.revisionesPendientes;
             return (
-              <tr key={c.case_id} className="hover:bg-slate-50/80 dark:hover:bg-zinc-800/40">
+              <tr key={c.case_id} className="hover:bg-[#f8fafc] dark:hover:bg-zinc-800">
                 <td className="max-w-[16rem] px-4 py-2.5">
                   <Link href={`/legal/cases/${encodeURIComponent(c.case_id)}`} className="block truncate font-semibold text-blue-800 hover:underline dark:text-blue-300">{c.title}</Link>
                   <span className="block truncate text-[11px] text-slate-500 dark:text-zinc-400">{c.case_number_internal || "Sin número interno"}</span>
@@ -94,5 +121,6 @@ export function CaseWorkTable({ filas, plazosDisponibles, revisionesDisponibles,
         </tbody>
       </table>
     </div>
+    </>
   );
 }

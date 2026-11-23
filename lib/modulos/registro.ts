@@ -204,7 +204,11 @@ export const MODULOS: ModuloConfig[] = [
     coreMatchers: seccionDe("legal-hub").coreMatchers,
     roles: [],
     seccion: "legal-hub",
-    menu: desdeSeccion("legal-hub", "Legal"),
+    // Legal OS (maqueta V3): «Espacio jurídico» y «Herramientas», títulos fijos; mismas URLs de lib/navigation.ts.
+    menu: desdeSeccion("legal-hub", "Espacio jurídico", [
+      { label: "Herramientas", prefijos: ["/legal/contracts", "/legal/research", "/legal/library", "/legal/audit", "/legal/config"] },
+    ]),
+    sinPantallaGrupo: true,
     acento: "#a78bfa",
     carcasa: "comun",
     // Legal OS (César, 22-nov): una sola navegación, la lateral; dentro del expediente sigue su navegación propia.

@@ -67,7 +67,7 @@ export function DeadlineNotificationBanner() {
                 <span className="shrink-0 text-xs font-semibold">{rem <= 0 ? "VENCIDO" : `${rem}d`}</span>
               </div>
               <p className="mt-0.5 text-xs opacity-90">
-                {d.deadline_db_id}{d.is_peremptory ? " · perentorio" : ""}
+                {d.deadline_category || d.deadline_db_id}{d.is_peremptory ? " · perentorio" : ""}
               </p>
             </Link>
           );

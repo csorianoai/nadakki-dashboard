@@ -6,7 +6,9 @@ import { useUpcomingDeadlines } from "@/hooks/legal/useUpcomingDeadlines";
 import { useValidationQueue, useValidationQueueSummary } from "@/hooks/legal/useValidationQueue";
 import { useHearingKpis } from "@/hooks/legal/useHearings";
 
-type Props = { tenantId: string | undefined; casesTotal: number | null; casesLoading: boolean };
+type Props = { tenantId: string | undefined; casesTotal: number | null; casesLoading: boolean;
+  /** 2×2 en la columna derecha de Mi despacho (junto a Atención prioritaria). */
+  compacto?: boolean };
 
 function Tile({ label, value, sub, tone, href, testId }: {
   label: string; value: string; sub?: string | null; tone?: "red" | "amber"; href?: string; testId: string;
@@ -29,7 +31,7 @@ function Tile({ label, value, sub, tone, href, testId }: {
  * Cuatro indicadores de "Mi despacho". Regla: "—" = no se sabe; un número solo si el
  * servidor lo confirma con cobertura completa. Los vencidos cuentan como urgentes.
  */
-export function HomeKpiTiles({ tenantId, casesTotal, casesLoading }: Props) {
+export function HomeKpiTiles({ tenantId, casesTotal, casesLoading, compacto = false }: Props) {
   const m = useLegalHomeMessages();
   const deadlines = useUpcomingDeadlines(tenantId, 7, false, true);
   const queue = useValidationQueue(tenantId);
@@ -59,7 +61,7 @@ export function HomeKpiTiles({ tenantId, casesTotal, casesLoading }: Props) {
   const partes: string[] = [];
   if (s && s.overdue > 0) partes.push(m.kpi_reviews_overdue.replace("{n}", String(s.overdue)));
   if (s && s.attorney_profile && s.assigned_to_me !== null) {
-    partes.push(m.kpi_assigned_to_me.replace("{n}", String(s.assigned_to_me)));
+    partes.push(s.assigned_to_me === 1 ? m.kpi_assigned_to_me_one : m.kpi_assigned_to_me.replace("{n}", String(s.assigned_to_me)));
   } else if (s && !s.attorney_profile) {
     partes.push(m.kpi_no_attorney_profile);
   } else if (queue.forbidden) {
@@ -74,7 +76,7 @@ export function HomeKpiTiles({ tenantId, casesTotal, casesLoading }: Props) {
   const cargando = (b: boolean) => (b ? "…" : null);
 
   return (
-    <div className="grid grid-cols-2 gap-3 lg:grid-cols-4" data-testid="mi-despacho-kpis">
+    <div className={`grid grid-cols-2 gap-3 ${compacto ? "content-start" : "lg:grid-cols-4"}`} data-testid="mi-despacho-kpis" data-compacto="">
       <Tile
         testId="kpi-plazos"
         label={m.kpi_deadlines_7d}
