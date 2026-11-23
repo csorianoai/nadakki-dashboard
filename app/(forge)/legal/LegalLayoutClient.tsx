@@ -70,7 +70,7 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
                     <LegalAvisoInicial />
                     <DemoBannerStrong />
                     {/* En Mi despacho los plazos ya encabezan la pantalla («Atención prioritaria»): no se repiten arriba. */}
-                    {pathname === "/legal" ? null : <DeadlineNotificationBanner />}
+                    {pathname === "/legal" || pathname?.endsWith("/deadlines") ? null : <DeadlineNotificationBanner />}
                     {/* Las pestañas de Legal las pinta ModuleShell (PestanasGrupo) desde el registro; ya no hay barra propia. */}
                     <LegalCoreShell>
                       {/* pb-20: el botón flotante del asistente (56 px, abajo a la derecha) no tapa el final de la página. */}

@@ -52,9 +52,16 @@ function prefijoDe(prefijos: string[], ruta: string): number {
 }
 
 /** Pantalla final: la propia ruta cuando es más profunda que la entrada del menú (p. ej. un detalle). */
+/** Pantallas internas cuyo segmento de URL está en inglés: la miga se muestra en español. */
+const SEGMENTOS_ES: Record<string, string> = {
+  deadlines: "Plazos", documents: "Documentos", timeline: "Línea de tiempo", strategy: "Estrategia",
+  issues: "Incidencias", risk: "Riesgo", snapshots: "Versiones", related: "Relacionados", archive: "Archivo",
+};
+
 function conDetalle(migas: Miga[], ultimaHref: string, ruta: string): Miga[] {
   if (sinQuery(ultimaHref) === ruta) return migas;
   const seg = ruta.split("/").filter(Boolean).pop() ?? "";
+  if (SEGMENTOS_ES[seg]) return [...migas, { label: SEGMENTOS_ES[seg], href: ruta }];
   // un identificador (uuid, número) no es un nombre: la pantalla es «Detalle»
   const label = !seg || /^[0-9a-f-]{8,}$/i.test(seg) || /^\d+$/.test(seg) ? "Detalle" : titulo(seg);
   return [...migas, { label, href: ruta }];

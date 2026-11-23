@@ -72,7 +72,7 @@ export function QuickAiActions({ tasks, loading, error, onRetry }: Props) {
             ))}
           </ul>
         )}
-        <p className="mt-3 text-[11px] text-slate-500 dark:text-zinc-400">Si trabajas en un caso, lanza la tarea desde su expediente: el contexto ya va incluido. Todo resultado requiere revisión profesional.</p>
+        <p className="mt-3 text-[11px] text-slate-500 dark:text-zinc-400">Indica en la tarea los datos del expediente que corresponda. Todo resultado requiere revisión profesional.</p>
       </div>
     </section>
   );

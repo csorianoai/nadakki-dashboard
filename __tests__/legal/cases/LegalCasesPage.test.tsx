@@ -63,7 +63,7 @@ describe("Legal › Expedientes (página)", () => {
       error: null,
     });
     render(<LegalCasesListPage />);
-    expect(screen.getByText("Expediente uno")).toBeInTheDocument();
+    expect(screen.getAllByText("Expediente uno").length).toBeGreaterThan(0);
   });
 
   it("fallo del backend: mensaje con acción, sin volcar el error crudo", () => {

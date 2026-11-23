@@ -80,13 +80,16 @@ export default function LegalHomeContent() {
         </div>
       </header>
 
-      <PriorityDeadlinesPanel tenantId={effectiveTenantId} />
-
-      <HomeKpiTiles
-        tenantId={effectiveTenantId}
-        casesTotal={typeof casesQ.data?.total === "number" ? casesQ.data.total : null}
-        casesLoading={casesQ.isLoading}
-      />
+      {/* Prioridades primero (orden aprobado) y, a su derecha, los indicadores en 2×2: sin franja vacía. */}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px] [&>*]:min-w-0">
+        <PriorityDeadlinesPanel tenantId={effectiveTenantId} />
+        <HomeKpiTiles
+          tenantId={effectiveTenantId}
+          casesTotal={typeof casesQ.data?.total === "number" ? casesQ.data.total : null}
+          casesLoading={casesQ.isLoading}
+          compacto
+        />
+      </div>
 
       <section aria-labelledby="legal-active-cases" className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-zinc-800">
@@ -104,12 +107,12 @@ export default function LegalHomeContent() {
         )}
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2 [&>*]:min-w-0">
+      <div className="grid items-start gap-4 lg:grid-cols-2 [&>*]:min-w-0">
         <MyReviewsPanel tenantId={effectiveTenantId} cases={casos} />
         <UpcomingHearingsPanel tenantId={effectiveTenantId} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr] [&>*]:min-w-0">
+      <div className="grid items-start gap-4 lg:grid-cols-[1.2fr_1fr] [&>*]:min-w-0">
         <QuickAiActions tasks={tasks} loading={loading} error={Boolean(error)} onRetry={() => void refetch()} />
         <section aria-labelledby="legal-recent" className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-zinc-800">

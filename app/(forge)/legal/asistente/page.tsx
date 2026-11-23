@@ -24,7 +24,7 @@ function CatalogoIa() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-zinc-100">Asistente IA</h1>
-          <p className="text-sm text-slate-600 dark:text-zinc-400">Todas las tareas de IA del despacho. Si trabajas en un caso, inícialas desde su expediente.</p>
+          <p className="text-sm text-slate-600 dark:text-zinc-400">Todas las tareas de IA del despacho. Indica en cada tarea los datos del expediente que corresponda.</p>
         </div>
         <label className="relative w-full max-w-sm">
           <span className="sr-only">Buscar tarea</span>

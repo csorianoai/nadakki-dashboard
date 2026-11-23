@@ -64,7 +64,7 @@ export function MyReviewsPanel({ tenantId, cases }: Props) {
             return (
               <li key={item.queue_item_id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-slate-900 dark:text-zinc-200">
+                  <p className="line-clamp-2 text-sm font-medium text-slate-900 dark:text-zinc-200">
                     {c ? c.title : m.reviews_case_fallback}
                     {c?.case_number_internal ? (
                       <span className="ml-2 text-xs font-normal text-zinc-500">{c.case_number_internal}</span>
@@ -82,7 +82,7 @@ export function MyReviewsPanel({ tenantId, cases }: Props) {
                   </p>
                 </div>
                 <Link
-                  href={`/legal/cases/${encodeURIComponent(item.case_id)}`}
+                  href={`/legal/cases/${encodeURIComponent(item.case_id)}/documents`}
                   className="shrink-0 rounded-lg border border-slate-200 px-3 py-1.5 dark:border-zinc-700 text-xs text-blue-700 hover:border-blue-300 hover:text-blue-900 dark:text-zinc-300 dark:hover:border-blue-600 dark:hover:text-zinc-100"
                 >
                   {m.reviews_open_case}
