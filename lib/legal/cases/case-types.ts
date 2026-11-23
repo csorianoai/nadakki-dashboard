@@ -104,6 +104,8 @@ export interface CaseDocument {
   uploaded_at: string;
   extracted_data?: Record<string, unknown>;
   extracted_data_human_verified: boolean;
+  /** «ai_generated» en los escritos generados por IA. */
+  document_subtype?: string | null;
 }
 
 export interface RiskProfile {
