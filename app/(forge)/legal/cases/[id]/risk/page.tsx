@@ -7,6 +7,9 @@ import { useLegalEffectiveTenantId } from "@/hooks/useLegalCore";
 import { CaseDetailHeader } from "@/components/legal/cases/CaseDetailHeader";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 
+const NIVEL: Record<string, string> = { low: "Bajo", medium: "Medio", high: "Alto", critical: "Crítico" };
+const nivel = (v: string) => NIVEL[v] ?? v;
+
 export default function LegalCaseRiskPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const m = useLegalCasesMessages();
@@ -32,17 +35,25 @@ export default function LegalCaseRiskPage({ params }: { params: Promise<{ id: st
       ) : (
         <div className="rounded-forge-md border border-forgeGray-200 bg-forgeSurface-card p-4 text-sm space-y-2">
           <h2 className="font-semibold text-forgeGray-900">{m.risk.title}</h2>
+          {/* QA 23-nov: 50 % era el valor «desconocido» del motor, mostrado como cálculo. */}
+          {profile.datos_suficientes?.probability_of_loss === false ? (
+            <p className="rounded bg-amber-50 px-2 py-1 text-xs text-amber-900">
+              Estimación preliminar: aún no hay una estrategia seleccionada con su fuerza estimada, así que no se calcula la probabilidad de pérdida.
+            </p>
+          ) : null}
           <p>
             {m.risk.overall_score}: {Math.round(profile.overall_risk_score * 100)}%
+            {profile.datos_suficientes?.probability_of_loss === false ? " (preliminar)" : ""}
           </p>
           <p>
-            {m.risk.probability_of_loss}: {Math.round(profile.probability_of_loss * 100)}%
+            {m.risk.probability_of_loss}:{" "}
+            {profile.datos_suficientes?.probability_of_loss === false ? "Sin datos suficientes" : `${Math.round(profile.probability_of_loss * 100)}%`}
           </p>
           <p>
-            {m.risk.legal_complexity}: {profile.legal_complexity}
+            {m.risk.legal_complexity}: {nivel(profile.legal_complexity)}
           </p>
           <p>
-            {m.risk.timeline_risk}: {profile.timeline_risk}
+            {m.risk.timeline_risk}: {nivel(profile.timeline_risk)}
           </p>
           {profile.financial_exposure ? (
             <p>

@@ -102,6 +102,8 @@ export interface CaseDocument {
 
 export interface RiskProfile {
   probability_of_loss: number;
+  /** Qué cifras son estimación real (backend #2872); ausente en respuestas antiguas. */
+  datos_suficientes?: { probability_of_loss: boolean; financial_exposure: boolean };
   financial_exposure?: string;
   legal_complexity: "low" | "medium" | "high" | "critical";
   timeline_risk: "low" | "medium" | "high" | "critical";

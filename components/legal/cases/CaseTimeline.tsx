@@ -4,6 +4,8 @@ import { useState } from "react";
 import type { CaseTimelineEvent } from "@/lib/legal/cases/case-types";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { CaseDecisionTraceViewer } from "@/components/legal/cases/CaseDecisionTraceViewer";
+import { detalleEvento, nombreEvento } from "@/lib/legal/cases/eventos";
+import { caseStateLabel } from "@/lib/legal/presentation-labels";
 
 export function CaseTimeline({ events }: { events: CaseTimelineEvent[] }) {
   const m = useLegalCasesMessages();
@@ -19,8 +21,11 @@ export function CaseTimeline({ events }: { events: CaseTimelineEvent[] }) {
           <time className="text-xs text-forgeGray-500" dateTime={e.occurred_at}>
             {new Date(e.occurred_at).toLocaleString("es-DO")}
           </time>
-          <p className="text-sm font-medium text-forgeGray-900">{e.event_type}</p>
-          <p className="text-xs text-forgeGray-600">{e.event_category}</p>
+          <p className="text-sm font-medium text-forgeGray-900">{nombreEvento(e.event_type)}</p>
+          {(() => {
+            const d = detalleEvento(e, (st) => caseStateLabel(m, st));
+            return d ? <p className="text-xs text-forgeGray-600">{d}</p> : null;
+          })()}
           {e.decision_trace ? (
             <div className="mt-2">
               <button
