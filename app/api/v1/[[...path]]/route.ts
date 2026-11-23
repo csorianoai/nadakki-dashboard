@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { buildBffUpstreamHeaders, resolveBffTenantId } from "@/lib/api/bff-proxy-headers";
 import { resolveBackendUrl } from "@/lib/config/backend-url";
+import { topeBffMs } from "@/lib/api/timeouts";
 
 const BACKEND_URL = resolveBackendUrl().replace(/\/$/, "");
 
@@ -65,6 +66,17 @@ async function proxyRequest(
   const query = url.search;
   const target = `${BACKEND_URL}/api/v1/${pathStr}${query}`;
   const tenantId = resolveBffTenantId(req);
+  // Topes en lib/api/timeouts.ts: lecturas 20 s, reportes/descargas/documentos 120 s, escrituras y subidas sin tope aqui.
+  const topeMs = topeBffMs(method, pathStr);
+  const controlador = new AbortController();
+  let vencio = false;
+  const reloj =
+    topeMs === null
+      ? null
+      : setTimeout(() => {
+          vencio = true;
+          controlador.abort();
+        }, topeMs);
 
   try {
     const headers = buildBffUpstreamHeaders(req, method, tenantId);
@@ -76,6 +88,9 @@ async function proxyRequest(
       if (body.byteLength > 0) init.body = body;
     }
 
+    if (topeMs !== null) {
+      init.signal = controlador.signal;
+    }
     const res = await fetch(target, { ...init, cache: "no-store" });
     // 204/205/304 no admiten cuerpo: `new NextResponse("", {status: 204})` lanza y acababa en 502
     // (el DELETE de una foto salia bien en el backend y el panel veia un fallo).
@@ -124,8 +139,16 @@ async function proxyRequest(
       headers: { "Content-Type": contentType },
     });
   } catch (e: unknown) {
+    if (vencio) {
+      return NextResponse.json(
+        { error: "upstream_timeout", timeout_ms: topeMs },
+        { status: 504, headers: { "Cache-Control": "no-store" } }
+      );
+    }
     const msg = e instanceof Error ? e.message : String(e);
     return NextResponse.json({ error: msg }, { status: 502 });
+  } finally {
+    if (reloj) clearTimeout(reloj);
   }
 }
 
