@@ -19,22 +19,23 @@ type Mode = "evaluacion" | "ingesta";
 const inputClass =
   "mt-1 w-full rounded-lg border border-zinc-800/50 bg-zinc-950/50 px-3 py-2 text-sm text-zinc-100 focus:border-violet-500/40 focus:outline-none focus:ring-1 focus:ring-violet-500/30";
 
+/** Mismo Literal ActorRole del backend (schemas_expedientes.py) salvo los del despacho
+ *  (abogado_titular/abogado_asistente). Antes ofrecía demandante, demandado, víctima, notario…
+ *  que el backend rechaza con 422 y el expediente no se creaba (QA 23-nov). */
 const ROLE_OPTIONS = [
-  "cliente",
   "contraparte",
-  "demandante",
-  "demandado",
-  "imputado",
-  "victima",
+  "abogado_contraparte",
+  "cliente",
   "querellante",
-  "testigo",
-  "perito",
-  "abogado_contrario",
+  "imputado",
+  "tribunal",
   "juez",
   "fiscal",
-  "notario",
-  "garante",
-  "tercero_interviniente",
+  "ministerio_publico",
+  "alguacil",
+  "testigo",
+  "perito",
+  "otro",
 ] as const;
 
 const MAX_PARTIES = 10;
