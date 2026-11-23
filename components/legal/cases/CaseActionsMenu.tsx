@@ -18,6 +18,8 @@ import { LegalApiErrorPanel } from "@/components/legal/cases/LegalApiErrorPanel"
 const ACCION_CON_PANTALLA: Record<string, string> = {
   upload_document: "documents",
   compute_deadlines: "deadlines",
+  add_manual_deadline: "deadlines",
+  complete_deadline: "deadlines",
 };
 
 export function CaseActionsMenu({ tenantId, caseId, onChanged }: { tenantId: string; caseId: string; onChanged?: () => void }) {
@@ -27,6 +29,10 @@ export function CaseActionsMenu({ tenantId, caseId, onChanged }: { tenantId: str
   const level = useDisasterLevel();
   const { data, isLoading, runAction, runTransition, running } = useCaseActions(tenantId, caseId);
   const [err, setErr] = useState<unknown>(null);
+  const [pendiente, setPendiente] = useState<
+    { tipo: "estado"; estado: CaseState } | { tipo: "accion"; accion: AvailableAction } | null
+  >(null);
+  const [motivo, setMotivo] = useState("");
 
   const actions: AvailableAction[] = (data?.available_actions ?? []).filter((a) => {
     if (level === "CRITICAL_FALLBACK" && a.consumes_llm_tokens) return false;
@@ -48,9 +54,14 @@ export function CaseActionsMenu({ tenantId, caseId, onChanged }: { tenantId: str
       return;
     }
     if (a.requires_confirmation) {
-      const ok = typeof window !== "undefined" ? window.confirm(m.actions.confirm_execute) : true;
-      if (!ok) return;
+      // Sin window.confirm/prompt: el diálogo del navegador bloqueaba la página (QA 23-nov).
+      setPendiente({ tipo: "accion", accion: a });
+      return;
     }
+    await ejecutarAccion(a);
+  };
+
+  const ejecutarAccion = async (a: AvailableAction) => {
     try {
       await runAction({ actionName: a.action_name, payload: {} });
     } catch (e: unknown) {
@@ -58,15 +69,23 @@ export function CaseActionsMenu({ tenantId, caseId, onChanged }: { tenantId: str
     }
   };
 
-  const execTransition = async (state: CaseState) => {
+  const execTransition = (state: CaseState) => {
     setErr(null);
-    const reason =
-      typeof window !== "undefined"
-        ? window.prompt(`Motivo para cambiar estado a ${caseStateLabel(m, state)}:`, "Transición desde portal legal")
-        : "Transición desde portal legal";
-    if (!reason?.trim()) return;
+    setMotivo("");
+    setPendiente({ tipo: "estado", estado: state });
+  };
+
+  const confirmar = async () => {
+    if (!pendiente) return;
+    if (pendiente.tipo === "accion") {
+      setPendiente(null);
+      await ejecutarAccion(pendiente.accion);
+      return;
+    }
+    if (!motivo.trim()) return;
     try {
-      await runTransition({ newState: state, reason: reason.trim() });
+      await runTransition({ newState: pendiente.estado, reason: motivo.trim() });
+      setPendiente(null);
     } catch (e: unknown) {
       setErr(e);
     }
@@ -115,13 +134,45 @@ export function CaseActionsMenu({ tenantId, caseId, onChanged }: { tenantId: str
                   type="button"
                   disabled={running}
                   className="rounded-forge-sm px-3 py-1.5 text-xs font-medium ring-1 ring-forgeGray-200 hover:bg-forgeGray-50 disabled:opacity-50"
-                  onClick={() => void execTransition(state)}
+                  onClick={() => execTransition(state)}
                 >
                   → {caseStateLabel(m, state)}
                 </button>
               </li>
             ))}
           </ul>
+        </div>
+      ) : null}
+      {pendiente ? (
+        <div role="group" aria-label="Confirmar" className="mt-3 rounded-forge-sm border border-blue-200 bg-blue-50 p-3 text-sm">
+          {pendiente.tipo === "estado" ? (
+            <label className="block text-xs font-medium text-forgeGray-800">
+              Motivo para pasar a «{caseStateLabel(m, pendiente.estado)}» (queda en la línea de tiempo)
+              <textarea
+                value={motivo}
+                onChange={(e) => setMotivo(e.target.value)}
+                rows={2}
+                autoFocus
+                placeholder="Ej.: Se notificó la sentencia de primera instancia"
+                className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-900"
+              />
+            </label>
+          ) : (
+            <p className="text-xs text-forgeGray-800">{m.actions.confirm_execute}</p>
+          )}
+          <div className="mt-2 flex gap-2">
+            <button
+              type="button"
+              disabled={running || (pendiente.tipo === "estado" && !motivo.trim())}
+              onClick={() => void confirmar()}
+              className="rounded-forge-sm bg-blue-700 px-3 py-1 text-xs font-semibold text-white disabled:opacity-50"
+            >
+              Confirmar
+            </button>
+            <button type="button" onClick={() => setPendiente(null)} className="rounded-forge-sm border border-slate-300 bg-white px-3 py-1 text-xs">
+              Cancelar
+            </button>
+          </div>
         </div>
       ) : null}
       {agregandoParte ? (

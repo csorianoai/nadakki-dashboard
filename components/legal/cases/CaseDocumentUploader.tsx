@@ -20,7 +20,11 @@ const MB_POR_DEFECTO = 15;
 
 const campo = "mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-200";
 
-type Estado = { tipo: "inactivo" } | { tipo: "subiendo" } | { tipo: "ok"; nombre: string } | { tipo: "error"; mensaje: string };
+type Estado =
+  | { tipo: "inactivo" }
+  | { tipo: "subiendo" }
+  | { tipo: "ok"; nombre: string; documentId?: string; notificado?: string }
+  | { tipo: "error"; mensaje: string };
 
 /** Valida tipo y tamaño en el navegador; el backend vuelve a validar por firma de bytes. */
 export function validarArchivo(f: File, maxMb: number): string | null {
@@ -74,8 +78,16 @@ export function CaseDocumentUploader({ tenantId, caseId, onUploaded }: { tenantI
     const fd = new FormData();
     fd.append("file", archivo);
     try {
-      await ingestDocument(tenantId, caseId, fd, meta);
-      setEstado({ tipo: "ok", nombre: archivo.name });
+      const r = await ingestDocument(tenantId, caseId, fd, meta);
+      setEstado({
+        tipo: "ok",
+        nombre: archivo.name,
+        documentId: typeof r?.document_id === "string" ? r.document_id : undefined,
+        notificado: meta.notification_date,
+      });
+      // QA 23-nov: el formulario conservaba tipo, dirección y fechas del documento
+      // anterior y era fácil clasificar mal el siguiente.
+      setMeta({ direction: "incoming" });
       if (inputRef.current) inputRef.current.value = "";
       onUploaded();
     } catch (err) {
@@ -140,7 +152,20 @@ export function CaseDocumentUploader({ tenantId, caseId, onUploaded }: { tenantI
         {archivo && estado.tipo !== "subiendo" ? <span className="text-sm text-slate-600">{archivo.name}</span> : null}
         {estado.tipo === "subiendo" ? <span role="status" aria-live="polite" className="text-sm text-slate-600">Cifrando y guardando…</span> : null}
       </div>
-      {estado.tipo === "ok" ? <p role="status" className="text-sm text-emerald-700">«{estado.nombre}» quedó guardado en el expediente.</p> : null}
+      {estado.tipo === "ok" ? (
+        <div role="status" className="text-sm text-emerald-700">
+          <p>«{estado.nombre}» quedó guardado en el expediente.</p>
+          {estado.notificado ? (
+            // La notificación con fecha suele abrir un plazo: el abogado elige cuál y confirma.
+            <a
+              className="mt-1 inline-block font-semibold text-blue-800 underline"
+              href={`/legal/cases/${encodeURIComponent(caseId)}/deadlines?fecha=${encodeURIComponent(estado.notificado)}${estado.documentId ? `&doc=${encodeURIComponent(estado.documentId)}` : ""}`}
+            >
+              Calcular los plazos que abre esta notificación →
+            </a>
+          ) : null}
+        </div>
+      ) : null}
       {estado.tipo === "error" ? <p role="alert" className="text-sm text-red-700">{estado.mensaje}</p> : null}
     </form>
   );

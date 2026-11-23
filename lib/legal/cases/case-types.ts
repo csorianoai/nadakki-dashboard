@@ -64,6 +64,8 @@ export interface CaseDeadline {
   deadline_id: string;
   deadline_db_id: string;
   deadline_category: string;
+  deadline_sub_category?: string | null;
+  notes?: string | null;
   trigger_event: string;
   trigger_date: string;
   auto_calculated_deadline_date: string;
