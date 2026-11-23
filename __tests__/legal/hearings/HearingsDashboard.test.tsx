@@ -16,6 +16,10 @@ jest.mock("@/hooks/useLegalCore", () => ({
 
 const mockUseAuth = jest.fn();
 jest.mock("@/hooks/useAuth", () => ({ useAuth: () => mockUseAuth() }));
+// QA 23-nov: el expediente se elige de la lista (antes se escribía el case_id).
+jest.mock("@/hooks/legal/useLegalCases", () => ({
+  useLegalCases: () => ({ data: { cases: [{ case_id: "c-1", title: "Cobro QA", case_number_internal: "EXP-1" }], total: 1 }, isLoading: false }),
+}));
 
 const mockConfig = jest.fn();
 const mockKpis = jest.fn();
@@ -125,10 +129,10 @@ describe("HearingsDashboard", () => {
 
   it("uses statuses and hearing_types from /config in the filters", () => {
     render(<HearingsDashboard />);
-    // "Scheduled"/"Confirmed" also appear in per-card status controls → use getAll.
-    expect(screen.getAllByRole("option", { name: "Scheduled" }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("option", { name: "Confirmed" }).length).toBeGreaterThan(0);
-    expect(screen.getAllByRole("option", { name: "Audiencia Fondo" }).length).toBeGreaterThan(0);
+    // Estados y tipos en español (QA 23-nov); también aparecen en los controles de cada tarjeta → getAll.
+    expect(screen.getAllByRole("option", { name: "Programada" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("option", { name: "Confirmada" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("option", { name: "Audiencia de fondo" }).length).toBeGreaterThan(0);
   });
 
   it("shows an honest demo_data badge when KPIs report demo data", () => {

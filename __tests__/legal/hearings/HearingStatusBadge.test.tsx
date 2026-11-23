@@ -6,7 +6,7 @@ import { HearingStatusBadge } from "@/components/legal/hearings/HearingStatusBad
 describe("HearingStatusBadge", () => {
   it("renders a known status", () => {
     render(<HearingStatusBadge status="SCHEDULED" />);
-    expect(screen.getByText("Scheduled")).toBeInTheDocument();
+    expect(screen.getByText("Programada")).toBeInTheDocument();
   });
 
   it("tolerates an UNKNOWN status without crashing", () => {

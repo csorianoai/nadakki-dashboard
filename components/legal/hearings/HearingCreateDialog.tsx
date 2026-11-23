@@ -3,17 +3,17 @@
 import { useState } from "react";
 import { toast } from "@/components/forge/ui/Toast";
 import { useCreateHearing } from "@/hooks/legal/useHearings";
-import { humanizeToken } from "@/lib/legal/hearings/hearings-format";
+import { horaDelTribunalAIso, humanizeToken } from "@/lib/legal/hearings/hearings-format";
 import type { HearingCreatePayload } from "@/lib/legal/hearings/hearings-types";
+import { SelectorExpediente } from "@/components/legal/hearings/SelectorExpediente";
 
 /**
  * Create-hearing dialog. Only `title` and `hearing_date` are required (the rest
  * are server-defaulted). tenant_id is NEVER part of the payload — the tenant
  * travels in X-Tenant-ID via the legal proxy.
  *
- * NOTE on hearing_date: the native datetime-local value is interpreted in the
- * browser timezone and converted to an ISO TIMESTAMPTZ via toISOString(). The
- * `timezone` field is sent separately (default from /config).
+ * hearing_date: the datetime-local value is the COURT's wall-clock time in
+ * `defaultTimezone` (QA 23-nov: it used to be read in the browser timezone).
  */
 type Props = {
   tenantId: string;
@@ -71,7 +71,8 @@ export function HearingCreateDialog({
       toast.error("La fecha de la audiencia es obligatoria.");
       return;
     }
-    const iso = new Date(hearingDate).toISOString();
+    // Hora del tribunal (no la del navegador): ver horaDelTribunalAIso.
+    const iso = horaDelTribunalAIso(hearingDate, defaultTimezone || "America/Santo_Domingo");
     const payload: HearingCreatePayload = {
       title: title.trim(),
       hearing_date: iso,
@@ -160,7 +161,7 @@ export function HearingCreateDialog({
                 disabled={isPending}
                 onChange={(e) => setHearingType(e.target.value)}
               >
-                <option value="">(Por defecto del servidor)</option>
+                <option value="">Sin especificar</option>
                 {hearingTypes.map((t) => (
                   <option key={t} value={t}>
                     {humanizeToken(t)}
@@ -188,16 +189,9 @@ export function HearingCreateDialog({
             </div>
             <div>
               <label htmlFor="h-case" className={labelCls}>
-                Expediente (case_id)
+                Expediente
               </label>
-              <input
-                id="h-case"
-                type="text"
-                className={fieldCls}
-                value={caseId}
-                disabled={isPending}
-                onChange={(e) => setCaseId(e.target.value)}
-              />
+              <SelectorExpediente id="h-case" tenantId={tenantId} className={fieldCls} value={caseId} disabled={isPending} onChange={setCaseId} />
             </div>
           </div>
 
@@ -217,7 +211,7 @@ export function HearingCreateDialog({
             </div>
             <div>
               <label htmlFor="h-courtroom" className={labelCls}>
-                Sala (courtroom)
+                Sala
               </label>
               <input
                 id="h-courtroom"
