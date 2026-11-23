@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { MapPin, Gavel, Briefcase, Clock } from "lucide-react";
 import { HearingStatusBadge } from "@/components/legal/hearings/HearingStatusBadge";
 import { HearingStatusControl } from "@/components/legal/hearings/HearingStatusControl";
@@ -60,7 +61,10 @@ export function HearingCard({ tenantId, hearing, statuses, canManage, hideDate }
         {hearing.case_id ? (
           <div className="flex items-center gap-1.5">
             <Briefcase className="h-3.5 w-3.5 shrink-0 text-zinc-500" aria-hidden="true" />
-            <span>Expediente: {hearing.case_id}</span>
+            {/* QA ronda 2: mostraba el UUID; ahora lleva al expediente. */}
+            <Link href={`/legal/cases/${encodeURIComponent(hearing.case_id)}`} className="text-blue-700 underline">
+              Ver expediente
+            </Link>
           </div>
         ) : null}
       </dl>

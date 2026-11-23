@@ -8,11 +8,19 @@ import { daysUntil } from "@/lib/legal/cases/deadline-formatter";
 import { CaseDeadlineOverrideModal } from "@/components/legal/cases/CaseDeadlineOverrideModal";
 import { postCaseAction } from "@/lib/legal/cases/legal-cases-api";
 
+/** Actos del catálogo con su ortografía (QA ronda 2: salía «Apelacion»). */
+const ACTOS: Record<string, string> = {
+  apelacion: "apelación", casacion: "casación", oposicion: "oposición", prescripcion: "prescripción",
+  investigacion: "investigación", detencion: "detención", reconsideracion: "reconsideración",
+  declaracion: "declaración", adopcion: "adopción", revision: "revisión", reestructuracion: "reestructuración",
+};
+
 /** Nombre del plazo: el que escribió el abogado (tribunal) o el acto del catálogo. */
 export function nombreDelPlazo(d: CaseDeadline): string {
   if (d.deadline_category === "TRIBUNAL") return d.notes || d.deadline_sub_category || "Plazo fijado por el tribunal";
-  const acto = d.deadline_sub_category || d.deadline_category || d.deadline_db_id;
-  return acto.charAt(0).toUpperCase() + acto.slice(1).replace(/_/g, " ");
+  const acto = (d.deadline_sub_category || d.deadline_category || d.deadline_db_id).toLowerCase();
+  const conTilde = ACTOS[acto] ?? acto.replace(/_/g, " ");
+  return conTilde.charAt(0).toUpperCase() + conTilde.slice(1);
 }
 
 function fechaLarga(iso: string): string {
@@ -88,12 +96,17 @@ export function CaseDeadlinesPanel({
                     Vence {fechaLarga(d.effective_deadline_date)}{cumplido ? "" : ` · ${restantes(days, m.deadlines.expired)}`}
                   </p>
                   <p className="text-xs text-forgeGray-500">
-                    {d.has_human_override ? m.deadlines.human_override : m.deadlines.auto_calculated}
+                    {d.has_human_override
+                      ? m.deadlines.human_override
+                      : d.deadline_category === "TRIBUNAL"
+                        ? "Fijado por el tribunal"
+                        : m.deadlines.auto_calculated}
                   </p>
                 </div>
                 {/* Próxima acción: preparar el escrito o revisar la estrategia; corregir el plazo queda como secundaria.
                     (Las tareas de IA aún no reciben el expediente como contexto: el abogado lo indica en la tarea.) */}
                 <div className="flex flex-wrap items-center gap-2">
+                  {!cumplido ? (<>
                   <Link
                     href="/legal/asistente"
                     aria-describedby={`ia-sin-contexto-${d.deadline_id}`}
@@ -104,6 +117,7 @@ export function CaseDeadlinesPanel({
                   <Link href={`/legal/cases/${encodeURIComponent(caseId)}/strategy`} className="rounded-forge-sm border border-blue-200 px-2.5 py-1 text-xs font-semibold text-blue-800 hover:bg-blue-50">
                     Ver estrategia
                   </Link>
+                  </>) : null}
                 {!cumplido ? (
                   <button
                     type="button"
@@ -121,9 +135,11 @@ export function CaseDeadlinesPanel({
                 >
                   {m.deadlines.override}
                 </button>
-                <p id={`ia-sin-contexto-${d.deadline_id}`} className="w-full text-[11px] text-slate-500 sm:text-right">
-                  El asistente no recibe este expediente: indica tú los datos del caso en la tarea.
-                </p>
+                {!cumplido ? (
+                  <p id={`ia-sin-contexto-${d.deadline_id}`} className="w-full text-[11px] text-slate-500 sm:text-right">
+                    El asistente no recibe este expediente: indica tú los datos del caso en la tarea.
+                  </p>
+                ) : null}
                 </div>
               </div>
             </li>
