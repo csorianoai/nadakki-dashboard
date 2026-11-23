@@ -3,6 +3,8 @@
 import { use, useState } from "react";
 import { useLegalCase } from "@/hooks/legal/useLegalCase";
 import { useCaseStrategies } from "@/hooks/legal/useCaseStrategies";
+import { useCaseActions } from "@/hooks/legal/useCaseActions";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLegalEffectiveTenantId } from "@/hooks/useLegalCore";
 import { CaseDetailHeader } from "@/components/legal/cases/CaseDetailHeader";
 import { CaseStrategyMultiSelect } from "@/components/legal/cases/CaseStrategyMultiSelect";
@@ -14,6 +16,24 @@ export default function LegalCaseStrategyPage({ params }: { params: Promise<{ id
   const { data: c, isLoading, error, refetch } = useLegalCase(effectiveTenantId, id);
   const { data: st, isLoading: ls, error: strategyError, selectStrategies, selecting } = useCaseStrategies(effectiveTenantId, id);
   const [selected, setSelected] = useState<string[]>([]);
+  // QA 23-nov: la pestaña no tenía cómo generar estrategias; el botón estaba solo en el Resumen.
+  const { runAction, running } = useCaseActions(effectiveTenantId, id);
+  const qc = useQueryClient();
+  const [aviso, setAviso] = useState<string | null>(null);
+  const generar = async () => {
+    setAviso(null);
+    try {
+      const r = (await runAction({ actionName: "generate_strategies", payload: {} })) as
+        | { count?: number; strategies?: unknown[]; mensaje?: string; motivo?: string }
+        | null
+        | undefined;
+      const n = typeof r?.count === "number" ? r.count : Array.isArray(r?.strategies) ? r.strategies.length : null;
+      if (n === null || n === 0) setAviso(r?.mensaje || r?.motivo || "No se generaron estrategias.");
+      await qc.invalidateQueries({ queryKey: ["legal_case_strategies", effectiveTenantId ?? "", id] });
+    } catch (e: unknown) {
+      setAviso(e instanceof Error ? e.message : "No se pudieron generar las estrategias. Intenta de nuevo.");
+    }
+  };
 
   const strategies: CaseStrategy[] = st?.strategies ?? c?.strategies ?? [];
 
@@ -28,6 +48,20 @@ export default function LegalCaseStrategyPage({ params }: { params: Promise<{ id
   return (
     <main id="main-content" className="min-h-0 space-y-6">
       <CaseDetailHeader legalCase={c} />
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => void generar()}
+          disabled={running}
+          className="inline-flex rounded-forge-sm bg-forgeBrand-600 px-4 py-2 text-sm font-medium text-forgeGray-50 hover:bg-forgeBrand-700 disabled:opacity-50"
+        >
+          {running ? "Generando estrategias…" : strategies.length ? "Volver a generar estrategias" : "Generar estrategias"}
+        </button>
+        <span className="text-xs text-forgeGray-600">
+          {running ? "Puede tardar hasta un minuto." : "Se proponen para el cliente del despacho; requieren revisión del abogado."}
+        </span>
+      </div>
+      {aviso ? <p role="status" className="text-sm text-amber-700">{aviso}</p> : null}
       {ls ? <p className="text-sm text-forgeGray-500">Cargando estrategias…</p> : null}
       {!ls && strategyError ? <p role="status" className="text-sm text-amber-700">{String((strategyError as Error).message).includes("503") ? "El modelo no está disponible. Intenta más tarde." : "La generación de estrategias aún no está disponible."}</p> : null}
       <CaseStrategyMultiSelect
