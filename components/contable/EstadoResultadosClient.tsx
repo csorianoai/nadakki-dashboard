@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { TrendingUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -15,11 +15,12 @@ import {
   Cell,
   Legend,
 } from "recharts";
-import { Button, Input } from "@/components/forge";
-import { ContableApiError, getEstadoResultados } from "@/app/hooks/contable";
+import { Button, Select } from "@/components/forge";
+import { ContableApiError, getEstadoResultadosPorPeriodo, listPeriodos, fechaLocalIso, periodoQueContieneFecha } from "@/app/hooks/contable";
 import { ContablePageShell } from "@/components/contable/ContablePageShell";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
 import type { EstadoResultadosReport } from "@/types/contable";
+import type { PeriodoContable } from "@/types/contable";
 import { cn } from "@/lib/utils";
 import {
   MonedaFuncionalNota,
@@ -46,21 +47,28 @@ export function EstadoResultadosClient() {
   /** Importe en la moneda funcional del tenant. Sin moneda, em dash: nunca una inventada. */
   const importe = (valor: number | null | undefined) => formateaImporteContable(valor, moneda);
   const tenantId = useContableTenantId();
-  const [desde, setDesde] = useState(() => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
-  });
-  const [hasta, setHasta] = useState(() => new Date().toISOString().slice(0, 10));
+  const [periodos, setPeriodos] = useState<PeriodoContable[]>([]);
+  const [periodoId, setPeriodoId] = useState("");
   const [report, setReport] = useState<EstadoResultadosReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const generate = useCallback(async () => {
+  useEffect(() => {
     if (!tenantId) return;
+    void listPeriodos(tenantId, new Date().getFullYear()).then((items) => {
+      setPeriodos(items);
+      setPeriodoId(periodoQueContieneFecha(items, fechaLocalIso())?.id ?? "");
+    }).catch((cause) => {
+      setError(cause instanceof ContableApiError ? cause.message : "No se pudieron cargar los períodos.");
+    });
+  }, [tenantId]);
+
+  const generate = useCallback(async () => {
+    if (!tenantId || !periodoId) return;
     setLoading(true);
     setError(null);
     try {
-      const data = await getEstadoResultados(tenantId, desde, hasta);
+      const data = await getEstadoResultadosPorPeriodo(tenantId, periodoId);
       setReport(data);
     } catch (e) {
       if (e instanceof ContableApiError && (e.status === 404 || e.status === 400)) {
@@ -74,13 +82,13 @@ export function EstadoResultadosClient() {
     } finally {
       setLoading(false);
     }
-  }, [tenantId, desde, hasta]);
+  }, [tenantId, periodoId]);
 
   const barData = report
     ? [
-        { name: "Ingresos", value: report.total_ingresos },
-        { name: "Costos", value: report.total_costos },
-        { name: "Gastos", value: report.total_gastos },
+      { name: "Ingresos", value: report.total_ingresos },
+      ...(report.costos.length ? [{ name: "Costos", value: report.total_costos }] : []),
+      { name: "Gastos", value: report.total_gastos },
       ]
     : [];
 
@@ -88,7 +96,7 @@ export function EstadoResultadosClient() {
     ? report.gastos.map((g) => ({ name: g.nombre, value: Math.abs(g.total) }))
     : [];
 
-  const barColors = [COLORS.ingresos, COLORS.costos, COLORS.gastos];
+  const colorPorNombre: Record<string, string> = { Ingresos: COLORS.ingresos, Costos: COLORS.costos, Gastos: COLORS.gastos };
 
   return (
     <ContablePageShell
@@ -99,9 +107,13 @@ export function EstadoResultadosClient() {
       <MonedaFuncionalNota locale={moneda} />
 
       <div className="mb-6 flex flex-wrap items-end gap-3">
-        <Input label="Desde" type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
-        <Input label="Hasta" type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} />
-        <Button onClick={() => void generate()} disabled={loading}>
+        <Select
+          label="Período"
+          value={periodoId}
+          onChange={(e) => setPeriodoId(e.target.value)}
+          options={periodos.map((periodo) => ({ value: periodo.id, label: periodo.label }))}
+        />
+        <Button onClick={() => void generate()} disabled={loading || !periodoId}>
           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Generar reporte
         </Button>
@@ -122,11 +134,18 @@ export function EstadoResultadosClient() {
 
       {report && (
         <div className="space-y-6">
+          {!report.costos.length ? (
+            <p role="note" className="text-sm text-zinc-400">
+              El servidor no diferencia costos de gastos; aquí se muestran las cuentas que reporta como gastos.
+            </p>
+          ) : null}
           {/* Badges de margen */}
           <div className="flex flex-wrap gap-3">
-            <span className={cn("inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1", margenColor(report.margen_bruto_pct))}>
-              Margen bruto: {report.margen_bruto_pct.toFixed(1)}%
-            </span>
+            {report.costos.length ? (
+              <span className={cn("inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1", margenColor(report.margen_bruto_pct))}>
+                Margen bruto: {report.margen_bruto_pct.toFixed(1)}%
+              </span>
+            ) : null}
             <span className={cn("inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1", margenColor(report.margen_neto_pct))}>
               Margen neto: {report.margen_neto_pct.toFixed(1)}%
             </span>
@@ -146,8 +165,8 @@ export function EstadoResultadosClient() {
                       formatter={(value: number) => [importe(value), "Monto"]}
                     />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                      {barData.map((_, i) => (
-                        <Cell key={i} fill={barColors[i]} />
+                      {barData.map((entry, i) => (
+                        <Cell key={i} fill={colorPorNombre[entry.name]} />
                       ))}
                     </Bar>
                   </BarChart>
@@ -214,15 +233,18 @@ export function EstadoResultadosClient() {
                     <td className="px-4 py-2 text-right font-mono">{importe(r.total)}</td>
                   </tr>
                 ))}
-                <tr className="bg-amber-500/5 font-bold text-amber-200">
-                  <td className="px-4 py-2" colSpan={2}>Total Costos</td>
-                  <td className="px-4 py-2 text-right font-mono">{importe(report.total_costos)}</td>
-                </tr>
-
-                <tr className="bg-indigo-500/5 font-bold text-indigo-200">
-                  <td className="px-4 py-2" colSpan={2}>Utilidad Bruta</td>
-                  <td className="px-4 py-2 text-right font-mono">{importe(report.utilidad_bruta)}</td>
-                </tr>
+                {report.costos.length ? (
+                  <>
+                    <tr className="bg-amber-500/5 font-bold text-amber-200">
+                      <td className="px-4 py-2" colSpan={2}>Total Costos</td>
+                      <td className="px-4 py-2 text-right font-mono">{importe(report.total_costos)}</td>
+                    </tr>
+                    <tr className="bg-indigo-500/5 font-bold text-indigo-200">
+                      <td className="px-4 py-2" colSpan={2}>Utilidad Bruta</td>
+                      <td className="px-4 py-2 text-right font-mono">{importe(report.utilidad_bruta)}</td>
+                    </tr>
+                  </>
+                ) : null}
 
                 {report?.gastos?.map((r) => (
                   <tr key={r.codigo} className="border-b border-white/5">

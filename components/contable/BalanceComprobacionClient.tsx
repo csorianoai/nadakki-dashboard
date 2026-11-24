@@ -8,6 +8,8 @@ import {
   ContableApiError,
   getBalanceComprobacion,
   listPeriodos,
+  fechaLocalIso,
+  periodoQueContieneFecha,
 } from "@/app/hooks/contable";
 import { ContablePageShell } from "@/components/contable/ContablePageShell";
 import { ErrorConReintentar } from "@/components/contable/ErrorConReintentar";
@@ -17,7 +19,8 @@ import {
   formateaImporteContable,
   useMonedaFuncional,
 } from "@/components/contable/monedaFuncional";
-import type { BalanceComprobacionReport, PeriodoContable } from "@/types/contable";
+import type { PeriodoContable } from "@/types/contable";
+import type { BalanceComprobacionDashboardReport } from "@/app/hooks/contable";
 import { cn } from "@/lib/utils";
 import { evaluaCuadre } from "@/lib/contable/cuadre";
 import { opcionPeriodo } from "@/lib/contable/periodo-nombre";
@@ -28,7 +31,8 @@ export function BalanceComprobacionClient() {
   const importe = (valor: number | null | undefined) => formateaImporteContable(valor, moneda);
   const [periodos, setPeriodos] = useState<PeriodoContable[]>([]);
   const [periodoId, setPeriodoId] = useState("");
-  const [report, setReport] = useState<BalanceComprobacionReport | null>(null);
+  const [report, setReport] = useState<BalanceComprobacionDashboardReport | null>(null);
+  const [periodosListos, setPeriodosListos] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorPeriodos, setErrorPeriodos] = useState<string | null>(null);
   const [intentoPeriodos, setIntentoPeriodos] = useState(0);
@@ -43,7 +47,8 @@ export function BalanceComprobacionClient() {
       .then((p) => {
         if (cancelado) return;
         setPeriodos(p);
-        if (p[0]) setPeriodoId(p[0].id);
+        setPeriodoId(periodoQueContieneFecha(p, fechaLocalIso())?.id ?? "");
+        setPeriodosListos(true);
       })
       .catch((e) => {
         if (cancelado) return;
@@ -55,10 +60,10 @@ export function BalanceComprobacionClient() {
   }, [tenantId, intentoPeriodos]);
 
   const load = useCallback(async () => {
-    if (!tenantId || !periodoId) return;
+    if (!tenantId || !periodosListos) return;
     setLoading(true);
     try {
-      setReport(await getBalanceComprobacion(tenantId, periodoId));
+      setReport(await getBalanceComprobacion(tenantId, periodoId || undefined));
     } catch (e) {
       toast.error("Error cargando balance", {
         description: e instanceof ContableApiError ? e.message : "",
@@ -66,7 +71,7 @@ export function BalanceComprobacionClient() {
     } finally {
       setLoading(false);
     }
-  }, [tenantId, periodoId]);
+  }, [tenantId, periodoId, periodosListos]);
 
   useEffect(() => {
     void load();
@@ -94,7 +99,7 @@ export function BalanceComprobacionClient() {
           label="Periodo"
           value={periodoId}
           onChange={(e) => setPeriodoId(e.target.value)}
-          options={periodos.map((p) => ({ value: p.id, label: opcionPeriodo(p) }))}
+          options={[{ value: "", label: "Todos los períodos" }, ...periodos.map((p) => ({ value: p.id, label: opcionPeriodo(p) }))]}
         />
       </div>
 

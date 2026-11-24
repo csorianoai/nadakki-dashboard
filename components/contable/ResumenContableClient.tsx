@@ -21,13 +21,17 @@ import { LineChart, Line, ResponsiveContainer } from "recharts";
 import {
   ContableApiError,
   getBalanceComprobacion,
+  listCuentas,
   listAsientos,
   listPeriodos,
+  fechaLocalIso,
+  periodoQueContieneFecha,
 } from "@/app/hooks/contable";
 import { ContablePageShell } from "@/components/contable/ContablePageShell";
 import { PeriodoStatusBadge } from "@/components/contable/ContableBadges";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
-import type { AsientoContable, BalanceComprobacionReport, PeriodoContable } from "@/types/contable";
+import type { AsientoContable, PeriodoContable } from "@/types/contable";
+import type { BalanceComprobacionDashboardReport } from "@/app/hooks/contable";
 import { cn } from "@/lib/utils";
 import {
   MonedaFuncionalNota,
@@ -64,25 +68,27 @@ export function ResumenContableClient() {
   const [loading, setLoading] = useState(true);
   const [periodos, setPeriodos] = useState<PeriodoContable[]>([]);
   const [asientos, setAsientos] = useState<AsientoContable[]>([]);
-  const [balance, setBalance] = useState<BalanceComprobacionReport | null>(null);
+  const [balance, setBalance] = useState<BalanceComprobacionDashboardReport | null>(null);
+  const [tiposCuenta, setTiposCuenta] = useState<Record<string, string>>({});
 
   const load = useCallback(async () => {
     if (!tenantId) return;
     setLoading(true);
     try {
       const year = new Date().getFullYear();
-      const [pers, asts] = await Promise.all([
+      const [pers, asts, cuentas] = await Promise.all([
         listPeriodos(tenantId, year),
         listAsientos(tenantId).catch(() => [] as AsientoContable[]),
+        listCuentas(tenantId, { activa: true }),
       ]);
       setPeriodos(pers);
       setAsientos(asts);
+      setTiposCuenta(Object.fromEntries(cuentas.map((cuenta) => [cuenta.id, cuenta.tipo_cuenta])));
 
-      // Try to get balance from the first period
-      const openPeriod = pers.find((p) => p.status === "open") ?? pers[0];
-      if (openPeriod) {
+      const currentPeriod = periodoQueContieneFecha(pers, fechaLocalIso());
+      if (currentPeriod) {
         try {
-          setBalance(await getBalanceComprobacion(tenantId, openPeriod.id));
+          setBalance(await getBalanceComprobacion(tenantId, currentPeriod.id));
         } catch {
           // Balance may not be available
         }
@@ -102,13 +108,13 @@ export function ResumenContableClient() {
 
   const postedAsientos = asientos.filter((a) => a.status === "posted");
   const last5 = postedAsientos.slice(-5).reverse();
-  const currentPeriod = periodos.find((p) => p.status === "open");
+  const currentPeriod = periodoQueContieneFecha(periodos, fechaLocalIso());
 
   // Derive KPIs from balance data
   const totalDebe = balance?.totals?.total_debe ?? 0;
   const totalHaber = balance?.totals?.total_haber ?? 0;
-  const ingresoRows = balance?.rows?.filter((r) => r.tipo_cuenta === "ingreso") ?? [];
-  const gastoRows = balance?.rows?.filter((r) => r.tipo_cuenta === "gasto") ?? [];
+  const ingresoRows = balance?.rows?.filter((r) => tiposCuenta[r.cuenta_id] === "ingreso") ?? [];
+  const gastoRows = balance?.rows?.filter((r) => tiposCuenta[r.cuenta_id] === "gasto") ?? [];
   const totalIngresos = ingresoRows.reduce((s, r) => s + Math.abs(r.saldo), 0);
   const totalGastos = gastoRows.reduce((s, r) => s + Math.abs(r.saldo), 0);
   const utilidadNeta = totalIngresos - totalGastos;
