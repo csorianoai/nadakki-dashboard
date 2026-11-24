@@ -25,6 +25,44 @@ import type {
   UpdateCuentaPayload,
 } from "@/types/contable";
 
+export type MayorCuentaRow = {
+  tenant_id?: string;
+  cuenta_id: string;
+  codigo: string;
+  nombre: string;
+  periodo_id: string;
+  total_debe: number;
+  total_haber: number;
+  saldo: number;
+};
+
+export type BalanceComprobacionDashboardReport = {
+  periodo_id?: string;
+  rows: Array<{
+    cuenta_id: string;
+    codigo: string;
+    nombre: string;
+    total_debe: number;
+    total_haber: number;
+    saldo: number;
+  }>;
+  totals: { total_debe: number; total_haber: number; cuadra: boolean };
+};
+
+export function periodoQueContieneFecha(
+  periodos: PeriodoContable[],
+  fecha: string,
+): PeriodoContable | undefined {
+  return periodos.find((periodo) => periodo.fecha_inicio <= fecha && fecha <= periodo.fecha_fin);
+}
+
+export function fechaLocalIso(fecha = new Date()): string {
+  const year = fecha.getFullYear();
+  const month = String(fecha.getMonth() + 1).padStart(2, "0");
+  const day = String(fecha.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 const CONTABLE_BASE = resolveApiUrl("/api/v1/contable");
 
 /** TODO[contable-backend]: set to false when Stream B is deployed to prod. */
@@ -341,27 +379,140 @@ export async function postAsiento(tenantId: string, asientoId: string): Promise<
 
 export async function getLibroMayor(
   tenantId: string,
-  cuentaId: string,
-  periodoId: string,
-): Promise<LibroMayorReport> {
-  if (USE_MOCKS) return mock.mockGetLibroMayor(tenantId, cuentaId, periodoId);
+  cuentaId?: string,
+  periodoId?: string,
+): Promise<MayorCuentaRow[]> {
+  if (USE_MOCKS) {
+    const [accounts, periods] = await Promise.all([
+      mock.mockListCuentas(tenantId, { activa: true }),
+      mock.mockListPeriodos(tenantId),
+    ]);
+    const selectedAccounts = accounts.filter((account) => !cuentaId || account.id === cuentaId);
+    const selectedPeriods = periods.filter((period) => !periodoId || period.id === periodoId);
+    const rows: MayorCuentaRow[] = [];
+    for (const account of selectedAccounts) {
+      for (const period of selectedPeriods) {
+        const report = await mock.mockGetLibroMayor(tenantId, account.id, period.id);
+        rows.push({
+          cuenta_id: account.id,
+          codigo: account.codigo,
+          nombre: account.nombre,
+          periodo_id: period.id,
+          total_debe: report.movimientos.reduce((sum, movement) => sum + movement.debe_base, 0),
+          total_haber: report.movimientos.reduce((sum, movement) => sum + movement.haber_base, 0),
+          saldo: report.saldo_final,
+        });
+      }
+    }
+    return rows;
+  }
 
-  return contableFetch<LibroMayorReport>(
-    tenantId,
-    `/mayor?cuenta_id=${encodeURIComponent(cuentaId)}&periodo_id=${encodeURIComponent(periodoId)}`,
-  );
+  const params = new URLSearchParams();
+  if (cuentaId) params.set("cuenta_id", cuentaId);
+  if (periodoId) params.set("periodo_id", periodoId);
+  const query = params.toString();
+  return contableFetch<MayorCuentaRow[]>(tenantId, `/mayor${query ? `?${query}` : ""}`);
 }
 
 export async function getBalanceComprobacion(
   tenantId: string,
-  periodoId: string,
-): Promise<BalanceComprobacionReport> {
-  if (USE_MOCKS) return mock.mockGetBalanceComprobacion(tenantId, periodoId);
+  periodoId?: string,
+): Promise<BalanceComprobacionDashboardReport> {
+  if (USE_MOCKS) {
+    const periods = await mock.mockListPeriodos(tenantId);
+    const selectedPeriods = periods.filter((period) => !periodoId || period.id === periodoId);
+    const byAccount = new Map<string, BalanceComprobacionDashboardReport["rows"][number]>();
+    for (const period of selectedPeriods) {
+      const report = await mock.mockGetBalanceComprobacion(tenantId, period.id);
+      for (const row of report.rows) {
+        const current = byAccount.get(row.cuenta_id) ?? {
+          cuenta_id: row.cuenta_id,
+          codigo: row.codigo,
+          nombre: row.nombre,
+          total_debe: 0,
+          total_haber: 0,
+          saldo: 0,
+        };
+        current.total_debe += row.total_debe;
+        current.total_haber += row.total_haber;
+        current.saldo += row.saldo;
+        byAccount.set(row.cuenta_id, current);
+      }
+    }
+    const rows = [...byAccount.values()];
+    const totalDebe = rows.reduce((sum, row) => sum + row.total_debe, 0);
+    const totalHaber = rows.reduce((sum, row) => sum + row.total_haber, 0);
+    return {
+      periodo_id: periodoId,
+      rows,
+      totals: { total_debe: totalDebe, total_haber: totalHaber, cuadra: Math.abs(totalDebe - totalHaber) < 0.02 },
+    };
+  }
 
-  return contableFetch<BalanceComprobacionReport>(
+  const params = new URLSearchParams();
+  if (periodoId) params.set("periodo_id", periodoId);
+  const query = params.toString();
+  const response = await contableFetch<{
+    cuentas?: BalanceComprobacionDashboardReport["rows"];
+    total_debe?: number;
+    total_haber?: number;
+    cuadra?: boolean;
+  }>(
     tenantId,
-    `/balance-comprobacion?periodo_id=${encodeURIComponent(periodoId)}`,
+    `/balance-comprobacion${query ? `?${query}` : ""}`,
   );
+  const rows = Array.isArray(response?.cuentas) ? response.cuentas : [];
+  const totalDebe = Number(response?.total_debe ?? 0);
+  const totalHaber = Number(response?.total_haber ?? 0);
+  return {
+    periodo_id: periodoId,
+    rows,
+    totals: {
+      total_debe: totalDebe,
+      total_haber: totalHaber,
+      cuadra: typeof response?.cuadra === "boolean" ? response.cuadra : Math.abs(totalDebe - totalHaber) < 0.02,
+    },
+  };
+}
+
+export async function getEstadoResultadosPorPeriodo(
+  tenantId: string,
+  periodoId: string,
+): Promise<EstadoResultadosReport> {
+  const rows = await contableFetch<Array<{
+    tipo_cuenta?: string;
+    codigo?: string;
+    nombre?: string;
+    saldo?: number;
+  }>>(
+    tenantId,
+    `/reports/estado-resultados?periodo_id=${encodeURIComponent(periodoId)}`,
+  );
+  const entries = Array.isArray(rows) ? rows : [];
+  const mapRow = (row: (typeof entries)[number]) => ({
+    codigo: String(row.codigo ?? ""),
+    nombre: String(row.nombre ?? ""),
+    total: Number(row.saldo ?? 0),
+  });
+  const ingresos = entries.filter((row) => row.tipo_cuenta === "ingreso").map(mapRow);
+  const gastos = entries.filter((row) => row.tipo_cuenta === "gasto").map(mapRow);
+  const totalIngresos = ingresos.reduce((total, row) => total + row.total, 0);
+  const totalGastos = gastos.reduce((total, row) => total + row.total, 0);
+  const utilidadNeta = totalIngresos - totalGastos;
+  return {
+    desde: "",
+    hasta: "",
+    ingresos,
+    total_ingresos: totalIngresos,
+    costos: [],
+    total_costos: 0,
+    utilidad_bruta: totalIngresos,
+    gastos,
+    total_gastos: totalGastos,
+    utilidad_neta: utilidadNeta,
+    margen_bruto_pct: 0,
+    margen_neto_pct: totalIngresos ? (utilidadNeta / totalIngresos) * 100 : 0,
+  };
 }
 
 // ── Reportes financieros ──────────────────────────────────────────────────

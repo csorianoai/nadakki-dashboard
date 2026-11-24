@@ -1,6 +1,5 @@
 "use client";
 
-import { formateaFecha } from "@/lib/dealer-management/formato";
 import { useCallback, useEffect, useState } from "react";
 import { BookMarked } from "lucide-react";
 import { toast } from "sonner";
@@ -10,6 +9,9 @@ import {
   getLibroMayor,
   listCuentas,
   listPeriodos,
+  fechaLocalIso,
+  periodoQueContieneFecha,
+  type MayorCuentaRow,
 } from "@/app/hooks/contable";
 import { ContablePageShell } from "@/components/contable/ContablePageShell";
 import { ErrorConReintentar } from "@/components/contable/ErrorConReintentar";
@@ -19,7 +21,7 @@ import {
   formateaImporteContable,
   useMonedaFuncional,
 } from "@/components/contable/monedaFuncional";
-import type { CuentaContable, LibroMayorReport, PeriodoContable } from "@/types/contable";
+import type { CuentaContable, PeriodoContable } from "@/types/contable";
 
 export function LibroMayorClient() {
   const tenantId = useContableTenantId();
@@ -29,7 +31,8 @@ export function LibroMayorClient() {
   const [periodos, setPeriodos] = useState<PeriodoContable[]>([]);
   const [cuentaId, setCuentaId] = useState("");
   const [periodoId, setPeriodoId] = useState("");
-  const [report, setReport] = useState<LibroMayorReport | null>(null);
+  const [report, setReport] = useState<MayorCuentaRow[] | null>(null);
+  const [catalogoListo, setCatalogoListo] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorCatalogo, setErrorCatalogo] = useState<string | null>(null);
   const [intentoCatalogo, setIntentoCatalogo] = useState(0);
@@ -49,8 +52,8 @@ export function LibroMayorClient() {
         if (cancelado) return;
         setCuentas(c);
         setPeriodos(p);
-        if (c[0]) setCuentaId(c[0].id);
-        if (p[0]) setPeriodoId(p[0].id);
+        setPeriodoId(periodoQueContieneFecha(p, fechaLocalIso())?.id ?? "");
+        setCatalogoListo(true);
       })
       .catch((e) => {
         if (cancelado) return;
@@ -62,10 +65,10 @@ export function LibroMayorClient() {
   }, [tenantId, intentoCatalogo]);
 
   const load = useCallback(async () => {
-    if (!tenantId || !cuentaId || !periodoId) return;
+    if (!tenantId || !catalogoListo) return;
     setLoading(true);
     try {
-      setReport(await getLibroMayor(tenantId, cuentaId, periodoId));
+      setReport(await getLibroMayor(tenantId, cuentaId || undefined, periodoId || undefined));
     } catch (e) {
       toast.error("Error cargando libro mayor", {
         description: e instanceof ContableApiError ? e.message : "",
@@ -73,7 +76,7 @@ export function LibroMayorClient() {
     } finally {
       setLoading(false);
     }
-  }, [tenantId, cuentaId, periodoId]);
+  }, [tenantId, cuentaId, periodoId, catalogoListo]);
 
   useEffect(() => {
     void load();
@@ -82,7 +85,7 @@ export function LibroMayorClient() {
   return (
     <ContablePageShell
       title="Libro mayor"
-      description="Movimientos y saldo acumulado por cuenta y periodo."
+      description="Saldos por cuenta del período seleccionado o de todos los períodos."
       icon={<BookMarked className="h-10 w-10" aria-hidden />}
     >
       <MonedaFuncionalNota locale={moneda} />
@@ -100,54 +103,44 @@ export function LibroMayorClient() {
           label="Cuenta"
           value={cuentaId}
           onChange={(e) => setCuentaId(e.target.value)}
-          options={cuentas.map((c) => ({ value: c.id, label: `${c.codigo} · ${c.nombre}` }))}
+          options={[{ value: "", label: "Todas las cuentas" }, ...cuentas.map((c) => ({ value: c.id, label: `${c.codigo} · ${c.nombre}` }))]}
         />
         <Select
           label="Periodo"
           value={periodoId}
           onChange={(e) => setPeriodoId(e.target.value)}
-          options={periodos.map((p) => ({ value: p.id, label: p.label }))}
+          options={[{ value: "", label: "Todos los períodos" }, ...periodos.map((p) => ({ value: p.id, label: p.label }))]}
         />
       </div>
 
       {report ? (
         <div className="space-y-4">
-          <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-sm">
-            <p className="font-mono text-emerald-200">{report.cuenta_codigo} · {report.cuenta_nombre}</p>
-            <p className="mt-1 text-zinc-400">
-              Saldo final:{" "}
-              <span className="font-mono font-semibold text-white">
-                {importe(report?.saldo_final ?? 0)}
-              </span>
-            </p>
-          </div>
-
           {loading ? (
             <p className="text-sm text-zinc-400">Actualizando…</p>
-          ) : (report?.movimientos?.length ?? 0) === 0 ? (
-            <p className="text-sm text-zinc-400">Sin movimientos posteados en este periodo.</p>
+          ) : report.length === 0 ? (
+            <p className="text-sm text-zinc-400">Sin saldos posteados en este período.</p>
           ) : (
             <div className="overflow-x-auto rounded-xl border border-white/10">
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="border-b border-white/10 bg-white/[0.03] text-left text-[10px] uppercase text-zinc-400">
-                    <th className="px-4 py-3">Fecha</th>
-                    <th className="px-4 py-3">Asiento</th>
-                    <th className="px-4 py-3">Descripción</th>
+                    <th className="px-4 py-3">Período</th>
+                    <th className="px-4 py-3">Código</th>
+                    <th className="px-4 py-3">Cuenta</th>
                     <th className="px-4 py-3 text-right">Debe</th>
                     <th className="px-4 py-3 text-right">Haber</th>
                     <th className="px-4 py-3 text-right">Saldo</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {report?.movimientos?.map((m) => (
-                    <tr key={m.id} className="border-b border-white/5">
-                      <td className="px-4 py-2">{formateaFecha(m.fecha, moneda) ?? m.fecha}</td>
-                      <td className="px-4 py-2 font-mono text-xs">{m.numero_asiento ?? m.asiento_id.slice(0, 8)}</td>
-                      <td className="px-4 py-2">{m.descripcion}</td>
-                      <td className="px-4 py-2 text-right font-mono">{m.debe_base ? importe(m.debe_base) : "—"}</td>
-                      <td className="px-4 py-2 text-right font-mono">{m.haber_base ? importe(m.haber_base) : "—"}</td>
-                      <td className="px-4 py-2 text-right font-mono text-emerald-200">{importe(m.saldo_acumulado)}</td>
+                  {report.map((row) => (
+                    <tr key={`${row.periodo_id}:${row.cuenta_id}`} className="border-b border-white/5">
+                      <td className="px-4 py-2">{periodos.find((p) => p.id === row.periodo_id)?.label ?? row.periodo_id}</td>
+                      <td className="px-4 py-2 font-mono text-xs">{row.codigo}</td>
+                      <td className="px-4 py-2">{row.nombre}</td>
+                      <td className="px-4 py-2 text-right font-mono">{importe(row.total_debe)}</td>
+                      <td className="px-4 py-2 text-right font-mono">{importe(row.total_haber)}</td>
+                      <td className="px-4 py-2 text-right font-mono text-emerald-200">{importe(row.saldo)}</td>
                     </tr>
                   ))}
                 </tbody>

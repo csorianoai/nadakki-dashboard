@@ -35,6 +35,11 @@ export function ContablePageShell({
             </p>
             <h1 className="text-2xl font-bold text-white">{title}</h1>
             <p className="mt-2 max-w-2xl text-sm text-zinc-400">{description}</p>
+            {process.env.NEXT_PUBLIC_CONTABLE_USE_MOCKS !== "false" ? (
+              <p data-testid="contable-demo-badge" role="note" className="mt-2 inline-flex rounded-full border border-amber-400/30 bg-amber-500/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-amber-200">
+                DEMO · Datos de muestra, no conectados al servidor
+              </p>
+            ) : null}
           </div>
         </div>
         {actions ? <div className="flex flex-wrap gap-2">{actions}</div> : null}

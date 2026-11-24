@@ -35,11 +35,13 @@ import { toast } from "sonner";
 import { Button, Select } from "@/components/forge";
 import {
   ContableApiError,
-  getEstadoResultados,
+  getEstadoResultadosPorPeriodo,
   getSituacionFinanciera,
   getGastosMonitor,
   getSugerenciasAgente,
   listPeriodos,
+  fechaLocalIso,
+  periodoQueContieneFecha,
 } from "@/app/hooks/contable";
 import { useContableTenantId } from "@/components/contable/useContableTenantId";
 import GlassCard from "@/components/ui/GlassCard";
@@ -187,10 +189,12 @@ export function DashboardEjecutivoClient() {
     void listPeriodos(tenantId, new Date().getFullYear())
       .then((p) => {
         setPeriodos(p);
-        const open = p.find((x) => x.status === "open") ?? p[0];
-        if (open) setPeriodoId(open.id);
-        // Sin periodos no habra segunda carga: sin esto el spinner era infinito.
-        else setLoading(false);
+        const current = periodoQueContieneFecha(p, fechaLocalIso());
+        if (current) setPeriodoId(current.id);
+        else {
+          setErrorCarga("No hay un período contable que incluya la fecha de hoy.");
+          setLoading(false);
+        }
       })
       .catch(() => {
         setErrorCarga("No pudimos cargar los períodos contables.");
@@ -205,12 +209,10 @@ export function DashboardEjecutivoClient() {
     if (!tenantId || !periodoId || !selectedPeriodo) return;
     setLoading(true);
 
-    const desde = selectedPeriodo.fecha_inicio;
-    const hasta = selectedPeriodo.fecha_fin;
-    const fecha = hasta;
+    const fecha = selectedPeriodo.fecha_fin;
 
     const [erResult, sfResult, gmResult] = await Promise.allSettled([
-      getEstadoResultados(tenantId, desde, hasta),
+      getEstadoResultadosPorPeriodo(tenantId, periodoId),
       getSituacionFinanciera(tenantId, fecha),
       getGastosMonitor(tenantId, periodoId),
     ]);
