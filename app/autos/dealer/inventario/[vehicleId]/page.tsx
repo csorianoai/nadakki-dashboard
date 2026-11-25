@@ -19,6 +19,7 @@ import { SenasPanel } from "./SenasPanel";
 import { FotosVehiculoPanel } from "./FotosVehiculoPanel";
 import { PHOTOS_CAPABILITY } from "./fotos";
 import { DetalleTecnico } from "../DetalleTecnico";
+import { DealerSaleCommissions } from "./DealerSaleCommissions";
 import {
   COSTS_VIEW_CAPABILITY,
   FichaCompra,
@@ -66,6 +67,7 @@ function VehicleFicha({
     enabled: dealerId.length > 0 && vehicleId.length > 0,
     retry: false,
   });
+  const tenantId = selectedDealerIdentity()?.tenantId ?? "";
 
   if (query.isPending || query.isLoading) {
     return (
@@ -116,6 +118,13 @@ function VehicleFicha({
           </Link>
         ) : null}
       </section>
+      {isSold(query.data.status) ? (
+        <DealerSaleCommissions
+          vehicleId={vehicleId}
+          dealerId={dealerId}
+          tenantId={tenantId}
+        />
+      ) : null}
       {/* Editar y publicar piden la clave de ESCRITURA; el 403 del backend sigue mandando. */}
       {write.allowed ? (
         <VehicleEditPanel

@@ -12,8 +12,148 @@
 import { normalizaImporte } from "./vehicle-manual";
 import { ventaFiscalPayload, type VentaFiscalForm } from "./venta-fiscal";
 import { postVehicleSale } from "@/lib/dealer/vehicle-economics-write";
+import { accessApiErrorFromHttp, AccessApiError } from "@/lib/access/client";
+import { apiFetch } from "@/lib/api/fetch-client";
 
 export const SALE_STATUS = "vendido";
+export const SALE_COMMISSION_REGISTER_PATH = "/api/v1/autos/vehicles/{vehicle_id}/sale/commissions";
+export const SALE_COMMISSION_PAY_PATH = "/api/v1/autos/sale-commissions/{commission_id}/pay";
+export const DEALER_SALE_COMMISSIONS_PATH = "/api/v1/autos/dealers/{dealer_id}/sale-commissions";
+
+export type SaleCommissionCashAccount = "cash" | "bank";
+export type SaleCommissionItem = {
+  id: string;
+  vehicle_id: string;
+  salesperson_user_id: string;
+  amount: string;
+  currency: string;
+  status: "pending" | "paid";
+  sold_at: string | null;
+  paid_at: string | null;
+  month: string;
+};
+export type SaleCommissionSummary = {
+  salesperson_user_id: string;
+  month: string;
+  currency: string;
+  pending_amount: string;
+  paid_amount: string;
+  total_amount: string;
+  pending_count: number;
+  paid_count: number;
+};
+export type DealerSaleCommissions = {
+  tz: string;
+  items: SaleCommissionItem[];
+  summary: SaleCommissionSummary[];
+};
+
+const SALE_COMMISSION_ERROR_MESSAGES: Record<string, string> = {
+  SELF_PAYMENT_FORBIDDEN: "No puedes pagar una comisión asignada a tu propio usuario.",
+  ALREADY_PAID: "Esta comisión ya fue pagada.",
+  PAID_BEFORE_SALE: "La fecha de pago no puede ser anterior a la fecha de la venta.",
+  DEALER_WITHOUT_UNIT: "El concesionario no tiene una unidad organizativa asignada; no se pudo completar la operación.",
+  SALE_NOT_FOUND: "No hay una venta registrada para este vehículo.",
+  SALESPERSON_NOT_ASSIGNED: "El vendedor no pertenece a este concesionario.",
+  CURRENCY_MISMATCH: "La moneda debe coincidir con la moneda de la venta.",
+  COMMISSION_NOT_FOUND: "No se encontró esta comisión.",
+  DEALER_NOT_ASSIGNED: "Tu usuario no pertenece a este concesionario.",
+  UNIT_MISMATCH: "La unidad organizativa no coincide con la de este concesionario.",
+};
+
+function commissionErrorCode(error: unknown): string | null {
+  if (error instanceof AccessApiError) return error.reason_code;
+  if (typeof error === "string") return error;
+  if (!error || typeof error !== "object") return null;
+  const row = error as Record<string, unknown>;
+  if (typeof row.reason_code === "string") return row.reason_code;
+  if (typeof row.code === "string") return row.code;
+  const detail = row.detail;
+  return detail && typeof detail === "object" ? commissionErrorCode(detail) : null;
+}
+
+export function commissionErrorMessage(error: unknown): string {
+  const code = commissionErrorCode(error);
+  if (code && SALE_COMMISSION_ERROR_MESSAGES[code]) return SALE_COMMISSION_ERROR_MESSAGES[code];
+  if (error instanceof AccessApiError && error.status === 403) return "No tienes permiso para completar esta operación.";
+  return "No se pudo completar la operación de comisión. Revisa los datos e inténtalo de nuevo.";
+}
+
+export function saleCommissionListUrl(dealerId: string, month: string, timeZone: string): string {
+  const query = new URLSearchParams({ tz: timeZone });
+  if (month) query.set("month", month);
+  return `/api/v1/autos/dealers/${encodeURIComponent(dealerId)}/sale-commissions?${query.toString()}`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function parseCommissionList(value: unknown): DealerSaleCommissions {
+  if (!isRecord(value) || typeof value.tz !== "string" || !Array.isArray(value.items) || !Array.isArray(value.summary)) {
+    throw new Error("Respuesta inválida del listado de comisiones");
+  }
+  const items = value.items;
+  const summary = value.summary;
+  const validItems = items.every((item) => isRecord(item) &&
+    ["id", "vehicle_id", "salesperson_user_id", "amount", "currency", "month"].every((key) => typeof item[key] === "string") &&
+    (item.status === "pending" || item.status === "paid") &&
+    (item.sold_at === null || typeof item.sold_at === "string") &&
+    (item.paid_at === null || typeof item.paid_at === "string"));
+  const validSummary = summary.every((row) => isRecord(row) &&
+    ["salesperson_user_id", "month", "currency", "pending_amount", "paid_amount", "total_amount"].every((key) => typeof row[key] === "string") &&
+    typeof row.pending_count === "number" && typeof row.paid_count === "number");
+  if (!validItems || !validSummary) throw new Error("Respuesta inválida del listado de comisiones");
+  return value as unknown as DealerSaleCommissions;
+}
+
+async function commissionRequest<T>(path: string, tenantId: string, method: "GET" | "POST", body?: unknown): Promise<T> {
+  const response = await apiFetch(path, {
+    method,
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/json",
+      "X-Tenant-ID": tenantId,
+    },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+  });
+  let parsed: unknown = null;
+  try {
+    parsed = await response.json();
+  } catch {
+    parsed = null;
+  }
+  if (!response.ok) throw accessApiErrorFromHttp(response.status, parsed, path);
+  return parsed as T;
+}
+
+export function listDealerSaleCommissions(
+  tenantId: string,
+  dealerId: string,
+  month: string,
+  timeZone: string,
+): Promise<DealerSaleCommissions> {
+  return commissionRequest<unknown>(saleCommissionListUrl(dealerId, month, timeZone), tenantId, "GET")
+    .then(parseCommissionList);
+}
+
+export function registerSaleCommission(
+  tenantId: string,
+  vehicleId: string,
+  input: { salesperson_user_id: string; amount: string; currency: string },
+): Promise<unknown> {
+  const path = SALE_COMMISSION_REGISTER_PATH.replace("{vehicle_id}", encodeURIComponent(vehicleId));
+  return commissionRequest(path, tenantId, "POST", input);
+}
+
+export function paySaleCommission(
+  tenantId: string,
+  commissionId: string,
+  cashAccount: SaleCommissionCashAccount,
+): Promise<unknown> {
+  const path = SALE_COMMISSION_PAY_PATH.replace("{commission_id}", encodeURIComponent(commissionId));
+  return commissionRequest(path, tenantId, "POST", { cash_account: cashAccount });
+}
 
 export const SALE_BLOCKED_IN_EDIT_NOTE =
   "Para vender un vehículo usa «Registrar venta». Cambiar el estado a VENDIDO desde la edición no registra la venta ni entra en contabilidad.";
