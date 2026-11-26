@@ -137,6 +137,17 @@ export function listDealerSaleCommissions(
     .then(parseCommissionList);
 }
 
+export type DealerSalesperson = { user_id: string; email: string };
+
+export async function listDealerSalespeople(tenantId: string, dealerId: string): Promise<DealerSalesperson[]> {
+  const body = await commissionRequest<unknown>(`/api/v1/autos/dealers/${encodeURIComponent(dealerId)}/salespeople`, tenantId, "GET");
+  if (!isRecord(body) || body.dealer_id !== dealerId || !Array.isArray(body.items) ||
+      !body.items.every((item) => isRecord(item) && typeof item.user_id === "string" && item.user_id.trim() && typeof item.email === "string" && item.email.trim())) {
+    throw new Error("Respuesta inv?lida del listado de vendedores");
+  }
+  return body.items as DealerSalesperson[];
+}
+
 export function registerSaleCommission(
   tenantId: string,
   vehicleId: string,
@@ -209,3 +220,18 @@ export async function registerSale(
     ...(fiscal ? { fiscal: ventaFiscalPayload(fiscal) } : {}),
   });
 }
+
+/** Country-specific validation kept inside DASH-DEALER-FICHA. */
+export function validateSaleVat(fiscal: VentaFiscalForm, country: string | null): Record<string, string> {
+  if (country === "AR" && !fiscal.vat_rate.trim()) return {
+    vat_rate: "Indica la alícuota del IVA de la venta (por ejemplo 21, 10,5 o 0).",
+  };
+  if (country === "DO" && fiscal.vat_rate !== "18") return { vat_rate: "En República Dominicana el ITBIS es 18." };
+  return {};
+}
+
+export const SALE_VAT_MESSAGES: Record<string, string> = {
+  SALE_VAT_RATE_REQUIRED: "Falta la alícuota del IVA (o el ITBIS).",
+  SALE_VAT_RATE_INVALID: "En República Dominicana el ITBIS es 18.",
+  SALE_VAT_BASE_UNKNOWN: "La compra no tiene datos fiscales: complétalos antes de vender.",
+};

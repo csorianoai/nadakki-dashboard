@@ -10,6 +10,7 @@ import {
 
 jest.mock("@/lib/api/fetch-client", () => ({ apiFetch: jest.fn() }));
 
+const PEOPLE = { dealer_id: "dealer-1", items: [{ user_id: "22222222-2222-4222-8222-222222222222", email: "ventas@dealer.com" }] };
 const api = apiFetch as jest.MockedFunction<typeof apiFetch>;
 const COMMISSION = {
   id: "commission-1",
@@ -30,11 +31,11 @@ function response(body: unknown, status = 200) {
 describe("comisiones de venta del vehículo", () => {
   beforeEach(() => {
     api.mockReset();
-    api.mockResolvedValue(response({ items: [], summary: [], tz: "America/Santo_Domingo" }));
+    api.mockImplementation(async (path) => response(String(path).endsWith("/salespeople") ? PEOPLE : { items: [], summary: [], tz: "America/Santo_Domingo" }));
   });
 
   it("consulta el vendedor/mes con la zona horaria y muestra el resumen real", async () => {
-    api.mockResolvedValue(response({ items: [COMMISSION], summary: [{
+    api.mockImplementation(async (path) => response(String(path).endsWith("/salespeople") ? PEOPLE : { items: [COMMISSION], summary: [{
       salesperson_user_id: COMMISSION.salesperson_user_id,
       month: "2026-11", currency: "DOP", pending_amount: "1500.00",
       paid_amount: "0.00", total_amount: "1500.00", pending_count: 1, paid_count: 0,
@@ -43,18 +44,23 @@ describe("comisiones de venta del vehículo", () => {
     render(<DealerSaleCommissions vehicleId="vehicle-1" dealerId="dealer-1" tenantId="tenant-1" currency="DOP" timeZone="America/Santo_Domingo" />);
 
     expect(await screen.findByTestId("sale-commission-summary")).toHaveTextContent(/Pendiente 1500,00 DOP/);
+    await waitFor(() => expect(screen.getByTestId("sale-commission-summary")).toHaveTextContent("ventas@dealer.com"));
+    expect(screen.getByTestId("sale-commission-summary")).not.toHaveTextContent(COMMISSION.salesperson_user_id);
+    expect(screen.getByTestId("sale-commission-commission-1").textContent).not.toMatch(/commission-1|vehicle-1/);
     expect(api).toHaveBeenCalledWith(expect.stringContaining("/api/v1/autos/dealers/dealer-1/sale-commissions"), expect.anything());
     expect(saleCommissionListUrl("dealer-1", "2026-11", "America/Santo_Domingo")).toContain("month=2026-11");
   });
 
   it("registra la comisión con el vendedor, importe y moneda introducidos", async () => {
     api.mockImplementation(async (path) => {
+      if (String(path).endsWith("/salespeople")) return response(PEOPLE);
       if (String(path).includes("sale-commissions")) return response({ items: [], summary: [], tz: "UTC" });
       return response({ id: "commission-1", status: "pending" });
     });
     render(<DealerSaleCommissions vehicleId="vehicle-1" dealerId="dealer-1" tenantId="tenant-1" currency="DOP" timeZone="UTC" />);
 
-    fireEvent.change(screen.getByLabelText("ID del vendedor"), { target: { value: COMMISSION.salesperson_user_id } });
+    await screen.findByRole("option", { name: "ventas@dealer.com" });
+    fireEvent.change(screen.getByLabelText("Vendedor"), { target: { value: COMMISSION.salesperson_user_id } });
     fireEvent.change(screen.getByLabelText("Importe de la comisión"), { target: { value: "1500.00" } });
     fireEvent.click(screen.getByRole("button", { name: "Registrar comisión" }));
 
@@ -66,12 +72,12 @@ describe("comisiones de venta del vehículo", () => {
   });
 
   it("paga con cash_account obligatorio y traduce errores del backend al español", async () => {
-    api.mockResolvedValueOnce(response({ items: [COMMISSION], summary: [], tz: "UTC" }));
+    api.mockImplementation(async (path) => response(String(path).endsWith("/salespeople") ? PEOPLE : { items: [COMMISSION], summary: [], tz: "UTC" }));
     render(<DealerSaleCommissions vehicleId="vehicle-1" dealerId="dealer-1" tenantId="tenant-1" currency="DOP" timeZone="UTC" />);
     await screen.findByTestId("sale-commission-commission-1");
 
-    fireEvent.change(screen.getByLabelText("Medio de pago de commission-1"), { target: { value: "bank" } });
-    fireEvent.click(screen.getByRole("button", { name: "Pagar comisión commission-1" }));
+    fireEvent.change(screen.getByLabelText("Medio de pago de ventas@dealer.com"), { target: { value: "bank" } });
+    fireEvent.click(screen.getByRole("button", { name: "Pagar comisión" }));
 
     await waitFor(() => expect(api).toHaveBeenCalledWith("/api/v1/autos/sale-commissions/commission-1/pay", expect.objectContaining({
       method: "POST", body: JSON.stringify({ cash_account: "bank" }),
@@ -89,13 +95,40 @@ describe("comisiones de venta del vehículo", () => {
     ["DEALER_WITHOUT_UNIT", "unidad organizativa"],
   ])("muestra en español el error %s al pagar", async (code, message) => {
     api.mockImplementation(async (path) => {
+      if (String(path).endsWith("/salespeople")) return response(PEOPLE);
       if (String(path).includes("/pay")) return response({ detail: { reason_code: code } }, 409);
       return response({ items: [COMMISSION], summary: [], tz: "UTC" });
     });
     render(<DealerSaleCommissions vehicleId="vehicle-1" dealerId="dealer-1" tenantId="tenant-1" currency="DOP" timeZone="UTC" />);
     await screen.findByTestId("sale-commission-commission-1");
-    fireEvent.change(screen.getByLabelText("Medio de pago de commission-1"), { target: { value: "cash" } });
-    fireEvent.click(screen.getByRole("button", { name: "Pagar comisión commission-1" }));
+    fireEvent.change(screen.getByLabelText("Medio de pago de ventas@dealer.com"), { target: { value: "cash" } });
+    fireEvent.click(screen.getByRole("button", { name: "Pagar comisión" }));
     expect(await screen.findByTestId("sale-commission-pay-error-commission-1")).toHaveTextContent(message);
   });
+});
+
+it.each([403, 404])("bloquea el registro si vendedores devuelve %s", async (status) => {
+  api.mockReset();
+  api.mockImplementation(async (path) => response(String(path).endsWith("/salespeople") ? {} : { items: [], summary: [], tz: "UTC" }, String(path).endsWith("/salespeople") ? status : 200));
+  render(<DealerSaleCommissions vehicleId="vehicle-1" dealerId="dealer-1" tenantId="tenant-1" currency="DOP" />);
+  expect(await screen.findByRole("alert")).toHaveTextContent("No se pudieron consultar");
+  expect(screen.getByRole("button", { name: "Registrar comisión" })).toBeDisabled();
+  fireEvent.submit(screen.getByTestId("sale-commission-form"));
+  expect(api.mock.calls.every(([, init]) => init?.method === "GET")).toBe(true);
+});
+
+it("resuelve la moneda de venta desde margenes y deja el campo de solo lectura", async () => {
+  api.mockImplementation(async (path) => response(String(path).endsWith("/salespeople") ? PEOPLE : String(path).endsWith("/margin") ? [{ currency: "ARS", sale_price_amount: "500", total_cost: "100", margin: "400" }] : { items: [], summary: [], tz: "UTC" }));
+  render(<DealerSaleCommissions vehicleId="vehicle-1" dealerId="dealer-1" tenantId="tenant-1" />);
+  await waitFor(() => expect(screen.getByLabelText("Moneda de la venta")).toHaveValue("ARS"));
+  expect(screen.getByLabelText("Moneda de la venta")).toHaveAttribute("readonly");
+});
+
+it("oculta identificadores cuando el vendedor ya no esta asignado", async () => {
+  api.mockReset();
+  api.mockImplementation(async (path) => response(String(path).endsWith("/salespeople") ? { dealer_id: "dealer-1", items: [] } : { items: [COMMISSION], summary: [], tz: "UTC" }));
+  render(<DealerSaleCommissions vehicleId="vehicle-1" dealerId="dealer-1" tenantId="tenant-1" currency="DOP" />);
+  const detail = await screen.findByTestId("sale-commission-commission-1");
+  expect(detail).toHaveTextContent("Vendedor no asignado");
+  expect(detail.textContent).not.toMatch(/22222222|commission-1|vehicle-1/);
 });

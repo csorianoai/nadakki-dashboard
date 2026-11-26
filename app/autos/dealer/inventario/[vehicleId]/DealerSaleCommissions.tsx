@@ -4,15 +4,17 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   commissionErrorMessage,
   listDealerSaleCommissions,
+  listDealerSalespeople,
+  type DealerSalesperson,
   paySaleCommission,
   registerSaleCommission,
   type DealerSaleCommissions as DealerSaleCommissionsData,
   type SaleCommissionCashAccount,
 } from "@/lib/dealer-management/vehicle-sale";
+import { fetchVehicleMargins } from "@/lib/dealer/vehicle-economics";
 import { normalizaImporte } from "@/lib/dealer-management/vehicle-manual";
 
 const FIELD = "mt-1 min-h-11 w-full rounded-r-sm border border-nk-border bg-nk-surface px-3 text-sm text-nk-fg";
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function currentMonth(): string {
   const now = new Date();
@@ -48,6 +50,36 @@ export function DealerSaleCommissions({
   const [salespersonId, setSalespersonId] = useState("");
   const [amount, setAmount] = useState("");
   const [commissionCurrency, setCommissionCurrency] = useState(currency ?? "");
+  const [salespeople, setSalespeople] = useState<DealerSalesperson[]>([]);
+  const [peopleReady, setPeopleReady] = useState(false);
+  const [peopleError, setPeopleError] = useState("");
+  const sellerEmail = (id: string) => salespeople.find((person) => person.user_id === id)?.email ?? "Vendedor no asignado";
+
+  useEffect(() => {
+    let active = true;
+    setPeopleReady(false);
+    setPeopleError("");
+    setSalespeople([]);
+    setSalespersonId("");
+    setCommissionCurrency("");
+    if (!dealerId || !tenantId || !vehicleId) return;
+    void Promise.all([
+      listDealerSalespeople(tenantId, dealerId),
+      currency ? Promise.resolve(currency) : fetchVehicleMargins(vehicleId, tenantId).then((rows) => {
+        const currencies = [...new Set(rows.map((row) => row.currency))];
+        if (currencies.length !== 1) throw new Error("Moneda de venta desconocida");
+        return currencies[0];
+      }),
+    ]).then(([people, saleCurrency]) => {
+      if (!active) return;
+      setSalespeople(people);
+      setCommissionCurrency(saleCurrency);
+      setPeopleReady(true);
+    }).catch(() => {
+      if (active) setPeopleError("No se pudieron consultar los vendedores o la moneda de la venta. Revisa tus permisos y los datos del concesionario antes de registrar.");
+    });
+    return () => { active = false; };
+  }, [dealerId, tenantId, vehicleId, currency]);
   const [registering, setRegistering] = useState(false);
   const [cashAccounts, setCashAccounts] = useState<Record<string, SaleCommissionCashAccount | "">>({});
   const [payingId, setPayingId] = useState("");
@@ -82,8 +114,8 @@ export function DealerSaleCommissions({
     event.preventDefault();
     setFormError("");
     setSuccess("");
-    if (!UUID.test(salespersonId.trim())) {
-      setFormError("Escribe el identificador válido del vendedor.");
+    if (!peopleReady || !salespeople.some((person) => person.user_id === salespersonId)) {
+      setFormError("Elige un vendedor de la lista de correos.");
       return;
     }
     const parsedAmount = normalizaImporte(amount);
@@ -93,7 +125,7 @@ export function DealerSaleCommissions({
     }
     const currencyCode = commissionCurrency.trim().toUpperCase();
     if (!/^[A-Z]{3}$/.test(currencyCode)) {
-      setFormError("Escribe la moneda de la venta con su código de tres letras.");
+      setFormError("No se pudo determinar la moneda de la venta.");
       return;
     }
     setRegistering(true);
@@ -143,8 +175,11 @@ export function DealerSaleCommissions({
 
       <form onSubmit={(event) => void submitCommission(event)} className="grid gap-3 md:grid-cols-4" data-testid="sale-commission-form">
         <label className="text-sm text-nk-fg">
-          ID del vendedor
-          <input className={FIELD} value={salespersonId} onChange={(event) => setSalespersonId(event.target.value)} required />
+          Vendedor
+          <select className={FIELD} value={salespersonId} onChange={(event) => setSalespersonId(event.target.value)} required disabled={!peopleReady}>
+            <option value="">Selecciona el correo del vendedor</option>
+            {salespeople.map((person) => <option key={person.user_id} value={person.user_id}>{person.email}</option>)}
+          </select>
         </label>
         <label className="text-sm text-nk-fg">
           Importe de la comisión
@@ -152,14 +187,15 @@ export function DealerSaleCommissions({
         </label>
         <label className="text-sm text-nk-fg">
           Moneda de la venta
-          <input className={FIELD} value={commissionCurrency} onChange={(event) => setCommissionCurrency(event.target.value)} maxLength={3} autoCapitalize="characters" required />
+          <input className={FIELD} value={commissionCurrency} readOnly />
         </label>
         <div className="flex items-end">
-          <button type="submit" disabled={registering} className="min-h-11 w-full rounded-full bg-brand-2 px-4 text-sm font-semibold text-white">
+          <button type="submit" disabled={registering || !peopleReady || !commissionCurrency} className="min-h-11 w-full rounded-full bg-brand-2 px-4 text-sm font-semibold text-white">
             {registering ? "Registrando…" : "Registrar comisión"}
           </button>
         </div>
       </form>
+      {peopleError ? <p role="alert">{peopleError}</p> : null}
       {formError ? <p role="alert" data-testid="sale-commission-register-error" className="text-sm text-nk-fg">{formError}</p> : null}
       {success ? <p role="status" data-testid="sale-commission-success" className="text-sm text-nk-fg">{success}</p> : null}
 
@@ -180,7 +216,7 @@ export function DealerSaleCommissions({
               <ul className="mt-2 space-y-1 text-sm text-nk-fg">
                 {data.summary.map((row) => (
                   <li key={`${row.salesperson_user_id}-${row.month}-${row.currency}`} className="break-words">
-                    Vendedor {row.salesperson_user_id} · {row.month} · Pendiente {amountForDisplay(row.pending_amount)} {row.currency} · Pagado {amountForDisplay(row.paid_amount)} {row.currency}
+                    {sellerEmail(row.salesperson_user_id)} · {row.month} · Pendiente {amountForDisplay(row.pending_amount)} {row.currency} · Pagado {amountForDisplay(row.paid_amount)} {row.currency}
                   </li>
                 ))}
               </ul>
@@ -193,13 +229,13 @@ export function DealerSaleCommissions({
               <ul className="mt-2 space-y-3">
                 {data.items.map((item) => (
                   <li key={item.id} className="space-y-2 rounded-r-sm border border-nk-border p-3 text-sm text-nk-fg" data-testid={`sale-commission-${item.id}`}>
-                    <p className="break-words">Comisión {item.id} · Vehículo {item.vehicle_id} · Vendedor {item.salesperson_user_id} · {item.month} · {item.amount} {item.currency} · {item.status === "paid" ? "Pagada" : "Pendiente"}</p>
+                    <p className="break-words">{sellerEmail(item.salesperson_user_id)} · {item.month} · {item.amount} {item.currency} · {item.status === "paid" ? "Pagada" : "Pendiente"}</p>
                     {item.status === "pending" ? (
                       <div className="flex flex-col gap-2 sm:flex-row">
                         <label className="flex-1 text-sm">
-                          Medio de pago de {item.id}
+                          Medio de pago
                           <select
-                            aria-label={`Medio de pago de ${item.id}`}
+                            aria-label={`Medio de pago de ${sellerEmail(item.salesperson_user_id)}`}
                             required
                             className={FIELD}
                             value={cashAccounts[item.id] ?? ""}
@@ -211,7 +247,7 @@ export function DealerSaleCommissions({
                           </select>
                         </label>
                         <button type="button" disabled={payingId === item.id} onClick={() => void pay(item.id)} className="min-h-11 self-end rounded-full border border-brand-2 px-4 text-sm font-semibold text-nk-fg">
-                          {payingId === item.id ? "Pagando…" : `Pagar comisión ${item.id}`}
+                          {payingId === item.id ? "Pagando…" : "Pagar comisión"}
                         </button>
                       </div>
                     ) : null}
