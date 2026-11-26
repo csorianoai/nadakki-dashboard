@@ -86,6 +86,7 @@ const ADMIN_MODULES_BASE = [
   { id: "config", name: "Config", icon: Settings, desc: "Configuracion de tenant y canales en vivo", href: "/admin/config", color: "#8b5cf6" },
   { id: "db", name: "Database Status", icon: Database, desc: "Estado de conexion y esquema DB", href: "/admin/db", color: "#06b6d4" },
   { id: "billing", name: "Billing", icon: CreditCard, desc: "Planes y facturacion", href: "/admin/billing", color: "#10b981" },
+  { id: "estudio-genio", name: "Estudio Genio", icon: CreditCard, desc: "Compras y transferencias de los despachos", href: "/admin/estudio-genio", color: "#8b5cf6" },
   { id: "usage", name: "Usage", icon: BarChart3, desc: "Ejecuciones y limites por tenant", href: "/admin/usage", color: "#f59e0b" },
   {
     id: "observability",
