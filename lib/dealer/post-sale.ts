@@ -1,4 +1,4 @@
-import { accessApiErrorFromHttp } from "@/lib/access/client";
+import { AccessApiError, accessApiErrorFromHttp } from "@/lib/access/client";
 import { apiFetch } from "@/lib/api/fetch-client";
 
 export const POST_SALE_LEGAL_CASES_PATH = "/api/v1/legal/cases";
@@ -88,27 +88,73 @@ export function dealerVehiclesUrl(dealerId: string): string {
   return `/api/v1/autos/dealers/${encodeURIComponent(dealerId)}/vehicles`;
 }
 
-export async function fetchPostSaleSnapshot(tenantId: string, dealerId: string | null) {
-  const [casesBody, asientosBody, heartbeatBody, listingsBody] = await Promise.all([
+/**
+ * Cada parte de la tarjeta post-venta se lee por separado (Cowork, 26-nov): un plan sin Legal da 403
+ * `capability_denied:legal.cases.view:<razon>` y un tenant sin marketing da 404 `heartbeat_not_found`; antes
+ * cualquiera de los dos tumbaba la tarjeta entera con "DEFAULT_DENY".
+ */
+export type PostSaleParte<T> =
+  | { estado: "ok"; datos: T }
+  | { estado: "no_incluido" }
+  | { estado: "sin_datos" }
+  | { estado: "error" };
+
+export type PostSaleSnapshot = {
+  cases: PostSaleParte<PostSaleCase[]>;
+  asientos: PostSaleParte<PostSaleAsiento[]>;
+  listings: PostSaleParte<PostSaleListing[]>;
+  heartbeat: PostSaleParte<PostSaleHeartbeat>;
+};
+
+/** Texto del `detail` del backend, sea `detail: "..."` o `detail: { detail | code | error: "..." }`. */
+function detalleTexto(detail: unknown): string | null {
+  const directo = readTrimmed(detail);
+  if (directo) return directo;
+  const rec = asRecord(detail);
+  if (!rec) return null;
+  return readTrimmed(rec.detail) ?? readTrimmed(rec.code) ?? readTrimmed(rec.error);
+}
+
+/** `capability_denied:<capability>:<razon>` → sus partes; null si el texto no tiene esa forma. */
+export function parseCapabilityDenied(texto: string | null | undefined): { capability: string; razon: string | null } | null {
+  const m = /^capability_denied:([^:\s]+)(?::(.*))?$/.exec((texto ?? "").trim());
+  if (!m) return null;
+  return { capability: m[1]!, razon: m[2]?.trim() || null };
+}
+
+export function clasificarFalloPostSale(error: unknown): "no_incluido" | "sin_datos" | "error" {
+  if (!(error instanceof AccessApiError)) return "error";
+  const texto = detalleTexto(error.detail);
+  if (error.status === 403 && parseCapabilityDenied(texto)) return "no_incluido";
+  if (error.status === 404 && texto === "heartbeat_not_found") return "sin_datos";
+  return "error";
+}
+
+function parte<T>(r: PromiseSettledResult<unknown>, mapear: (body: unknown) => T): PostSaleParte<T> {
+  if (r.status === "fulfilled") return { estado: "ok", datos: mapear(r.value) };
+  return { estado: clasificarFalloPostSale(r.reason) };
+}
+
+export async function fetchPostSaleSnapshot(tenantId: string, dealerId: string | null): Promise<PostSaleSnapshot> {
+  const [casesR, asientosR, heartbeatR, listingsR] = await Promise.allSettled([
     accessGet(POST_SALE_LEGAL_CASES_PATH, tenantId),
     accessGet(POST_SALE_ASIENTOS_PATH, tenantId),
     accessGet(POST_SALE_HEARTBEAT_PATH, tenantId),
     dealerId ? accessGet(dealerVehiclesUrl(dealerId), tenantId) : Promise.resolve([]),
   ]);
-  const cases = asList(casesBody)
-    .map(parsePostSaleCase)
-    .filter((row): row is PostSaleCase => row != null)
-    .filter((row) => row.state !== "CLOSED" && row.state !== "ARCHIVED");
-  const asientos = asList(asientosBody)
-    .map(parsePostSaleAsiento)
-    .filter((row): row is PostSaleAsiento => row != null);
-  const listings = asList(listingsBody)
-    .map(parsePostSaleListing)
-    .filter((row): row is PostSaleListing => row != null);
   return {
-    cases,
-    asientos,
-    listings,
-    heartbeat: parseHeartbeat(heartbeatBody),
+    cases: parte(casesR, (body) =>
+      asList(body)
+        .map(parsePostSaleCase)
+        .filter((row): row is PostSaleCase => row != null)
+        .filter((row) => row.state !== "CLOSED" && row.state !== "ARCHIVED"),
+    ),
+    asientos: parte(asientosR, (body) =>
+      asList(body).map(parsePostSaleAsiento).filter((row): row is PostSaleAsiento => row != null),
+    ),
+    listings: parte(listingsR, (body) =>
+      asList(body).map(parsePostSaleListing).filter((row): row is PostSaleListing => row != null),
+    ),
+    heartbeat: parte(heartbeatR, parseHeartbeat),
   };
 }
