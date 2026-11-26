@@ -25,6 +25,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { legacyMarketplaceRedirectTarget } from "@/lib/autos-portal/routes";
+import { dealerPortalHomeRedirect, portalRequestHost } from "@/lib/config/portal-host";
 
 // FC1 — Cockpit consolidation: /cockpit/plans → Panel admin billing
 const COCKPIT_CONSOLIDATION_ENABLED =
@@ -171,6 +172,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/autos/vehiculos", request.url));
   }
 
+  // ── 2a. Portal del concesionario (mapaal.nadakki.com): la portada es su inventario real ──
+  // "/" mandaba a /login y "/autos" pintaba la vitrina generica de marketplace. Solo esas dos rutas exactas;
+  // /login y /autos/dealer/** siguen igual.
+  const portalTarget = dealerPortalHomeRedirect(portalRequestHost(request.headers), pathname, request.headers);
+  if (portalTarget) {
+    return NextResponse.redirect(new URL(portalTarget, request.url), 307);
+  }
+
   // ── 3. Tenant isolation — only for /api/* routes ──────────────────────
   if (!pathname.startsWith("/api/")) {
     return NextResponse.next();
@@ -289,6 +298,7 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     "/",
+    "/autos",
     "/autos/marketplace",
     "/autos/marketplace/:path*",
     "/cockpit/plans",
