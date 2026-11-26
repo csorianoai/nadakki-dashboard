@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { usePathname } from "next/navigation";
 import { AsistenteContable } from "@/components/ai/AsistenteContable";
+import { BienvenidaPrimerosPasos } from "@/components/ai/BienvenidaPrimerosPasos";
 
 export function DealerAsistente() {
   const pathname = usePathname() ?? "";
@@ -13,6 +14,8 @@ export function DealerAsistente() {
 
   return (
     <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2" data-testid="dealer-asistente">
+      {/* Bienvenida de primeros pasos: encima del botón, oculta mientras el panel está abierto. */}
+      {abierto ? null : <BienvenidaPrimerosPasos />}
       {/* Oculto con `hidden` y no desmontado: la conversación vive en el estado del panel y dura la sesión. */}
       <div hidden={!abierto} className="w-[min(24rem,calc(100vw-2rem))] shadow-lg">
         <button
