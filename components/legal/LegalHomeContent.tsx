@@ -1,6 +1,7 @@
 "use client";
 
 import { EstudioGenioTarjeta } from "@/components/legal/home/EstudioGenioTarjeta";
+import { MedidorArchivo } from "@/components/legal/archivo/PlanYAlmacenamiento";
 import Link from "next/link";
 import { useContext } from "react";
 import { Plus, Sparkles } from "lucide-react";
@@ -108,7 +109,10 @@ export default function LegalHomeContent() {
           <CaseWorkTable filas={filas} plazosDisponibles={trabajo.plazosDisponibles} revisionesDisponibles={trabajo.revisionesDisponibles} titulo="Mis expedientes recientes" />
         )}
       </section>
-      <EstudioGenioTarjeta />
+      <div className="space-y-4">
+        <EstudioGenioTarjeta />
+        {effectiveTenantId && <MedidorArchivo tenantId={effectiveTenantId} />}
+      </div>
       </div>
 
       <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_400px] [&>*]:min-w-0">

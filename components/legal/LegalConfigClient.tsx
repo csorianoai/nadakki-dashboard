@@ -5,6 +5,7 @@ import { useJurisdictions, useKnowledgePackStatus } from "@/hooks/legal/useJuris
 import { LegalPackStatusBadge } from "@/components/legal/LegalPackStatusBadge";
 import { LegalContentHonestyBadges } from "@/components/legal/LegalContentHonestyBadges";
 import { CASE_TYPE_LABELS } from "@/lib/legal/cases/case-type-labels";
+import { PlanYAlmacenamiento } from "@/components/legal/archivo/PlanYAlmacenamiento";
 
 function JurisdictionPackRow({ tenantId, code }: { tenantId: string; code: string }) {
   const pack = useKnowledgePackStatus(tenantId, code);
@@ -39,6 +40,8 @@ export default function LegalConfigClient() {
         <h2 className="text-2xl font-medium">Configuración Legal Core</h2>
         <p className="mt-1 text-sm text-zinc-500">Manifest real desde knowledge-pack y jurisdicciones expuestas.</p>
       </header>
+
+      <PlanYAlmacenamiento tenantId={effectiveTenantId} />
 
       <section className="rounded-lg border border-zinc-800 bg-zinc-900 p-5">
         <h3 className="font-medium mb-2">Knowledge pack activo (DO)</h3>

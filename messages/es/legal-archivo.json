@@ -1,0 +1,67 @@
+{
+  "titulo": "Plan y almacenamiento",
+  "ayuda": "Guarde aquí todos los expedientes del despacho: documentos cifrados, ordenados por caso y a mano desde cualquier lugar.",
+  "cargando": "Cargando el espacio del despacho…",
+  "error": "No se pudo leer el espacio del despacho. Intente de nuevo.",
+  "reintentar": "Reintentar",
+  "usado": "{usado} de {total}",
+  "libre": "{libre} libres",
+  "planActual": "Plan actual",
+  "sinPlan": "Sin plan legal asignado",
+  "incluido": "Incluido en el plan",
+  "ampliado": "Ampliaciones activas",
+  "niveles": {
+    "ok": "Hay espacio de sobra.",
+    "aviso": "El archivo pasó del 80 %. Conviene ampliar antes de que se llene.",
+    "lleno": "El archivo está lleno: no se aceptan documentos nuevos hasta ampliar."
+  },
+  "planes": {
+    "titulo": "Membresías del Core Legal",
+    "mes": "/mes",
+    "cotizacion": "a cotización",
+    "usuarios": "{n} usuarios",
+    "usuariosIlimitados": "Usuarios sin límite",
+    "espacio": "{n} de archivo",
+    "actual": "Su plan",
+    "genio": "Estudio Genio disponible",
+    "genioDetalle": "Esencial {esencial} · Completo {completo}, con revisión de un abogado de Nadakki",
+    "genioCta": "Conocer el Estudio Genio"
+  },
+  "ampliar": {
+    "titulo": "Ampliar el archivo",
+    "ayuda": "Se suma a su plan y se renueva cada mes. Puede cancelarla cuando quiera: sigue valiendo hasta el fin del mes pagado.",
+    "metodo": "Forma de pago",
+    "stripe": "Tarjeta (se renueva sola cada mes)",
+    "transferencia": "Transferencia bancaria (un mes por pago)",
+    "referencia": "Referencia o número de la transferencia",
+    "comprobante": "Comprobante (nombre o enlace, opcional)",
+    "pagar": "Ir a pagar",
+    "registrar": "Registrar transferencia",
+    "elegir": "Elija una ampliación",
+    "sinMetodos": "Por ahora no hay formas de pago disponibles. Escriba a cesar@nadakki.com.",
+    "referenciaFalta": "Indique la referencia de la transferencia.",
+    "recibida": "Recibido. Nadakki confirmará el depósito y verá el espacio ampliado.",
+    "pagoOk": "Pago verificado. El espacio ya está ampliado.",
+    "pagoPendiente": "El pago aún no aparece como cobrado. Vuelva a revisar en unos minutos.",
+    "pagoCancelado": "El pago no se completó.",
+    "lista": "Sus ampliaciones",
+    "hasta": "vale hasta {fecha}",
+    "cancelar": "Cancelar",
+    "confirmarCancelar": "Dejará de renovarse. ¿Cancelar?",
+    "si": "Sí, cancelar",
+    "no": "No",
+    "estados": {
+      "pendiente": "Pendiente de pago",
+      "activa": "Activa",
+      "cancelada": "Cancelada",
+      "rechazada": "Rechazada",
+      "vencida": "Vencida"
+    }
+  },
+  "medidor": {
+    "titulo": "Archivo del despacho",
+    "ampliar": "Ampliar"
+  },
+  "busy": "Procesando…",
+  "cancel": "Cancelar"
+}
