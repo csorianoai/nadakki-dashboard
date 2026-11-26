@@ -13,6 +13,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   PHOTO_ACCEPT, PHOTO_ERROR_HINT, deleteVehiclePhoto, fetchVehiclePhotos, photoError, uploadVehiclePhoto, type PhotoError,
 } from "./fotos";
+import { avisarProgreso } from "@/lib/dealer/pasos-tarea";
 
 const BOX_CLASS = "mt-3 rounded-r-sm border border-nk-border bg-nk-surface p-3 text-sm text-nk-fg";
 
@@ -37,7 +38,8 @@ export function FotosVehiculoPanel({ vehicleId }: { vehicleId: string }) {
     onSuccess: () => {
       setError(null);
       setAck(mensaje);
-      void client.invalidateQueries({ queryKey });
+      // Se avisa con las fotos ya releidas: quien escuche el progreso ve el numero nuevo.
+      void client.invalidateQueries({ queryKey }).then(() => avisarProgreso("fotos"));
     },
     onError: (err: unknown) => {
       setAck(null);

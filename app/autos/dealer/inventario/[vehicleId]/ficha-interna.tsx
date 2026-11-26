@@ -41,14 +41,14 @@ function useTenant() {
  * Identidad de la sesion para las claves de cache de datos filtrados por rol (compra):
  * tenant + usuario. Sin identidad legible se usa un marcador que no coincide con ningun usuario real.
  */
-function useIdentidadCache(): readonly [string, string] {
+export function useIdentidadCache(): readonly [string, string] {
   const tenantId = useTenant();
   const p = decodeJWT(tokenStorage.getAccessToken() ?? "") as { sub?: string; user_id?: string } | null;
   return [tenantId, p?.sub ?? p?.user_id ?? "sin-identidad"] as const;
 }
 
 /** Una respuesta filtrada por rol no se reutiliza: sin staleTime y sin retencion al desmontar. */
-const SIN_REUTILIZAR = { staleTime: 0, gcTime: 0 } as const;
+export const SIN_REUTILIZAR = { staleTime: 0, gcTime: 0 } as const;
 
 function NoDisponible({ testId, children }: { testId: string; children: string }) {
   return (

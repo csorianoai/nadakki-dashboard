@@ -13,6 +13,7 @@ import {
 } from "@/lib/dealer-management/vehicle-sale";
 import { fetchVehicleMargins } from "@/lib/dealer/vehicle-economics";
 import { normalizaImporte } from "@/lib/dealer-management/vehicle-manual";
+import { avisarProgreso } from "@/lib/dealer/pasos-tarea";
 
 const FIELD = "mt-1 min-h-11 w-full rounded-r-sm border border-nk-border bg-nk-surface px-3 text-sm text-nk-fg";
 
@@ -138,6 +139,7 @@ export function DealerSaleCommissions({
       setSalespersonId("");
       setAmount("");
       setSuccess("Comisión registrada y pendiente de pago.");
+      avisarProgreso("comision");
       // La venta puede ser de un mes anterior al filtro actual: muestra el registro recién creado.
       setMonth("");
     } catch (error) {

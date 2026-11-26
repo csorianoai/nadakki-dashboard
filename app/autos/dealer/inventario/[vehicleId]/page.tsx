@@ -20,6 +20,9 @@ import { FotosVehiculoPanel } from "./FotosVehiculoPanel";
 import { PHOTOS_CAPABILITY } from "./fotos";
 import { DetalleTecnico } from "../DetalleTecnico";
 import { DealerSaleCommissions } from "./DealerSaleCommissions";
+import { CicloDelAuto } from "./CicloDelAuto";
+import { avisarProgreso } from "@/lib/dealer/pasos-tarea";
+import { ANCLA } from "@/lib/dealer/pasos-vehiculo";
 import {
   COSTS_VIEW_CAPABILITY,
   FichaCompra,
@@ -99,6 +102,16 @@ function VehicleFicha({
 
   if (!query.data) return null;
 
+  const fichaKey = ["dealer-vehicle", dealerId, vehicleId];
+  // Tras guardar se relee la ficha y recien ahi se avisa: si paso a Disponible fue "publicar", si no "precio".
+  const alGuardar = () => {
+    const antes = query.data?.status ?? null;
+    void queryClient.invalidateQueries({ queryKey: fichaKey }).then(() => {
+      const despues = queryClient.getQueryData<{ status: string | null }>(fichaKey)?.status ?? null;
+      avisarProgreso(despues === "disponible" && antes !== "disponible" ? "publicar" : "precio");
+    });
+  };
+
   const title = [query.data.year, query.data.make, query.data.model].filter(Boolean).join(" ") || query.data.id;
 
   return (
@@ -118,6 +131,9 @@ function VehicleFicha({
           </Link>
         ) : null}
       </section>
+      <CicloDelAuto ficha={query.data} photosAllowed={photos.allowed} costsView={costsView} />
+      {/* Anclas vacias: los pasos de la guia saltan aca sin envolver (ni reindentar) cada seccion. */}
+      {isSold(query.data.status) ? <div id={ANCLA.comisiones} className="scroll-mt-4" /> : null}
       {isSold(query.data.status) ? (
         <DealerSaleCommissions
           vehicleId={vehicleId}
@@ -126,14 +142,16 @@ function VehicleFicha({
         />
       ) : null}
       {/* Editar y publicar piden la clave de ESCRITURA; el 403 del backend sigue mandando. */}
+      <div id={ANCLA.precio} className="scroll-mt-4" />
       {write.allowed ? (
-        <VehicleEditPanel
-          ficha={query.data}
-          context={selectedDealerIdentity()}
-          onSaved={() => void queryClient.invalidateQueries({ queryKey: ["dealer-vehicle", dealerId, vehicleId] })}
-        />
-      ) : null}
+        <VehicleEditPanel ficha={query.data} context={selectedDealerIdentity()} onSaved={alGuardar} />
+      ) : (
+        <p role="status" data-testid="vehicle-edit-gated" className="text-sm text-nk-fg-muted">
+          El precio y el paso a Disponible los carga quien tenga permiso para editar el inventario.
+        </p>
+      )}
       {/* `autos.inventory.photos` depende del plan: sin ella se dice por que. */}
+      <div id={ANCLA.fotos} className="scroll-mt-4" />
       {photos.allowed ? (
         <FotosVehiculoPanel vehicleId={vehicleId} />
       ) : (

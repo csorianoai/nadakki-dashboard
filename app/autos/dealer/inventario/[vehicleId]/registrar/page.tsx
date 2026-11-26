@@ -14,6 +14,7 @@ import { DEALER_REGISTER_CAPABILITY } from "@/lib/dealer/capabilities";
 import type { EntitlementDecision } from "@/types/entitlements";
 import { REASON_CODE_INFO } from "@/types/entitlements";
 import { DetalleTecnico } from "../../DetalleTecnico";
+import { avisarProgreso } from "@/lib/dealer/pasos-tarea";
 
 function asDecision(query: ReturnType<typeof useAccessEntitlementsBatch>): EntitlementDecision {
   if (query.error instanceof AccessApiError) {
@@ -54,6 +55,7 @@ export default function DealerVehicleRegisterPage() {
       const rec = body && typeof body === "object" ? (body as Record<string, unknown>) : null;
       const id = rec && typeof rec.id === "string" ? rec.id : null;
       setAck(id ? `${kind} ${id}` : kind);
+      avisarProgreso(kind === "acquisition" ? "compra" : "costo");
     } catch (error) {
       if (error instanceof AccessApiError) {
         setFormError({ reason_code: error.reason_code ?? `HTTP_${error.status}`, status: error.status });
@@ -173,6 +175,15 @@ export default function DealerVehicleRegisterPage() {
             <p data-testid="dealer-register-ack" className="text-sm text-nk-fg">
               {ack}
             </p>
+          ) : null}
+          {ack ? (
+            <Link
+              href={`/autos/dealer/inventario/${encodeURIComponent(vehicleId)}`}
+              data-testid="dealer-register-volver"
+              className="inline-flex min-h-11 items-center rounded-full border border-nk-border px-4 text-sm font-semibold text-nk-fg"
+            >
+              Guardado. Volver a la ficha del auto para seguir con los pasos
+            </Link>
           ) : null}
 
           <section data-testid="dealer-register-fiscal" className="rounded-r-sm border border-nk-border bg-nk-surface p-4">
