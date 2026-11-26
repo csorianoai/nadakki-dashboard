@@ -1,5 +1,5 @@
 /**
- * F4E-3-ASISTENTE-CONTABLE-UI: chat de solo lectura contra POST /api/assistant/contable/chat.
+ * F4E-3-ASISTENTE-CONTABLE-UI: chat de solo lectura contra POST /api/assistant/contable/ia/chat.
  */
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
@@ -72,13 +72,13 @@ describe("AsistenteContable", () => {
     expect(await screen.findByText(/El asistente todavia no esta disponible/)).toBeTruthy();
   });
 
-  it("solo hace POST a /api/assistant/contable/chat con {message}", async () => {
+  it("solo hace POST a /api/assistant/contable/ia/chat con {message}", async () => {
     apiFetchMock.mockResolvedValue(ok({ response: "ok", links: [] }));
     render(<AsistenteContable />);
     fireEvent.click(screen.getByRole("button", { name: "Donde registro una compra?" }));
     await waitFor(() => expect(apiFetchMock).toHaveBeenCalledTimes(1));
     const [url, init] = apiFetchMock.mock.calls[0];
-    expect(url).toBe("/api/assistant/contable/chat");
+    expect(url).toBe("/api/assistant/contable/ia/chat");
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body)).toEqual({ message: "Donde registro una compra?" });
     expect(JSON.stringify(init)).not.toMatch(/tenant/i);
@@ -92,4 +92,15 @@ describe("AsistenteContable", () => {
     expect(container.querySelector("[aria-live]")).not.toBeNull();
     expect(screen.queryByRole("button", { name: /crear|editar|borrar|eliminar/i })).toBeNull();
   });
+});
+
+it.each([
+  ["fijo", "tope_mensual", true], ["ia", "tope_mensual", false], ["fijo", "otro", false],
+])("nota de limite solo para %s/%s", async (modo, motivo, visible) => {
+  apiFetchMock.mockResolvedValue(ok({ response: "Respuesta legible", links: [], modo, motivo, datos: { secreto: "NO_MOSTRAR" }, herramienta: "NO_MOSTRAR", read_only: true }));
+  render(<AsistenteContable />);
+  await preguntar("Consulta");
+  await screen.findByText("Respuesta legible");
+  expect(Boolean(screen.queryByText("Respuesta sin IA: se alcanzó el tope de uso de este mes."))).toBe(visible);
+  expect(screen.queryByText(/NO_MOSTRAR/)).toBeNull();
 });

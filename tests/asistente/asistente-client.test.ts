@@ -32,14 +32,14 @@ describe("enlaceSeguro", () => {
 });
 
 describe("enviarMensaje", () => {
-  it("hace POST solo a /api/assistant/contable/chat con {message}", async () => {
+  it("hace POST solo a /api/assistant/contable/ia/chat con {message}", async () => {
     apiFetchMock.mockResolvedValue(ok({ response: "ok", links: ["/autos/dealer/leads", 5] }));
     const r = await enviarMensaje("hola");
     expect(r).toEqual({ ok: true, data: { response: "ok", links: ["/autos/dealer/leads"] } });
     expect(apiFetchMock).toHaveBeenCalledTimes(1);
     const [url, init] = apiFetchMock.mock.calls[0];
     expect(url).toBe(RUTA_CHAT);
-    expect(RUTA_CHAT).toBe("/api/assistant/contable/chat");
+    expect(RUTA_CHAT).toBe("/api/assistant/contable/ia/chat");
     expect(init.method).toBe("POST");
     expect(JSON.parse(init.body)).toEqual({ message: "hola" });
   });

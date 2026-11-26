@@ -8,7 +8,7 @@ import { enlaceSeguro, enviarMensaje } from "@/lib/agents/contable/asistente-cli
 const SUGERIDAS = ["Como cargo una reparacion?", "Donde registro una compra?", "Como doy de alta un contacto?"];
 const NO_DISPONIBLE = "El asistente todavia no esta disponible";
 
-type Turno = { rol: "yo" | "asistente"; texto: string; links?: string[] };
+type Turno = { rol: "yo" | "asistente"; texto: string; links?: string[]; topeMensual?: boolean };
 
 /** Texto como texto; solo los tokens de la lista blanca local se pintan como enlace interno. */
 function pintar(texto: string, links: string[] = []): ReactNode[] {
@@ -51,7 +51,7 @@ export function AsistenteContable() {
     setTexto("");
     const r = await enviarMensaje(m);
     setCargando(false);
-    if (r.ok) setTurnos((t) => [...t, { rol: "asistente", texto: r.data.response, links: r.data.links }]);
+    if (r.ok) setTurnos((t) => [...t, { rol: "asistente", texto: r.data.response, links: r.data.links, topeMensual: r.data.modo === "fijo" && r.data.motivo === "tope_mensual" }]);
     else setFallo(true);
   }
 
@@ -76,6 +76,7 @@ export function AsistenteContable() {
         {turnos.map((t, i) => (
           <p key={i} className={t.rol === "yo" ? "self-end rounded bg-blue-50 px-2 py-1" : "self-start rounded bg-gray-100 px-2 py-1"}>
             {t.rol === "yo" ? t.texto : pintar(t.texto, t.links)}
+            {t.topeMensual ? <small className="mt-1 block text-xs text-gray-700">Respuesta sin IA: se alcanzó el tope de uso de este mes.</small> : null}
           </p>
         ))}
         {cargando && <p className="text-sm text-gray-700">Escribiendo...</p>}
