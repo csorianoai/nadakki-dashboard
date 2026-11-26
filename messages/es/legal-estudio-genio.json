@@ -119,5 +119,23 @@
     "crear": "Crear un expediente",
     "errorCasos": "No se pudieron cargar los expedientes.",
     "verTodos": "Ver todos los expedientes"
+  },
+  "muestra": {
+    "titulo": "Qué recibe",
+    "items": [
+      "Resumen ejecutivo de una página: recomendación, plazo crítico y exposición en dinero.",
+      "Investigación del caso: cronología y pruebas, con lo que falta conseguir.",
+      "Normas aplicables y jurisprudencia dominicana a favor y en contra, más jurisprudencia comparada con su peso en RD.",
+      "Estrategias de tres modelos de IA, atacadas por una contraparte y votadas por tres jueces simulados.",
+      "Las tres mejores, desarrolladas: actos, pedimentos, pruebas y árbol de decisiones.",
+      "Flancos por donde atacará la contraparte, cada uno con su respuesta preparada.",
+      "Revisión de nivel casación y matriz de puntuación para que el abogado decida.",
+      "Anexo con cada sentencia y norma citada, su enlace y qué se leyó de ella."
+    ],
+    "aviso": "El estudio no sustituye al abogado ni predice el fallo de un juez. La decisión y la firma son suyas.",
+    "tarjeta": "Informe de muestra",
+    "detalle": "Caso ficticio de cobro comercial, sentencia en defecto y embargo. 21 páginas, paquete Completo.",
+    "abrir": "Ver el informe de muestra (PDF)",
+    "alt": "Portada del informe de muestra del Estudio Genio"
   }
 }

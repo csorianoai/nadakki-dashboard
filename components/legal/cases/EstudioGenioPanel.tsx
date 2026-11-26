@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useEstudioGenio, useInformeGenio } from "@/hooks/legal/useEstudioGenio";
 import { descargarEstudio, errorGenio, noHabilitado, type Paquete } from "@/lib/legal/cases/estudio-genio-api";
 import { EstudioGenioRevision } from "./EstudioGenioRevision";
+import { MuestraGenio } from "./estudio-genio/MuestraGenio";
 import { CabeceraGenio, genioButton, genioCard, genioField, genioLabel, genioPrimary, genioTitulo } from "./estudio-genio/estilo";
 import { EstudioGenioCompras, useComprasGenio } from "./EstudioGenioCompras";
 import m from "@/messages/es/legal-estudio-genio.json";
@@ -63,6 +64,7 @@ export function EstudioGenioPanel({ tenantId, caseId }: {
     const cabecera = <CabeceraGenio titulo={m.title} texto={m.about}/>;
     if (q.data?.habilitado === false || noHabilitado(q.error) || noHabilitado(error))
         return <div className="space-y-6">{cabecera}<section className={genioCard}><p role="status" className="font-medium">{m.disabled}</p></section>
+      <MuestraGenio/>
       <EstudioGenioCompras tenantId={tenantId}/></div>;
     if (!q.data || q.error)
         return <div className="space-y-6">{cabecera}<div role="alert" className={`${genioCard} flex flex-wrap items-center gap-3 text-[#8E2C3A]`}>{errorGenio(q.error)} <button className={genioButton} onClick={() => void q.refetch()}>{m.retry}</button></div></div>;
