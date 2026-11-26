@@ -1,14 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type KeyboardEvent, type ReactNode } from "react";
+import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
-import { enlaceSeguro, enviarMensaje } from "@/lib/agents/contable/asistente-client";
+import { confirmarAccion, enlaceSeguro, enviarMensaje, type AccionPropuesta } from "@/lib/agents/contable/asistente-client";
 
 const SUGERIDAS = ["Como cargo una reparacion?", "Donde registro una compra?", "Como doy de alta un contacto?"];
 const NO_DISPONIBLE = "El asistente todavia no esta disponible";
 
-type Turno = { rol: "yo" | "asistente"; texto: string; links?: string[]; topeMensual?: boolean };
+type EstadoAccion = "pendiente" | "enviando" | "hecha" | "cancelada";
+type Turno = {
+  rol: "yo" | "asistente"; texto: string; links?: string[]; topeMensual?: boolean;
+  accion?: AccionPropuesta; estado?: EstadoAccion;
+};
 
 /** Texto como texto; solo los tokens de la lista blanca local se pintan como enlace interno. */
 function pintar(texto: string, links: string[] = []): ReactNode[] {
@@ -40,6 +44,7 @@ export function AsistenteContable() {
   const [cargando, setCargando] = useState(false);
   const [fallo, setFallo] = useState(false);
   const [ultima, setUltima] = useState("");
+  const decididas = useRef(new Set<string>());
 
   async function enviar(mensaje: string, repetir = false) {
     const m = mensaje.trim();
@@ -51,8 +56,27 @@ export function AsistenteContable() {
     setTexto("");
     const r = await enviarMensaje(m);
     setCargando(false);
-    if (r.ok) setTurnos((t) => [...t, { rol: "asistente", texto: r.data.response, links: r.data.links, topeMensual: r.data.modo === "fijo" && r.data.motivo === "tope_mensual" }]);
+    if (r.ok) setTurnos((t) => [...t, { rol: "asistente", texto: r.data.response, links: r.data.links, topeMensual: r.data.modo === "fijo" && r.data.motivo === "tope_mensual",
+      ...(r.data.accionPropuesta ? { accion: r.data.accionPropuesta, estado: "pendiente" as const } : {}) }]);
     else setFallo(true);
+  }
+
+  const marcar = (i: number, estado: EstadoAccion) =>
+    setTurnos((t) => t.map((x, j) => (j === i ? { ...x, estado } : x)));
+
+  /** Una sola vez: los botones desaparecen al tocar cualquiera de los dos. */
+  async function decidir(i: number, accion: AccionPropuesta, confirmar: boolean) {
+    if (decididas.current.has(accion.id)) return;
+    decididas.current.add(accion.id);
+    if (!confirmar) {
+      marcar(i, "cancelada");
+      setTurnos((t) => [...t, { rol: "asistente", texto: "Listo, no hice nada." }]);
+      return;
+    }
+    marcar(i, "enviando");
+    const r = await confirmarAccion(accion.id);
+    marcar(i, "hecha");
+    setTurnos((t) => [...t, { rol: "asistente", texto: r.response, links: r.links }]);
   }
 
   const alTeclear = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -65,7 +89,7 @@ export function AsistenteContable() {
   return (
     <section aria-label="Asistente contable" className="flex flex-col gap-3 rounded border border-gray-300 bg-white p-4 text-gray-900">
       <h2 className="text-lg font-semibold">Asistente contable</h2>
-      <p className="text-sm text-gray-700">Solo te guio a la pantalla correcta: no creo, edito ni borro nada.</p>
+      <p className="text-sm text-gray-700">Te guio a la pantalla correcta. Si me lo pedis, preparo una accion simple (crear un contacto, publicar un auto) y solo la hago cuando tocas Confirmar.</p>
       <div className="flex flex-wrap gap-2">
         {SUGERIDAS.map((q) => (
           <button key={q} type="button" onClick={() => void enviar(q)} disabled={cargando}
@@ -77,6 +101,14 @@ export function AsistenteContable() {
           <p key={i} className={t.rol === "yo" ? "self-end rounded bg-blue-50 px-2 py-1" : "self-start rounded bg-gray-100 px-2 py-1"}>
             {t.rol === "yo" ? t.texto : pintar(t.texto, t.links)}
             {t.topeMensual ? <small className="mt-1 block text-xs text-gray-700">Respuesta sin IA: se alcanzó el tope de uso de este mes.</small> : null}
+            {t.accion && (t.estado === "pendiente" || t.estado === "enviando") ? (
+              <span role="group" aria-label={`Confirmar: ${t.accion.resumen}`} className="mt-2 flex gap-2">
+                <button type="button" disabled={t.estado === "enviando"} onClick={() => void decidir(i, t.accion!, true)}
+                  className="rounded bg-blue-800 px-3 py-1 text-white focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-blue-700">Confirmar</button>
+                <button type="button" disabled={t.estado === "enviando"} onClick={() => void decidir(i, t.accion!, false)}
+                  className="rounded border border-gray-500 px-3 py-1 focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-blue-700">Cancelar</button>
+              </span>
+            ) : null}
           </p>
         ))}
         {cargando && <p className="text-sm text-gray-700">Escribiendo...</p>}
