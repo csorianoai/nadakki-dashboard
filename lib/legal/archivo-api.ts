@@ -52,6 +52,11 @@ const headers = (tenantId: string) => ({ "X-Tenant-ID": tenantId.trim(), Accept:
 export async function leerEspacio(tenantId: string): Promise<Espacio> {
   const res = await apiFetch(`${base}/espacio`, { headers: headers(tenantId) });
   const raw = await readLegalJson<Espacio>(res, m.error);
+  // Una respuesta sin la forma esperada (backend viejo, proxy, simulacion) no se pinta: seria NaN.
+  if (!raw || typeof raw.usado_bytes !== "number" || typeof raw.total_bytes !== "number" || raw.total_bytes <= 0
+      || !raw.catalogo) {
+    throw new Error(m.error);
+  }
   return { ...raw, ampliaciones: raw.ampliaciones ?? [] };
 }
 

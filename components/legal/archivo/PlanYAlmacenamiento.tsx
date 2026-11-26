@@ -28,14 +28,15 @@ export function useEspacio(tenantId: string) {
 
 /** Barra de uso del archivo. La usan esta sección y la tarjeta de Mi despacho. */
 export function BarraEspacio({ e }: { e: Pick<Espacio, "usado_bytes" | "total_bytes" | "libre_bytes" | "porcentaje" | "nivel"> }) {
-  const ancho = Math.min(100, Math.max(e.usado_bytes > 0 ? 1.5 : 0, e.porcentaje));
+  const pct = Number.isFinite(e.porcentaje) ? Math.min(100, Math.max(0, e.porcentaje)) : 0;
+  const ancho = Math.max(e.usado_bytes > 0 ? 1.5 : 0, pct);
   return (
     <div>
       <div className="flex items-baseline justify-between gap-3">
         <p className="font-display text-2xl font-semibold">{fill(m.usado, { usado: tamano(e.usado_bytes), total: tamano(e.total_bytes) })}</p>
         <p className="text-sm text-[#6B7385]">{fill(m.libre, { libre: tamano(e.libre_bytes) })}</p>
       </div>
-      <div role="progressbar" aria-label={m.medidor.titulo} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(e.porcentaje)}
+      <div role="progressbar" aria-label={m.medidor.titulo} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(pct)}
         className="mt-3 h-2.5 w-full overflow-hidden rounded-full bg-[#E3E7EE]">
         <div className={`h-full rounded-full ${barra[e.nivel]}`} style={{ width: `${ancho}%` }} />
       </div>

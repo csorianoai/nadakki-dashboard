@@ -68,6 +68,12 @@ describe("Plan y almacenamiento", () => {
     expect(container.textContent).toBe("");
   });
 
+  it("una respuesta sin la forma esperada no pinta el medidor (axe: nada de aria-valuenow=NaN)", async () => {
+    const fetchMod = await import("@/lib/api/fetch-client");
+    jest.spyOn(fetchMod, "apiFetch").mockResolvedValue({ ok: true, status: 200, text: async () => JSON.stringify({ ok: true }) } as unknown as Response);
+    await expect(api.leerEspacio("t")).rejects.toThrow();
+  });
+
   it("tamaños en español", () => {
     expect(api.tamano(381 * 1024)).toBe("381 KB");
     expect(api.tamano(1.5 * GB)).toBe("1,5 GB");
