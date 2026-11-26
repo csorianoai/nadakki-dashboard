@@ -3,7 +3,7 @@
 import { ChevronDown } from "lucide-react";
 
 const AGENT_LABELS: Record<string, string> = {
-  chat_asesor_legal: "Laboral senior",
+  chat_asesor_legal: "Asesor legal general",
   analizador_riesgo_contractual: "Riesgo contractual",
   validador_amlkyc: "AML/KYC",
   calculador_plazos_procesales: "Plazos procesales",
@@ -31,9 +31,10 @@ export function ResearchTopBar({ agentId, onAgentChange, recentCount, onOpenRece
           aria-label="Seleccionar agente legal"
           value={agentId}
           onChange={(e) => onAgentChange(e.target.value)}
+          style={{ color: "#eef2f8" }}
         >
           {Object.entries(AGENT_LABELS).map(([id, name]) => (
-            <option key={id} value={id}>
+            <option key={id} value={id} style={{ color: "#17233A", background: "#ffffff" }}>
               {name}
             </option>
           ))}
