@@ -6,9 +6,9 @@ import { memo, useCallback } from "react";
 import { Camera, Fuel, Gauge, MapPin, Settings2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fmtKm } from "@/lib/format";
-import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
+import { useFmtPrecioDe } from "@/components/vehicle/precio";
 import { publicVehicleHref } from "@/lib/autos-portal/vehicle-href";
-import { cuota, priceStatus } from "@/lib/finance";
+import { priceStatus } from "@/lib/finance";
 import { photoCount, primaryPhotoUrl, type Vehicle } from "@/lib/vehicles";
 import { QualityBadge } from "@/components/vehicle/QualityBadge";
 import { PrecioJustoBadge } from "@/components/vehicle/PrecioJustoBadge";
@@ -90,9 +90,8 @@ export const VehicleCard = memo(function VehicleCard({
   variant?: VehicleCardVariant;
 }) {
   const router = useRouter();
-  const fmt = useFmtPrecio();
+  const fmt = useFmtPrecioDe(vehicle);
   const status = priceStatus(vehicle.badge, vehicle.match);
-  const monthly = vehicle.price > 0 ? Math.round(cuota(vehicle.price, 20, 60)) : 0;
   const href = publicVehicleHref(vehicle);
   const photos = photoCount(vehicle);
 
@@ -214,23 +213,15 @@ export const VehicleCard = memo(function VehicleCard({
             <QualityBadge status={status} />
             <PrecioJustoBadge vehicle={vehicle} />
           </div>
+          {/* Sin cuota ni "Aplicar financiamiento": el portal publico no trae condiciones de financiamiento del
+              concesionario (antes: 60 meses al 13.5% inventados y un enlace ?financiar=1 que no hacia nada). */}
           <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
             <Button variant="brand" className="min-h-10 w-full text-[13px]" asChild>
-              <Link href={`${href}?financiar=1`} prefetch>
-                Aplicar financiamiento
-              </Link>
-            </Button>
-            <Button variant="outline" className="min-h-10 w-full text-[13px]" asChild>
               <Link href={href} prefetch>
                 Ver detalles
               </Link>
             </Button>
           </div>
-          {monthly > 0 ? (
-            <p className="text-sm font-semibold tabular-nums text-brand">
-              {fmt(monthly)}/mes · 60 meses · 13.5% APR
-            </p>
-          ) : null}
         </div>
       </article>
     );
@@ -302,11 +293,6 @@ export const VehicleCard = memo(function VehicleCard({
             <QualityBadge status={status} />
           </div>
 
-          {monthly > 0 ? (
-            <p className="text-sm font-semibold tabular-nums text-brand">
-              {fmt(monthly)}/mes · 60 meses · 13.5% APR
-            </p>
-          ) : null}
         </div>
 
         <div className="flex flex-wrap gap-1.5">
@@ -349,13 +335,8 @@ export const VehicleCard = memo(function VehicleCard({
 
         <div className="mt-auto flex gap-2 pt-2">
           <Button variant="brand" className="min-h-11 flex-1 hover:brightness-110" asChild>
-            <Link href={`${href}?financiar=1`} onClick={(e) => e.stopPropagation()} prefetch>
-              Aplicar financiamiento
-            </Link>
-          </Button>
-          <Button variant="outline" className="min-h-11 px-4" asChild>
             <Link href={href} onClick={(e) => e.stopPropagation()} prefetch>
-              Ver
+              Ver detalles
             </Link>
           </Button>
         </div>

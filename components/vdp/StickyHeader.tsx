@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { publicVehicleHref } from "@/lib/autos-portal/vehicle-href";
-import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
+import { useFmtPrecioDe } from "@/components/vehicle/precio";
 import { SaveButton } from "@/components/vehicle/SaveButton";
 import { VEHICLES_SEED, type Vehicle } from "@/lib/vehicles";
 import { cn } from "@/lib/utils";
@@ -27,7 +27,7 @@ export function StickyHeader({
   navIndex: number;
   navTotal: number;
 }) {
-  const fmt = useFmtPrecio();
+  const fmt = useFmtPrecioDe(vehicle);
   return (
     <div
       className={cn(

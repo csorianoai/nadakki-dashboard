@@ -1,10 +1,10 @@
 import { fmtKm } from "@/lib/format";
-import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
+import { useFmtPrecioDe } from "@/components/vehicle/precio";
 
 import type { Vehicle } from "@/lib/vehicles";
 
 export function VehicleHeader({ vehicle }: { vehicle: Vehicle }) {
-  const fmt = useFmtPrecio();
+  const fmt = useFmtPrecioDe(vehicle);
   return (
     <header className="space-y-2">
       <h1 className="font-manrope text-[clamp(24px,3.4vw,32px)] font-extrabold leading-tight text-nk-fg">

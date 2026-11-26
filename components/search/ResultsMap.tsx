@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { publicVehicleHref } from "@/lib/autos-portal/vehicle-href";
 import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
-import { cuota } from "@/lib/finance";
+import { formatPrecioEnMoneda } from "@/components/vehicle/precio";
 import type { Vehicle } from "@/lib/vehicles";
 
 const PROVINCE_POSITIONS: Record<string, { top: string; left: string }> = {
@@ -46,7 +46,6 @@ export function ResultsMap({
             top: `${20 + (vehicle.id * 7) % 60}%`,
             left: `${25 + (vehicle.id * 11) % 50}%`,
           };
-          const monthly = Math.round(cuota(vehicle.price, 20, 60));
           return (
             <Link
               key={vehicle.id}
@@ -54,14 +53,14 @@ export function ResultsMap({
               className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-brand bg-nk-surface px-2 py-1 text-[10px] font-bold text-brand shadow-nk-md transition hover:scale-110"
               style={{ top: pos.top, left: pos.left }}
             >
-              {fmt(monthly)}/mes
+              {formatPrecioEnMoneda(vehicle.price, vehicle.currency) ?? fmt(vehicle.price)}
             </Link>
           );
         })}
       </div>
       <p className="border-t border-nk-border px-4 py-3 text-xs text-nk-fg-subtle">
-        En producción integrar Mapbox/Google Maps. Pins aproximados por provincia según cuota
-        mensual.
+        En producción integrar Mapbox/Google Maps. Pins aproximados por provincia con el precio
+        publicado.
       </p>
     </div>
   );
