@@ -190,7 +190,20 @@ export type SaleFormErrors = Partial<Record<keyof SaleForm | "currency", string>
 
 export const SALE_FORM_EMPTY: SaleForm = { sale_price_amount: "", sold_at: "" };
 
-export function validateSaleForm(form: SaleForm, currency: string | null): SaleFormErrors {
+/** Fecha y hora local en el formato del campo datetime-local ("2026-11-25T22:37"). */
+export function ahoraLocal(d: Date = new Date()): string {
+  const dos = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${dos(d.getMonth() + 1)}-${dos(d.getDate())}T${dos(d.getHours())}:${dos(d.getMinutes())}`;
+}
+
+/** Formulario nuevo con la hora actual precargada (validacion Cowork 26-nov: una hora futura dejaba la comision impagable). */
+export function saleFormNuevo(d: Date = new Date()): SaleForm {
+  return { sale_price_amount: "", sold_at: ahoraLocal(d) };
+}
+
+export const SALE_DATE_FUTURE_MESSAGE = "La fecha y hora de la venta no puede ser posterior a ahora.";
+
+export function validateSaleForm(form: SaleForm, currency: string | null, ahora: Date = new Date()): SaleFormErrors {
   const errors: SaleFormErrors = {};
   if (!currency || !/^[A-Z]{3}$/.test(currency.trim().toUpperCase())) {
     errors.currency = "Falta la moneda del concesionario. No se registra la venta con una moneda inventada.";
@@ -200,6 +213,8 @@ export function validateSaleForm(form: SaleForm, currency: string | null): SaleF
   }
   if (!form.sold_at.trim() || Number.isNaN(Date.parse(form.sold_at))) {
     errors.sold_at = "Indica la fecha y hora de la venta.";
+  } else if (Date.parse(form.sold_at) > ahora.getTime() + 60_000) {
+    errors.sold_at = SALE_DATE_FUTURE_MESSAGE;
   }
   return errors;
 }
@@ -234,4 +249,6 @@ export const SALE_VAT_MESSAGES: Record<string, string> = {
   SALE_VAT_RATE_REQUIRED: "Falta la alícuota del IVA (o el ITBIS).",
   SALE_VAT_RATE_INVALID: "En República Dominicana el ITBIS es 18.",
   SALE_VAT_BASE_UNKNOWN: "La compra no tiene datos fiscales: complétalos antes de vender.",
+  SALE_DATE_IN_FUTURE: SALE_DATE_FUTURE_MESSAGE,
+  VEHICLE_ALREADY_SOLD: "Este vehículo ya está vendido.",
 };
