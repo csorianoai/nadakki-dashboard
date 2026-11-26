@@ -13,12 +13,12 @@ export function ChatHeader({ onClose }: { onClose: () => void }) {
           </div>
           <span
             className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-nk-surface bg-nk-success"
-            title="En línea"
+            title="Asistente de inventario"
           />
         </div>
         <div>
           <h2 className="font-manrope text-base font-bold text-nk-fg">Concierge Nadakki</h2>
-          <p className="text-xs text-nk-fg-muted">Chat en español dominicano · en línea</p>
+          <p className="text-xs text-nk-fg-muted">Asistente de inventario</p>
         </div>
       </div>
       <Button
