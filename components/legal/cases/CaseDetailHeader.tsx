@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import genio from "@/messages/es/legal-estudio-genio.json";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { LegalCase } from "@/lib/legal/cases/case-types";
@@ -71,6 +72,7 @@ export function CaseDetailHeader({
           danger: false,
         },
         { href: `${base}/strategy`, segment: "strategy", label: m.nav.strategy, danger: false },
+        { href: `${base}/estudio-genio`, segment: "estudio-genio", label: genio.title, danger: false },
         { href: `${base}/deadlines`, segment: "deadlines", label: m.nav.deadlines, danger: false },
         { href: `${base}/issues`, segment: "issues", label: m.nav.issues, danger: false },
         { href: `${base}/risk`, segment: "risk", label: m.nav.risk, danger: false },
