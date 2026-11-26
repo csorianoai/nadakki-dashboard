@@ -15,12 +15,14 @@ export function VentaFiscalFields({
   onChange,
   errors,
   baseIva = null,
+  country = null,
 }: {
   value: VentaFiscalForm;
   onChange: (next: VentaFiscalForm) => void;
   errors: Record<string, string>;
   /** Base que devolvio el servidor tras registrar; antes de eso se dice que la calcula el sistema. */
   baseIva?: string | null;
+  country?: string | null;
 }) {
   const set = (k: keyof VentaFiscalForm, v: string | boolean) => onChange({ ...value, [k]: v });
   const err = (k: string) =>
@@ -43,11 +45,12 @@ export function VentaFiscalFields({
 
   return (
     <fieldset data-testid="venta-fiscal" className="min-w-0 space-y-3">
-      <legend className="text-sm font-bold text-nk-fg">IVA y permuta</legend>
+      <legend className="text-sm font-bold text-nk-fg">{country === "DO" ? "ITBIS y permuta" : "IVA y permuta"}</legend>
       <label className="block min-w-0">
-        <span className={LABEL}>Alícuota del IVA (%)</span>
+        <span className={LABEL}>{country === "DO" ? "ITBIS (%)" : "Alícuota del IVA (%)"}</span>
         <input
           name="vat_rate"
+          readOnly={country === "DO"}
           value={value.vat_rate}
           onChange={(e) => set("vat_rate", e.target.value)}
           inputMode="decimal"
@@ -55,12 +58,15 @@ export function VentaFiscalFields({
           className={FIELD}
         />
         <span className="mt-1 block text-xs text-nk-fg-muted">
-          No se completa sola. Si la dejas vacía, la venta se registra sin IVA calculado.
+          {country === "DO"
+            ? "En República Dominicana el ITBIS de la venta de un vehículo es 18 %. Va sobre el precio total en inventario propio y sobre la comisión en consignados."
+            : country === "AR" ? "Indica la alícuota del IVA antes de registrar la venta."
+            : "Indica la alícuota aplicable a la venta."}
         </span>
         {err("vat_rate")}
       </label>
       <label className="block min-w-0">
-        <span className={LABEL}>Base del IVA</span>
+        <span className={LABEL}>{country === "DO" ? "Base del ITBIS" : "Base del IVA"}</span>
         <input
           data-testid="venta-base-iva"
           name="vat_base_display"

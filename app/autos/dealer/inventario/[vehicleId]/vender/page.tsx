@@ -4,7 +4,7 @@ import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { DetalleTecnico } from "../../DetalleTecnico";
 import { useParams } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { AccessApiError, getAccessClientContext } from "@/lib/access/client";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { DEALER_REGISTER_CAPABILITY } from "@/lib/dealer/capabilities";
@@ -14,12 +14,17 @@ import {
   SALE_FORM_EMPTY,
   registerSale,
   validateSaleForm,
+  validateSaleVat,
+  SALE_VAT_MESSAGES,
   type SaleForm,
   type SaleFormErrors,
 } from "@/lib/dealer-management/vehicle-sale";
 import {
   VENTA_FISCAL_EMPTY, BASE_IVA_TEXTO, mensajeVenta, validateVentaFiscal, type VentaFiscalForm,
 } from "@/lib/dealer-management/venta-fiscal";
+import { decodeJWT } from "@/lib/auth/jwt-decode";
+import { tokenStorage } from "@/lib/auth/token-storage";
+import { fetchCompra } from "../vehicle-purchase-read";
 import { VentaFiscalFields } from "./VentaFiscalFields";
 
 const FIELD = "mt-1 min-h-11 w-full max-w-full rounded-r-sm border border-nk-border bg-nk-surface px-3 text-sm text-nk-fg";
@@ -27,7 +32,8 @@ const FIELD = "mt-1 min-h-11 w-full max-w-full rounded-r-sm border border-nk-bor
 export default function DealerVehicleSalePage() {
   const params = useParams();
   const vehicleId = String(params?.vehicleId ?? "").trim();
-  const tenantId = getAccessClientContext()?.tenantId ?? "";
+  const context = getAccessClientContext();
+  const tenantId = context?.tenantId ?? "";
   const access = useAccessEntitlementsBatch([DEALER_REGISTER_CAPABILITY]);
   const branding = useDealerManagementBranding();
   const locale = localeDeTenant(branding.data);
@@ -36,8 +42,22 @@ export default function DealerVehicleSalePage() {
   const [errors, setErrors] = useState<SaleFormErrors & Record<string, string>>({});
   const allowed = !access.error && access.data?.results?.[DEALER_REGISTER_CAPABILITY]?.allowed === true;
 
+  const identity = decodeJWT(tokenStorage.getAccessToken() ?? "") as { sub?: string; user_id?: string } | null;
+  const purchase = useQuery({
+    queryKey: ["sale-purchase", tenantId, identity?.sub ?? identity?.user_id ?? "sin-identidad", vehicleId],
+    queryFn: () => fetchCompra(vehicleId),
+    enabled: Boolean(tenantId && vehicleId && allowed),
+    retry: false,
+    gcTime: 0,
+    staleTime: 0,
+  });
+  const country = purchase.data?.country_code?.toUpperCase() ??
+    /-(AR|DO)$/i.exec(locale.locale)?.[1].toUpperCase() ??
+    (locale.currency === "ARS" ? "AR" : locale.currency === "DOP" ? "DO" : null);
+  const saleFiscal = country === "DO" ? { ...fiscal, vat_rate: "18" } : fiscal;
+
   const venta = useMutation({
-    mutationFn: (payload: SaleForm) => registerSale(vehicleId, tenantId, payload, locale.currency as string, fiscal),
+    mutationFn: (payload: SaleForm) => registerSale(vehicleId, tenantId, payload, locale.currency as string, saleFiscal),
     onSuccess: () => {
       setForm(SALE_FORM_EMPTY);
       setFiscal(VENTA_FISCAL_EMPTY);
@@ -47,7 +67,8 @@ export default function DealerVehicleSalePage() {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     venta.reset();
-    const found: Record<string, string> = { ...validateSaleForm(form, locale.currency), ...validateVentaFiscal(fiscal) };
+    if (purchase.isPending || purchase.isError || !allowed) return;
+    const found: Record<string, string> = { ...validateSaleForm(form, locale.currency), ...validateVentaFiscal(saleFiscal), ...validateSaleVat(saleFiscal, country) };
     setErrors(found);
     if (Object.keys(found).length > 0) return;
     venta.mutate(form);
@@ -99,15 +120,18 @@ export default function DealerVehicleSalePage() {
             {errors.sold_at ? <span role="alert" className="text-xs">{errors.sold_at}</span> : null}
           </label>
           <VentaFiscalFields
-            value={fiscal}
+            value={saleFiscal}
+            country={country}
             onChange={setFiscal}
             errors={errors}
             baseIva={baseDevuelta ? (BASE_IVA_TEXTO[baseDevuelta] ?? baseDevuelta) : null}
           />
+          {purchase.isPending ? <p role="status">Consultando el país de la compra…</p> : null}
+          {purchase.isError ? <p role="alert">No se pudo consultar la compra. Intenta de nuevo antes de vender.</p> : null}
           {errors.currency ? <p role="alert" data-testid="venta-sin-moneda" className="text-sm text-nk-fg">{errors.currency}</p> : null}
           {venta.isError ? (
             <p role="alert" data-testid="venta-error" className="text-sm text-nk-fg">
-              {mensajeVenta(reason) ?? "No se pudo registrar la venta. Prueba de nuevo en unos minutos; si sigue igual, avisa a soporte."}
+              {SALE_VAT_MESSAGES[reason] ?? mensajeVenta(reason) ?? "No se pudo registrar la venta. Prueba de nuevo en unos minutos; si sigue igual, avisa a soporte."}
               <DetalleTecnico>
                 <code>{reason}</code>
               </DetalleTecnico>
@@ -118,7 +142,7 @@ export default function DealerVehicleSalePage() {
           ) : null}
           <button
             type="submit"
-            disabled={venta.isPending}
+            disabled={venta.isPending || purchase.isPending || purchase.isError}
             className="min-h-11 w-full rounded-full bg-brand-2 px-4 text-sm font-semibold text-white"
           >
             Registrar venta
