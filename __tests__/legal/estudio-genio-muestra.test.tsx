@@ -10,7 +10,7 @@ describe("Estudio Genio: informe de muestra", () => {
     expect(enlace).toHaveAttribute("href", RUTA_MUESTRA);
     expect(enlace).toHaveAttribute("target", "_blank");
     expect(screen.getByRole("heading", { name: "Qué recibe" })).toBeInTheDocument();
-    expect(screen.getAllByRole("listitem")).toHaveLength(8);
+    expect(screen.getAllByRole("listitem")).toHaveLength(9);
     expect(screen.getByText(/no sustituye al abogado/i)).toBeInTheDocument();
   });
 

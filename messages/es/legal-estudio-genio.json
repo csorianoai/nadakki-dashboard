@@ -6,8 +6,8 @@
   "disabled": "El Estudio Genio no está activado para este despacho",
   "about": "Tres modelos de IA proponen estrategias; una contraparte y tres jueces simulados las ponen a prueba. Recibes un informe para revisar y firmar.",
   "packages": {
-    "completo": "Completo · 20 estrategias simuladas · US$1.500",
-    "esencial": "Esencial · 5 estrategias simuladas · US$500"
+    "completo": "Completo · 20 estrategias simuladas y 3 revisiones de un abogado de Nadakki · US$1.500",
+    "esencial": "Esencial · 5 estrategias simuladas y 1 revisión de un abogado de Nadakki · US$500"
   },
   "package": "Paquete",
   "pedido": "¿Qué necesitas del estudio?",
@@ -131,12 +131,52 @@
       "Las tres mejores, desarrolladas: actos, pedimentos, pruebas y árbol de decisiones.",
       "Flancos por donde atacará la contraparte, cada uno con su respuesta preparada.",
       "Revisión de nivel casación y matriz de puntuación para que el abogado decida.",
-      "Anexo con cada sentencia y norma citada, su enlace y qué se leyó de ella."
+      "Anexo con cada sentencia y norma citada, su enlace y qué se leyó de ella.",
+      "Revisión de un abogado de Nadakki incluida: 1 en el Esencial y 3 en el Completo, con sus correcciones y su firma dentro del informe."
     ],
     "aviso": "El estudio no sustituye al abogado ni predice el fallo de un juez. La decisión y la firma son suyas.",
     "tarjeta": "Informe de muestra",
     "detalle": "Caso ficticio de cobro comercial, sentencia en defecto y embargo. 21 páginas, paquete Completo.",
     "abrir": "Ver el informe de muestra (PDF)",
     "alt": "Portada del informe de muestra del Estudio Genio"
+  },
+  "nadakki": {
+    "titulo": "Revisión de un abogado de Nadakki",
+    "ayuda": "Un abogado de Nadakki lee el estudio, corrige lo que haga falta y lo firma. Sus correcciones quedan en el informe y mejoran los próximos estudios de su despacho.",
+    "quedan": "Le quedan {n} de {total} revisiones incluidas en este estudio.",
+    "agotadas": "Ya usó las {total} revisiones incluidas en este estudio.",
+    "nota": "Qué quiere que revise (opcional)",
+    "notaAyuda": "Por ejemplo: la vía y el plazo, la prueba del crédito o la estrategia que piensa usar.",
+    "pedir": "Pedir revisión",
+    "confirmar": "Se usará 1 de sus revisiones incluidas. ¿Enviar la solicitud al abogado de Nadakki?",
+    "enviada": "Solicitud enviada. Le avisaremos aquí cuando el abogado de Nadakki responda.",
+    "enCurso": "Revisión en curso con un abogado de Nadakki. Pedida el {fecha}.",
+    "respuestas": "Revisiones recibidas",
+    "pedido": "Lo que pidió",
+    "decisiones": {
+      "aprobado": "Aprobado",
+      "con_correcciones": "Aprobado con correcciones",
+      "rechazado": "Rechazado: rehacer antes de usar"
+    },
+    "errores": {
+      "REVISION_YA_PENDIENTE": "Ya hay una revisión en curso para este estudio.",
+      "SIN_REVISIONES_DISPONIBLES": "Ya usó todas las revisiones incluidas en este estudio.",
+      "REVISION_SOLO_ESTUDIO_COMPLETADO": "Solo se puede pedir la revisión de un estudio completado.",
+      "REVISION_YA_RESPONDIDA": "Esta solicitud ya fue respondida."
+    },
+    "cola": {
+      "titulo": "Cola de revisiones del Estudio Genio",
+      "ayuda": "Solicitudes de los despachos que esperan la revisión de un abogado de Nadakki. La más antigua primero.",
+      "vacia": "No hay revisiones pendientes.",
+         "despacho": "Despacho",
+      "pedida": "Pedida",
+      "abrirInforme": "Ver el informe",
+      "responder": "Responder",
+      "decision": "Decisión",
+      "firmante": "Abogado de Nadakki que firma",
+      "enviar": "Firmar y enviar",
+      "enviada": "Revisión enviada al despacho.",
+      "faltaCorreccion": "Con correcciones exige al menos una corrección escrita."
+    }
   }
 }
