@@ -6,11 +6,9 @@ import { useParams, useSearchParams } from "next/navigation";
 import { VdpBreadcrumb } from "@/components/vdp/Breadcrumb";
 import { Gallery } from "@/components/vdp/Gallery";
 import { VehicleHeader } from "@/components/vdp/VehicleHeader";
-import { AddToCartButton } from "@/components/autos/AddToCartButton";
 import { SpecTabs } from "@/components/vdp/SpecTabs";
 import { PriceEvaluation } from "@/components/vdp/PriceEvaluation";
 import { ContactSeller } from "@/components/vdp/ContactSeller";
-import { TradeIn } from "@/components/vdp/TradeIn";
 import { StickyHeader, useVdpNavigation } from "@/components/vdp/StickyHeader";
 import { SimilarVehicles } from "@/components/vdp/SimilarVehicles";
 import { FinancingBridgeStatus } from "@/components/vdp/FinancingBridgeStatus";
@@ -121,15 +119,15 @@ export default function AutosVehiculoDetailPage() {
           <div className="min-w-0 flex-[999_1_540px] space-y-6">
             <Gallery vehicle={vehicle} />
             <VehicleHeader vehicle={vehicle} />
-            <AddToCartButton vehicle={vehicle} vehicleRefId={id} className="mt-2" />
             <PriceEvaluation vehicle={vehicle} />
             <SpecTabs vehicle={vehicle} />
             <SimilarVehicles vehicle={vehicle} />
           </div>
 
           <div className="w-full min-w-[280px] flex-[1_1_320px] max-w-[370px] space-y-4">
+            {/* Sin carrito ni tasacion de usados en el portal del concesionario (Cowork 26-nov): "Agregar al carrito"
+                y "Trade-in" (formulario que no enviaba nada y prometia "resultado en 24h") eran restos del marketplace. */}
             <ContactSeller vehicle={vehicle} />
-            <TradeIn />
           </div>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { fmtKm } from "@/lib/format";
+import { kmTexto } from "@/components/vehicle/km";
 import { useFmtPrecioDe } from "@/components/vehicle/precio";
 
 import type { Vehicle } from "@/lib/vehicles";
@@ -11,7 +11,7 @@ export function VehicleHeader({ vehicle }: { vehicle: Vehicle }) {
         {vehicle.year} {vehicle.make} {vehicle.model}
       </h1>
       <p className="text-[13px] text-nk-fg-muted">
-        {vehicle.loc} · {fmtKm(vehicle.km)} · {vehicle.trans}
+        {[vehicle.loc, kmTexto(vehicle), vehicle.trans].filter(Boolean).join(" · ")}
       </p>
       <div className="flex flex-wrap items-baseline gap-2">
         <span className="font-manrope text-[26px] font-extrabold tabular-nums text-nk-fg">
