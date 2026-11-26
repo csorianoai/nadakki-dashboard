@@ -128,7 +128,8 @@ export async function listRevisionesPendientes(tenantId: string): Promise<Pendie
 }
 export const responderRevisionNadakki = (tenantId: string, p: PendienteNadakki, body: RespuestaNadakki) =>
     post<unknown>(tenantId, `${admin}/${[p.tenant_id, p.case_id, p.estudio_id, p.solicitud_id].map(encodeURIComponent).join("/")}`, body);
-export const soloNadakki = (e: unknown) => e instanceof LegalApiHttpError && e.status === 403;
+/** 403: no es del equipo de Nadakki. 404: el backend aún no tiene la cola. En ambos casos no se muestra nada. */
+export const soloNadakki = (e: unknown) => e instanceof LegalApiHttpError && (e.status === 403 || e.status === 404);
 
 export async function informeEstudio(tenantId: string, caseId: string, studyId: string, format: "html" | "pdf") {
     const res = await apiFetch(`${item(caseId, studyId)}/informe?formato=${format}`, { headers: { ...headers(tenantId), Accept: format === "pdf" ? "application/pdf" : "text/html" } });
