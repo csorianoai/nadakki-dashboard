@@ -1,7 +1,13 @@
-/** Concierge AI API with mock fallback. */
+/** Concierge API: failures never produce inventory recommendations. */
 
 import { autosFetch } from "@/lib/autos-consumer-api";
-import { matchConciergeReply } from "@/lib/concierge/mock-responses";
+export class ConciergeUnavailableError extends Error {
+  readonly code = "CONCIERGE_UNAVAILABLE";
+  constructor() {
+    super("No pude consultar el inventario en este momento. Intenta de nuevo en unos minutos.");
+    this.name = "ConciergeUnavailableError";
+  }
+}
 
 export type ConciergeMessageResponse = {
   message: string;
@@ -19,16 +25,14 @@ export async function conversationalSearch(query: string): Promise<ConciergeMess
       method: "POST",
       body: JSON.stringify({ query }),
     });
-    if (!res) throw new Error("empty");
+    if (!res || typeof res.reply !== "string" || !res.reply.trim()) throw new ConciergeUnavailableError();
     return {
       message: res.reply,
-      recId: res.vehicle_id ? Number(res.vehicle_id) : undefined,
+      recId: res.vehicle_id && Number.isFinite(Number(res.vehicle_id)) && Number(res.vehicle_id) > 0 ? Number(res.vehicle_id) : undefined,
       sessionId: res.session_id,
     };
-  } catch (error) {
-    console.warn("Concierge backend down, using mock", error);
-    const mock = matchConciergeReply(query);
-    return { message: mock.text, recId: mock.recId };
+  } catch {
+    throw new ConciergeUnavailableError();
   }
 }
 
@@ -46,15 +50,13 @@ export async function sendConciergeMessage(
       method: "POST",
       body: JSON.stringify({ session_id: sessionId, message, context }),
     });
-    if (!res) throw new Error("empty");
+    if (!res || typeof res.reply !== "string" || !res.reply.trim()) throw new ConciergeUnavailableError();
     return {
       message: res.reply,
-      recId: res.vehicle_id ? Number(res.vehicle_id) : undefined,
+      recId: res.vehicle_id && Number.isFinite(Number(res.vehicle_id)) && Number(res.vehicle_id) > 0 ? Number(res.vehicle_id) : undefined,
       sessionId: res.session_id ?? sessionId ?? undefined,
     };
-  } catch (error) {
-    console.warn("Concierge backend down, using mock", error);
-    const mock = matchConciergeReply(message);
-    return { message: mock.text, recId: mock.recId };
+  } catch {
+    throw new ConciergeUnavailableError();
   }
 }
