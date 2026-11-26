@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useEstudioGenio, useInformeGenio } from "@/hooks/legal/useEstudioGenio";
 import { descargarEstudio, errorGenio, noHabilitado, type Paquete } from "@/lib/legal/cases/estudio-genio-api";
 import { EstudioGenioRevision, genioButton, genioField } from "./EstudioGenioRevision";
+import { EstudioGenioCompras, useComprasGenio } from "./EstudioGenioCompras";
 import m from "@/messages/es/legal-estudio-genio.json";
 const phases = ["contexto", "estrategias", "simulacro", "evaluacion_cruzada"] as const;
 const date = (value?: string) => value && Number.isFinite(Date.parse(value)) ? new Date(value).toLocaleString("es") : m.noDate;
@@ -11,6 +12,7 @@ export function EstudioGenioPanel({ tenantId, caseId }: {
     caseId: string;
 }) {
     const q = useEstudioGenio(tenantId, caseId);
+    const saldo = useComprasGenio(tenantId).data?.saldo;
     const [selected, setSelected] = useState("");
     const [paquete, setPaquete] = useState<Paquete>("completo");
     const [pedido, setPedido] = useState("");
@@ -56,17 +58,21 @@ export function EstudioGenioPanel({ tenantId, caseId }: {
     };
     if (q.isPending)
         return <p role="status">{m.loading}</p>;
+    const sinSaldo = Boolean(saldo && !saldo[paquete]?.disponible);
     if (q.data?.habilitado === false || noHabilitado(q.error) || noHabilitado(error))
-        return <section className="space-y-3 rounded border bg-white p-5 text-slate-900"><p role="status">{m.disabled}</p><p>{m.about}</p></section>;
+        return <div className="space-y-4"><section className="space-y-3 rounded border bg-white p-5 text-slate-900"><p role="status">{m.disabled}</p><p>{m.about}</p></section>
+      <EstudioGenioCompras tenantId={tenantId}/></div>;
     if (!q.data || q.error)
         return <div role="alert">{errorGenio(q.error)} <button className={genioButton} onClick={() => void q.refetch()}>{m.retry}</button></div>;
     return <section aria-label={m.title} className="space-y-6 text-slate-900">
+    <EstudioGenioCompras tenantId={tenantId}/>
     <div className="space-y-4 rounded border border-slate-300 bg-white p-4"><h2 className="text-xl font-semibold">{m.title}</h2><p>{m.about}</p>
       <fieldset disabled={running || q.request.isPending || confirming} className="grid gap-3 sm:grid-cols-2"><legend>{m.package}</legend>
         {(["completo", "esencial"] as const).map((value) => <label key={value} className={`cursor-pointer rounded border p-4 ${paquete === value ? "border-blue-700 bg-blue-50" : "border-slate-300"}`}>
           <input type="radio" name="paquete" value={value} checked={paquete === value} onChange={() => setPaquete(value)}/> {m.packages[value]}</label>)}
       </fieldset><label className="block">{m.pedido}<textarea className={genioField} value={pedido} disabled={running || confirming || q.request.isPending} onChange={(e) => setPedido(e.target.value)}/></label>
-      <button type="button" className={genioButton} disabled={running || q.request.isPending || confirming} onClick={() => { setError(null); setConfirming(true); }}>{study?.estado === "fallido" || study?.estado === "interrumpido" ? m.again : m.request}</button>
+      {sinSaldo && <p role="status">{m.compras.sinSaldoPedir}</p>}
+      <button type="button" className={genioButton} disabled={running || sinSaldo || q.request.isPending || confirming} onClick={() => { setError(null); setConfirming(true); }}>{study?.estado === "fallido" || study?.estado === "interrumpido" ? m.again : m.request}</button>
       {confirming && <div role="group" aria-label={m.confirmRequest} className="space-y-2 rounded border border-blue-500 bg-blue-50 p-3"><p>{m.confirmRequest}</p><p className="font-semibold">{m.packages[paquete]}</p>
         <button type="button" className={genioButton} disabled={running || q.request.isPending} onClick={() => void request()}>{q.request.isPending ? m.busy : m.confirm}</button>{" "}
         <button type="button" className={genioButton} disabled={q.request.isPending} onClick={() => setConfirming(false)}>{m.cancel}</button></div>}
