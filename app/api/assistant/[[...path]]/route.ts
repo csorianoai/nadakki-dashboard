@@ -3,11 +3,16 @@ import { buildBffUpstreamHeaders, resolveBffTenantId } from "@/lib/api/bff-proxy
 import { resolveBackendUrl } from "@/lib/config/backend-url";
 
 const BACKEND_URL = resolveBackendUrl().replace(/\/$/, "");
-const ALLOWED = new Set(["contable/chat", "contable/ia/chat"]);
+const ALLOWED = new Set(["contable/chat", "contable/ia/chat", "contable/ia/confirmar"]);
+// Ejecuta una accion propuesta por el asistente: solo POST (el backend no tiene GET y un GET no debe llegar).
+const POST_ONLY = new Set(["contable/ia/confirmar"]);
 
 async function proxy(req: NextRequest, path: string[], method: "GET" | "POST") {
   const route = path.join("/");
   if (!ALLOWED.has(route)) return NextResponse.json({ detail: "Not Found" }, { status: 404 });
+  if (method !== "POST" && POST_ONLY.has(route)) {
+    return NextResponse.json({ detail: "Method Not Allowed" }, { status: 405, headers: { Allow: "POST" } });
+  }
   try {
     const headers = buildBffUpstreamHeaders(req, method, resolveBffTenantId(req));
     const init: RequestInit = { method, headers, cache: "no-store" };
