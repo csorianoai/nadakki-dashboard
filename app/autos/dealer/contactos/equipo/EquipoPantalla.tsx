@@ -85,8 +85,9 @@ export function EquipoPantalla() {
     }
   }
 
+  // pb-28: el boton flotante del asistente (abajo a la derecha) tapaba "Desactivar" de la ultima fila (Cowork 26-nov).
   return (
-    <main className="space-y-6 p-6">
+    <main className="space-y-6 p-6 pb-28">
       <header>
         <h1 className="text-xl font-semibold text-nk-fg">Equipo</h1>
         <p className="text-sm text-nk-muted">Invitá a tus vendedores. Cada uno entra con su propio usuario.</p>
