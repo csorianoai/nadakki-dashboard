@@ -11,7 +11,8 @@ import { DEALER_REGISTER_CAPABILITY } from "@/lib/dealer/capabilities";
 import { localeDeTenant } from "@/lib/dealer-management/formato";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
 import {
-  SALE_FORM_EMPTY,
+  saleFormNuevo,
+  ahoraLocal,
   registerSale,
   validateSaleForm,
   validateSaleVat,
@@ -37,7 +38,7 @@ export default function DealerVehicleSalePage() {
   const access = useAccessEntitlementsBatch([DEALER_REGISTER_CAPABILITY]);
   const branding = useDealerManagementBranding();
   const locale = localeDeTenant(branding.data);
-  const [form, setForm] = useState<SaleForm>(SALE_FORM_EMPTY);
+  const [form, setForm] = useState<SaleForm>(() => saleFormNuevo());
   const [fiscal, setFiscal] = useState<VentaFiscalForm>(VENTA_FISCAL_EMPTY);
   const [errors, setErrors] = useState<SaleFormErrors & Record<string, string>>({});
   const allowed = !access.error && access.data?.results?.[DEALER_REGISTER_CAPABILITY]?.allowed === true;
@@ -59,7 +60,7 @@ export default function DealerVehicleSalePage() {
   const venta = useMutation({
     mutationFn: (payload: SaleForm) => registerSale(vehicleId, tenantId, payload, locale.currency as string, saleFiscal),
     onSuccess: () => {
-      setForm(SALE_FORM_EMPTY);
+      setForm(saleFormNuevo());
       setFiscal(VENTA_FISCAL_EMPTY);
     },
   });
@@ -113,6 +114,7 @@ export default function DealerVehicleSalePage() {
             <input
               name="sold_at"
               type="datetime-local"
+              max={ahoraLocal()}
               value={form.sold_at}
               onChange={(e) => setForm({ ...form, sold_at: e.target.value })}
               className={FIELD}
