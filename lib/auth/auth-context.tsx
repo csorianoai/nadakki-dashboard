@@ -80,6 +80,10 @@ const POST_LOGIN_REDIRECT_BY_ROLE: Record<string, string> = {
   marketing_admin: "/marketing",
   credit_admin: PANEL_BANCO_V2,
   dealer: "/autos/dealer",
+  // EQUIPO-DEALER: el equipo invitado por el dueno solo trae su rol del core autos (sin credit/dealer).
+  dealer_gerente: "/autos/dealer",
+  dealer_vendedor: "/autos/dealer",
+  dealer_contador: "/autos/dealer",
   bank_analyst: PANEL_BANCO_V2,
   banker: PANEL_BANCO_V2,
 };
@@ -94,6 +98,9 @@ const POST_LOGIN_ROLE_PRIORITY = [
   "marketing_admin",
   "credit_admin",
   "dealer",
+  "dealer_gerente",
+  "dealer_vendedor",
+  "dealer_contador",
   "bank_analyst",
   "banker",
 ] as const;
