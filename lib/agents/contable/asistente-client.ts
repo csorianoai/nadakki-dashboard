@@ -10,9 +10,9 @@ export const ENLACES_PERMITIDOS: Readonly<Record<string, string>> = {
   "/autos/dealer/contactos": "Contactos",
 };
 
-export const RUTA_CHAT = "/api/assistant/contable/chat";
+export const RUTA_CHAT = "/api/assistant/contable/ia/chat";
 
-export type RespuestaAsistente = { response: string; links: string[] };
+export type RespuestaAsistente = { response: string; links: string[]; modo?: "ia" | "fijo"; motivo?: string };
 export type ResultadoChat = { ok: true; data: RespuestaAsistente } | { ok: false };
 
 /** Devuelve el enlace tal cual si es interno, de la lista blanca y con query simple; si no, null. */
@@ -30,7 +30,11 @@ export async function enviarMensaje(message: string): Promise<ResultadoChat> {
     const j = await r.json();
     if (!j || typeof j.response !== "string") return { ok: false };
     const links = Array.isArray(j.links) ? j.links.filter((l: unknown): l is string => typeof l === "string") : [];
-    return { ok: true, data: { response: j.response, links } };
+    return { ok: true, data: {
+      response: j.response, links,
+      ...(j.modo === "ia" || j.modo === "fijo" ? { modo: j.modo } : {}),
+      ...(typeof j.motivo === "string" ? { motivo: j.motivo } : {}),
+    } };
   } catch {
     return { ok: false };
   }
