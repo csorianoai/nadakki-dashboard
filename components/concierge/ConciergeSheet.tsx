@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ChatHeader } from "@/components/concierge/ChatHeader";
 import { ChatMessage } from "@/components/concierge/ChatMessage";
@@ -20,7 +21,19 @@ type Message = {
   retryText?: string;
 };
 
+/** El concierge es para compradores: en las pantallas del concesionario tapaba el boton del asistente contable. */
+export function esPantallaDelConcesionario(pathname: string | null | undefined): boolean {
+  const p = pathname ?? "";
+  return p === "/autos/dealer" || p.startsWith("/autos/dealer/");
+}
+
 export function ConciergeHost() {
+  const pathname = usePathname();
+  if (esPantallaDelConcesionario(pathname)) return null;
+  return <ConciergeHostVisible />;
+}
+
+function ConciergeHostVisible() {
   const branding = useDealerManagementBranding();
   const { locale, country, currency } = conciergeRegion(branding.data);
   const [open, setOpen] = useState(false);
