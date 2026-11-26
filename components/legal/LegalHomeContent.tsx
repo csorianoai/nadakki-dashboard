@@ -1,5 +1,6 @@
 "use client";
 
+import { EstudioGenioTarjeta } from "@/components/legal/home/EstudioGenioTarjeta";
 import Link from "next/link";
 import { useContext } from "react";
 import { Plus, Sparkles } from "lucide-react";
@@ -81,7 +82,7 @@ export default function LegalHomeContent() {
       </header>
 
       {/* Prioridades primero (orden aprobado) y, a su derecha, los indicadores en 2×2: sin franja vacía. */}
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px] [&>*]:min-w-0">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_400px] [&>*]:min-w-0">
         <PriorityInbox tenantId={effectiveTenantId} casos={casos} />
         <HomeKpiTiles
           tenantId={effectiveTenantId}
@@ -91,6 +92,7 @@ export default function LegalHomeContent() {
         />
       </div>
 
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_400px] [&>*]:min-w-0">
       <section data-compacto="" aria-labelledby="legal-active-cases" className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-zinc-800">
           <h2 id="legal-active-cases" className="text-[15px] font-semibold text-slate-900 dark:text-zinc-100">Mis expedientes recientes</h2>
@@ -106,13 +108,15 @@ export default function LegalHomeContent() {
           <CaseWorkTable filas={filas} plazosDisponibles={trabajo.plazosDisponibles} revisionesDisponibles={trabajo.revisionesDisponibles} titulo="Mis expedientes recientes" />
         )}
       </section>
+      <EstudioGenioTarjeta />
+      </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-2 [&>*]:min-w-0">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_400px] [&>*]:min-w-0">
         <MyReviewsPanel tenantId={effectiveTenantId} cases={casos} />
         <UpcomingHearingsPanel tenantId={effectiveTenantId} />
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[1.2fr_1fr] [&>*]:min-w-0">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_400px] [&>*]:min-w-0">
         <QuickAiActions tasks={tasks} loading={loading} error={Boolean(error)} onRetry={() => void refetch()} />
         <section data-compacto="" aria-labelledby="legal-recent" className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 px-4 py-3 dark:border-zinc-800">

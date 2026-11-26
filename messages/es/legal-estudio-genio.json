@@ -108,5 +108,16 @@
     },
     "sinSaldoPedir": "Sin saldo: compra estudios arriba",
     "referenciaFalta": "Indica la referencia de la transferencia."
+  },
+  "acceso": {
+    "tarjeta": "Pon a prueba la estrategia de un expediente antes de presentarla: tres modelos proponen, una contraparte ataca y tres jueces simulados deciden.",
+    "abrir": "Abrir Estudio Genio",
+    "elegir": "Elige el expediente que quieres estudiar",
+    "elegirAyuda": "El estudio usa los hechos, documentos y plazos del expediente. Revisa que estén al día antes de pedirlo.",
+    "estudiar": "Estudiar",
+    "sinCasos": "Todavía no hay expedientes abiertos.",
+    "crear": "Crear un expediente",
+    "errorCasos": "No se pudieron cargar los expedientes.",
+    "verTodos": "Ver todos los expedientes"
   }
 }
