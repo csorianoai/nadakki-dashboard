@@ -75,5 +75,38 @@
     "404": "No se encontró el expediente o el estudio.",
     "409": "El estudio todavía no está completado o la acción no está disponible en su estado actual.",
     "422": "Algunos datos enviados no son válidos. Revisa el formulario e inténtalo de nuevo."
+  },
+  "compras": {
+    "title": "Saldo y compras",
+    "saldo": "Saldo",
+    "disponibles": "{n} disponibles",
+    "sinSaldo": "sin saldo",
+    "prueba": "despacho de pruebas: sin límite",
+    "comprar": "Comprar estudios",
+    "paquete": "Paquete",
+    "cantidad": "Cantidad",
+    "total": "Total",
+    "metodo": "Forma de pago",
+    "stripe": "Tarjeta (Stripe)",
+    "transferencia": "Transferencia bancaria",
+    "referencia": "Referencia o número de la transferencia",
+    "comprobante": "Comprobante (nombre o enlace, opcional)",
+    "pagar": "Ir a pagar",
+    "registrar": "Registrar transferencia",
+    "recibida": "Recibido. Nadakki confirmará el depósito y verás el saldo actualizado.",
+    "sinMetodos": "Por ahora no hay formas de pago disponibles. Escribe a cesar@nadakki.com.",
+    "pagoOk": "Pago verificado. Tu saldo ya está actualizado.",
+    "pagoPendiente": "El pago aún no aparece como cobrado. Vuelve a revisar en unos minutos.",
+    "pagoCancelado": "El pago no se completó.",
+    "lista": "Compras",
+    "sinCompras": "Todavía no hay compras.",
+    "estados": {
+      "pendiente": "Pendiente",
+      "confirmada": "Confirmada",
+      "rechazada": "Rechazada",
+      "cancelada": "Cancelada"
+    },
+    "sinSaldoPedir": "Sin saldo: compra estudios arriba",
+    "referenciaFalta": "Indica la referencia de la transferencia."
   }
 }

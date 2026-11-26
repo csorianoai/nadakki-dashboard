@@ -88,3 +88,35 @@ export async function descargarEstudio(tenantId: string, caseId: string, studyId
     a.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
+export type Metodo = "stripe" | "transferencia";
+export type Saldo = Record<Paquete, { disponible: boolean; disponibles: number | null; comprados: number | null; usados: number | null }>;
+export type Compra = {
+    compra_id: string;
+    paquete: Paquete;
+    cantidad: number;
+    monto_usd: number;
+    metodo: Metodo;
+    estado: "pendiente" | "confirmada" | "rechazada" | "cancelada";
+    referencia?: string | null;
+    motivo?: string | null;
+    created_at: string;
+};
+export type ComprasResp = {
+    compras: Compra[];
+    saldo: Saldo;
+    precios_usd: Record<Paquete, number>;
+    datos_transferencia: string;
+    metodos_disponibles: Metodo[];
+};
+export type NuevaCompra = { paquete: Paquete; cantidad: number; metodo: Metodo; referencia?: string; comprobante?: string; url_retorno?: string };
+const compras = "/api/legal/cases/estudio-genio/compras";
+export async function listCompras(tenantId: string): Promise<ComprasResp> {
+    const res = await apiFetch(compras, { headers: headers(tenantId) });
+    const raw = await readLegalJson<ComprasResp>(res, m.error);
+    return { ...raw, compras: raw.compras ?? [], metodos_disponibles: raw.metodos_disponibles ?? [] };
+}
+export const comprar = (tenantId: string, body: NuevaCompra) =>
+    post<Compra & { url_pago?: string; instrucciones?: string }>(tenantId, compras, body);
+export const verificarCompra = (tenantId: string, compraId: string) =>
+    post<Compra>(tenantId, `${compras}/${encodeURIComponent(compraId)}/verificar`, {});
