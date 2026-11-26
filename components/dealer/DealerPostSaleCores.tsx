@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { getAccessClientContext } from "@/lib/access/client";
-import { fetchPostSaleSnapshot, type PostSaleParte } from "@/lib/dealer/post-sale";
+import { fetchPostSaleSnapshot, resumenAnuncios, resumenAsientos, type PostSaleParte } from "@/lib/dealer/post-sale";
 
 /** Texto para el dueno cuando una parte no se leyo: nunca un reason_code ni un detalle tecnico. */
 const TEXTO_FALLO: Record<Exclude<PostSaleParte<unknown>["estado"], "ok">, string> = {
@@ -45,6 +45,24 @@ function Lista({ filas }: { filas: { id: string; texto: string | null }[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+/** Una cifra y, debajo, como mucho unas pocas lineas legibles. Sin ids. */
+function Resumen({ testId, cifra, filas }: { testId: string; cifra: string; filas: string[] }) {
+  return (
+    <div data-testid={testId}>
+      <p className="text-sm text-nk-fg">{cifra}</p>
+      {filas.length > 0 ? (
+        <ul className="mt-1 text-sm text-nk-fg-muted">
+          {filas.map((f, i) => (
+            <li key={i} className="break-words">
+              {f}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
   );
 }
 
@@ -116,19 +134,26 @@ export function DealerPostSaleCores() {
           cases.length === 0 ? <Vacio texto="Sin expedientes abiertos." /> : <Lista filas={cases.map((r) => ({ id: r.id, texto: r.state }))} />
         }
       </Parte>
-      <Parte id="contable" titulo="Contable — asiento registrado" parte={data.asientos}>
-        {(asientos) =>
-          asientos.length === 0 ? <Vacio texto="Sin asientos." /> : <Lista filas={asientos.map((r) => ({ id: r.id, texto: r.status }))} />
-        }
+      <Parte id="contable" titulo="Contable — asientos" parte={data.asientos}>
+        {(asientos) => {
+          if (asientos.length === 0) return <Vacio texto="Sin asientos." />;
+          const { total, ultimos } = resumenAsientos(asientos);
+          return (
+            <Resumen
+              testId="dealer-post-sale-contable-resumen"
+              cifra={`${total} ${total === 1 ? "asiento registrado" : "asientos registrados"}${ultimos.length ? ". Últimos:" : "."}`}
+              filas={ultimos}
+            />
+          );
+        }}
       </Parte>
-      <Parte id="anuncios" titulo="Marketing — anuncio" parte={data.listings}>
-        {(listings) =>
-          listings.length === 0 ? (
-            <Vacio texto="Sin anuncios en el inventario dealer." />
-          ) : (
-            <Lista filas={listings.map((r) => ({ id: r.id, texto: r.status }))} />
-          )
-        }
+      <Parte id="anuncios" titulo="Anuncios — autos del inventario" parte={data.listings}>
+        {(listings) => {
+          // Sin archivados: el conteo y los ultimos son de autos activos (Cowork 26-nov: 21 de 25 eran archivados).
+          const { conteo, ultimos } = resumenAnuncios(listings);
+          if (!conteo) return <Vacio texto="Sin autos activos en el inventario." />;
+          return <Resumen testId="dealer-post-sale-anuncios-resumen" cifra={conteo} filas={ultimos} />;
+        }}
       </Parte>
       <Parte id="latido" titulo="Scheduler heartbeat" parte={data.heartbeat}>
         {(heartbeat) => {

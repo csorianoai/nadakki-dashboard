@@ -73,8 +73,10 @@ describe("tarjeta post-venta", () => {
     const lista = await screen.findByTestId("dealer-post-sale-ready");
     expect(within(screen.getByTestId("dealer-post-sale-legal")).getByText("No incluido en tu plan.")).toBeInTheDocument();
     expect(within(screen.getByTestId("dealer-post-sale-latido")).getByText("Sin datos todavía.")).toBeInTheDocument();
-    expect(screen.getByText(/asi-1 · posted/)).toBeInTheDocument();
-    expect(screen.getByText(/veh-1 · sold/)).toBeInTheDocument();
+    // Resumen legible (post-venta-resumen.test.tsx): sin ids crudos.
+    expect(screen.getByTestId("dealer-post-sale-contable-resumen")).toHaveTextContent("1 asiento registrado.");
+    expect(screen.getByTestId("dealer-post-sale-anuncios")).toHaveTextContent("Sin autos activos en el inventario.");
+    expect(screen.queryByText(/asi-1|veh-1/)).toBeNull();
     expect(lista.textContent).not.toMatch(/DEFAULT_DENY|capability_denied|heartbeat_not_found|Detalle técnico/);
     expect(document.body.innerHTML).not.toContain("DEFAULT_DENY");
   });
