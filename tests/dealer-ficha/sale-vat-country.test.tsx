@@ -60,3 +60,13 @@ it("sin pais de compra usa la configuracion regional existente", async () => {
   country = null; renderSale(); await submit();
   expect(await screen.findByText("Indica la alícuota del IVA de la venta (por ejemplo 21, 10,5 o 0).")).toBeVisible();
 });
+
+it("en RD la ayuda de la base del ITBIS no habla de la diferencia por compra a particular", async () => {
+  country = "DO"; renderSale();
+  expect(await screen.findByText(/sobre el precio total en inventario propio \(aunque se haya comprado a una persona física\)/)).toBeVisible();
+  expect(screen.queryByText(/comprado a un particular/)).toBeNull();
+});
+it("en AR la ayuda de la base del IVA sigue igual", async () => {
+  renderSale();
+  expect(await screen.findByText(/comprado a un particular/)).toBeVisible();
+});

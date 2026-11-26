@@ -76,8 +76,9 @@ export function VentaFiscalFields({
           className={FIELD}
         />
         <span className="mt-1 block text-xs text-nk-fg-muted">
-          La calcula el sistema según cómo se compró: sobre la diferencia entre venta y costo (consignado o comprado a
-          un particular) o sobre el precio completo (comprado con factura). No se puede cambiar.
+          {country === "DO"
+            ? "La calcula el sistema: sobre el precio total en inventario propio (aunque se haya comprado a una persona física) y sobre la comisión en consignados. No se puede cambiar."
+            : "La calcula el sistema según cómo se compró: sobre la diferencia entre venta y costo (consignado o comprado a un particular) o sobre el precio completo (comprado con factura). No se puede cambiar."}
         </span>
       </label>
 
