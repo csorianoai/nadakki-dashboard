@@ -1,0 +1,79 @@
+{
+  "title": "Estudio Genio",
+  "loading": "Cargando el estudio…",
+  "tenant": "No se pudo identificar el despacho. Vuelve a iniciar sesión.",
+  "retry": "Reintentar",
+  "disabled": "El Estudio Genio no está activado para este despacho",
+  "about": "Tres modelos de IA proponen estrategias; una contraparte y tres jueces simulados las ponen a prueba. Recibes un informe para revisar y firmar.",
+  "packages": {
+    "completo": "Completo · 20 estrategias simuladas · US$1.500",
+    "esencial": "Esencial · 5 estrategias simuladas · US$500"
+  },
+  "package": "Paquete",
+  "pedido": "¿Qué necesitas del estudio?",
+  "request": "Pedir estudio",
+  "again": "Pedir de nuevo",
+  "confirmRequest": "Confirma el paquete y su precio antes de pedir el estudio.",
+  "confirm": "Confirmar",
+  "cancel": "Cancelar",
+  "busy": "Guardando…",
+  "existing": "Ya había un estudio para este pedido. Puedes seguirlo aquí.",
+  "requested": "Estudio solicitado. Puedes seguir su avance aquí.",
+  "waiting": "Suele tardar entre 10 y 30 minutos. Puedes cerrar esta página",
+  "phases": {
+    "contexto": "Contexto",
+    "estrategias": "Estrategias",
+    "simulacro": "Simulacro",
+    "evaluacion_cruzada": "Evaluación cruzada"
+  },
+  "done": "Recibida",
+  "pending": "Pendiente",
+  "states": {
+    "en_curso": "En curso",
+    "completado": "Completado",
+    "fallido": "Fallido",
+    "interrumpido": "Interrumpido"
+  },
+  "noReason": "El estudio no terminó. Puedes pedirlo de nuevo.",
+  "report": "Informe del Estudio Genio",
+  "pdf": "Descargar PDF",
+  "history": "Historial de estudios",
+  "latest": "Estudio más reciente",
+  "noSignature": "Sin firma",
+  "noDate": "Fecha no disponible",
+  "reviewNotice": "Las correcciones se guardan y el Estudio Genio las aplica en los próximos estudios de este despacho",
+  "reviewTitle": "Revisión del abogado",
+  "signer": "Firmante",
+  "license": "Colegiatura",
+  "notes": "Notas",
+  "topic": "Tema",
+  "correction": "Corrección",
+  "addCorrection": "Agregar corrección",
+  "removeCorrection": "Quitar corrección",
+  "topics": {
+    "via": "Vía",
+    "plazo": "Plazo",
+    "norma": "Norma",
+    "prueba": "Prueba",
+    "hechos": "Hechos",
+    "otro": "Otro"
+  },
+  "approve": "Aprobar y firmar",
+  "reject": "Rechazar",
+  "confirmReview": "Confirma la revisión. Si existe una anterior, esta la reemplazará.",
+  "required": "Indica el firmante y completa el texto de cada corrección.",
+  "saved": "Revisión guardada.",
+  "decisions": {
+    "aprobado": "Aprobado",
+    "rechazado": "Rechazado"
+  },
+  "error": "No se pudo completar la operación. Intenta de nuevo.",
+  "errors": {
+    "0": "No se pudo conectar con el servidor. Revisa tu conexión e inténtalo de nuevo.",
+    "401": "Tu sesión expiró. Vuelve a iniciar sesión.",
+    "403": "No tienes permiso para esta acción. Consulta al administrador del despacho.",
+    "404": "No se encontró el expediente o el estudio.",
+    "409": "El estudio todavía no está completado o la acción no está disponible en su estado actual.",
+    "422": "Algunos datos enviados no son válidos. Revisa el formulario e inténtalo de nuevo."
+  }
+}

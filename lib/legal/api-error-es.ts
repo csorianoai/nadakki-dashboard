@@ -76,7 +76,7 @@ export function legalErrorToSpanish(status: number, detail: string): string {
 }
 
 /** Para un error capturado: usa status/detail si los trae (LegalApiHttpError, APIError). */
-export function legalCaughtErrorToSpanish(e: unknown): string {
+export function legalCaughtErrorToSpanish(e: unknown, messages?: Record<string, string>): string {
   const o = (e ?? {}) as { status?: number; detail?: string; message?: unknown; error?: { detail?: unknown } };
   const status = typeof o.status === "number" ? o.status : 0;
   // LegalApiHttpError trae `detail`; APIError (lib/legal-api) lo trae en error.detail;
@@ -85,5 +85,5 @@ export function legalCaughtErrorToSpanish(e: unknown): string {
     typeof o.detail === "string"
       ? o.detail
       : backendDetail(o.error?.detail) || (typeof o.message === "string" ? o.message : "");
-  return legalErrorToSpanish(status, detail);
+  return messages?.[String(status)] ?? legalErrorToSpanish(status, detail);
 }
