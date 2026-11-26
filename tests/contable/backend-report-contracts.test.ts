@@ -18,15 +18,20 @@ beforeAll(async () => {
  process.env.NEXT_PUBLIC_CONTABLE_USE_MOCKS = "false";
  api = await import("@/app/hooks/contable");
 });
+let resultadoSinCerrar: unknown[] = [];
+let balanceGeneral: unknown[] = [];
 beforeEach(() => {
+ resultadoSinCerrar = [];
+ balanceGeneral = [{ tipo_cuenta: "activo", codigo: "1010", nombre: "Caja", saldo: "1000" }, { tipo_cuenta: "pasivo", codigo: "2010", nombre: "Proveedores", saldo: "400" }, { tipo_cuenta: "patrimonio", codigo: "3010", nombre: "Capital", saldo: "600" }];
  fetchMock = jest.fn(async (input) => {
   const url = new URL(String(input), "https://dashboard.example");
   if (url.pathname.endsWith("/periodos")) return json(periods);
   if (url.pathname.endsWith("/plan-cuentas")) return json([{ id: "cash", codigo: "1010", nombre: "Caja", tipo_cuenta: "activo" }, { id: "expense", codigo: "6010", nombre: "Servicios", tipo_cuenta: "gasto" }]);
   if (url.pathname.endsWith("/balance-comprobacion")) return json({ cuentas: [{ cuenta_id: "cash", codigo: "1010", nombre: "Caja", total_debe: "1000", total_haber: "1000", saldo: "0" }], total_debe: "1000", total_haber: "1000", cuadra: true });
   if (url.pathname.endsWith("/mayor")) return json([{ cuenta_id: "cash", codigo: "1010", nombre: "Caja", periodo_id: "nov", total_debe: "1000", total_haber: "400", saldo: "600" }]);
+  if (url.pathname.endsWith("/estado-resultados") && !url.searchParams.has("periodo_id")) return json(resultadoSinCerrar);
   if (url.pathname.endsWith("/estado-resultados")) return json(url.searchParams.get("periodo_id") === "nov" ? november : [{ tipo_cuenta: "gasto", codigo: "6010", nombre: "Servicios", saldo: "50" }]);
-  if (url.pathname.endsWith("/balance-general")) return json([{ tipo_cuenta: "activo", codigo: "1010", nombre: "Caja", saldo: "1000" }, { tipo_cuenta: "pasivo", codigo: "2010", nombre: "Proveedores", saldo: "400" }, { tipo_cuenta: "patrimonio", codigo: "3010", nombre: "Capital", saldo: "600" }]);
+  if (url.pathname.endsWith("/balance-general")) return json(balanceGeneral);
   throw new Error("Ruta no contemplada " + input);
  }); global.fetch = fetchMock;
 });
@@ -68,4 +73,14 @@ it("monitor compara gastos operativos de periodos reales sin incluir costo de ve
  expect(report.total_gastos).toBe(100); expect(report.variacion_total_pct).toBe(100);
  expect(report.gastos).toEqual([expect.objectContaining({ codigo: "6010", cuenta_id: "expense", periodo_actual: 100, periodo_anterior: 50 })]);
  expect(fetchMock.mock.calls.every(([url]) => !String(url).includes("gastos-monitor"))).toBe(true);
+});
+
+it("situacion suma al patrimonio el resultado del ejercicio sin cerrar (caso Cowork 26-nov)", async () => {
+ // Activos 83.350.000 = pasivos 78.821.487,62 + utilidad 4.528.512,38 (medido en qa-dealer-nadakki).
+ balanceGeneral = [{ tipo_cuenta: "activo", codigo: "1220", nombre: "Inventario", saldo: "83350000.00" }, { tipo_cuenta: "pasivo", codigo: "2010", nombre: "Proveedores", saldo: "78821487.62" }];
+ resultadoSinCerrar = [{ tipo_cuenta: "ingreso", codigo: "4010", nombre: "Ventas", saldo: "40528512.38" }, { tipo_cuenta: "gasto", codigo: "5010", nombre: "Costo de ventas", saldo: "36000000.00" }];
+ const report = await api.getSituacionFinanciera("t", new Date().toISOString().slice(0, 10));
+ expect(report.patrimonio.detalle).toContainEqual(expect.objectContaining({ nombre: "Resultado del ejercicio (sin cerrar)", saldo: 4528512.38 }));
+ expect(report.patrimonio.total).toBeCloseTo(4528512.38, 2);
+ expect(report.ecuacion_cuadra).toBe(true);
 });
