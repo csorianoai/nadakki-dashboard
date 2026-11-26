@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { addCaseActor, type AddActorBody } from "@/lib/legal/cases/legal-cases-api";
 import { mensajeDeError } from "@/lib/legal/cases/mensajes-error";
+import { avisarProgreso } from "@/lib/agents/onboarding/progreso";
 
 /** Papeles procesales ofrecidos al agregar una parte (subconjunto del CHECK del backend). */
 export const PAPELES: { value: string; label: string }[] = [
@@ -46,6 +47,7 @@ export function AddPartyForm({ tenantId, caseId, onDone, onCancel }: Props) {
     setEnviando(true);
     try {
       await addCaseActor(tenantId, caseId, f);
+      if (f.role === "cliente") avisarProgreso("legal.cliente-agregado");
       setOk(`${f.full_name.trim()} quedó agregada al expediente.`);
       onDone();
     } catch (err) {
