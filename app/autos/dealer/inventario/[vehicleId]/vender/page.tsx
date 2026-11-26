@@ -31,6 +31,8 @@ import { tokenStorage } from "@/lib/auth/token-storage";
 import { fetchCompra } from "../vehicle-purchase-read";
 import { VentaFiscalFields } from "./VentaFiscalFields";
 import { CompradorYPagoFields } from "./CompradorYPagoFields";
+import { PasosDeTarea, avisarProgreso } from "@/lib/dealer/pasos-tarea";
+import { despuesDeVender, pasosVenta } from "@/lib/dealer/pasos-vehiculo";
 
 const FIELD = "mt-1 min-h-11 w-full max-w-full rounded-r-sm border border-nk-border bg-nk-surface px-3 text-sm text-nk-fg";
 
@@ -65,6 +67,7 @@ export default function DealerVehicleSalePage() {
   const venta = useMutation({
     mutationFn: (payload: SaleForm) => registerSale(vehicleId, tenantId, payload, locale.currency as string, saleFiscal, pago),
     onSuccess: () => {
+      avisarProgreso("venta");
       setForm(saleFormNuevo());
       setFiscal(VENTA_FISCAL_EMPTY);
       setPago(COMPRADOR_Y_PAGO_EMPTY);
@@ -80,6 +83,18 @@ export default function DealerVehicleSalePage() {
     if (Object.keys(found).length > 0) return;
     venta.mutate(form);
   }
+
+  // Los pasos avanzan con lo que el usuario va completando; se valida igual que al enviar.
+  const errPrecio = validateSaleForm(form, locale.currency);
+  const pasos = pasosVenta({
+    precioYFecha: !errPrecio.sale_price_amount && !errPrecio.sold_at,
+    comprador: Boolean(pago.buyer_contact_id),
+    formaDePago: Boolean(pago.payment_method),
+    fiscal: purchase.isSuccess &&
+      Object.keys({ ...validateVentaFiscal(saleFiscal), ...validateSaleVat(saleFiscal, country) }).length === 0,
+    impuesto: country === "DO" ? "ITBIS" : "IVA",
+    registrada: venta.isSuccess,
+  });
 
   const baseDevuelta = (venta.data as { fiscal?: { vat_base?: string } } | undefined)?.fiscal?.vat_base ?? null;
   const reason =
@@ -103,6 +118,22 @@ export default function DealerVehicleSalePage() {
           No tienes permiso para registrar ventas.
         </p>
       ) : (
+        <>
+        <PasosDeTarea titulo="Registrar la venta" pasos={pasos} final="Listo: la venta quedó registrada en la contabilidad." />
+        {venta.isSuccess ? (
+          <nav aria-label="Qué sigue después de la venta" data-testid="venta-que-sigue" className="space-y-2 rounded-r-sm border border-nk-border bg-nk-surface p-4">
+            <h2 className="text-base font-semibold text-nk-fg">Qué sigue</h2>
+            <ul className="flex flex-col gap-2">
+              {despuesDeVender(vehicleId).map((l) => (
+                <li key={l.href}>
+                  <Link href={l.href} className="inline-flex min-h-11 w-full items-center rounded-full border border-nk-border px-4 text-sm font-semibold text-nk-fg sm:w-auto">
+                    {l.texto}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        ) : null}
         <form onSubmit={submit} className="space-y-3 rounded-r-sm border border-nk-border bg-nk-surface p-4" data-testid="venta-form">
           <label className="block text-sm text-nk-fg">
             Precio de venta{locale.currency ? ` (${locale.currency})` : ""}
@@ -157,6 +188,7 @@ export default function DealerVehicleSalePage() {
             Registrar venta
           </button>
         </form>
+        </>
       )}
       <Link href={`/autos/dealer/inventario/${encodeURIComponent(vehicleId)}`} className="text-sm underline">
         Volver al vehículo
