@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
-import { useFmtPrecio } from "@/lib/autos-portal/moneda-publica";
+import { useFmtPrecioDe } from "@/components/vehicle/precio";
 import { getPriceConfidence, type PriceConfidenceResult } from "@/lib/api/ai-features";
 import type { Vehicle } from "@/lib/vehicles";
 
@@ -17,7 +17,7 @@ function calcRangesLocal(price: number): PriceConfidenceResult {
 }
 
 export function PriceEvaluation({ vehicle }: { vehicle: Vehicle }) {
-  const fmt = useFmtPrecio();
+  const fmt = useFmtPrecioDe(vehicle);
   const [data, setData] = useState<PriceConfidenceResult>(() =>
     calcRangesLocal(vehicle.price),
   );
