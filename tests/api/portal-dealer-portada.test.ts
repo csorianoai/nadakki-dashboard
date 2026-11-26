@@ -20,6 +20,7 @@ describe("isDealerPortalHost", () => {
   it.each([
     "dashboard.nadakki.com", "autos.nadakki.com", "www.nadakki.com", "api.nadakki.com", "staging-dashboard.nadakki.com",
     "nadakki.com", "nadakki-dashboard-git-x.vercel.app", "localhost", "localhost:3000", "127.0.0.1", "a.b.nadakki.com", "",
+    "baylara.nadakki.com", // conectado al proyecto en Vercel pero es de la marca de realtor
   ])("%s es host de la app", (h) => expect(isDealerPortalHost(h)).toBe(false));
 });
 

@@ -15,9 +15,17 @@ export function portalRequestHost(headers: Headers): string {
     .replace(/:\d+$/, "");
 }
 
+/**
+ * Subdominios de nadakki.com conectados a este proyecto en Vercel que NO son portal de concesionario (medido en Vercel
+ * 26-nov: baylara.nadakki.com es de la marca de realtor, no de autos). Sin esto su portada caeria en /autos/vehiculos.
+ */
+const NO_SON_PORTAL_DE_AUTOS = new Set(["baylara.nadakki.com"]);
+
 export function isDealerPortalHost(host: string): boolean {
   if (!host) return false;
-  return resolveDealerAdminHost(host.replace(/:\d+$/, "")).mode === "dealer_subdomain";
+  const limpio = host.replace(/:\d+$/, "");
+  if (NO_SON_PORTAL_DE_AUTOS.has(limpio)) return false;
+  return resolveDealerAdminHost(limpio).mode === "dealer_subdomain";
 }
 
 /** Destino de la portada en un host de portal: el inventario real del concesionario. */
