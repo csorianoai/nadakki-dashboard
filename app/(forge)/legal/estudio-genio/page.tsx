@@ -4,6 +4,7 @@ import { useLegalEffectiveTenantId } from "@/hooks/useLegalCore";
 import { useLegalCases } from "@/hooks/legal/useLegalCases";
 import { EstudioGenioCompras } from "@/components/legal/cases/EstudioGenioCompras";
 import { CabeceraGenio, genioCard, genioTitulo } from "@/components/legal/cases/estudio-genio/estilo";
+import { MuestraGenio } from "@/components/legal/cases/estudio-genio/MuestraGenio";
 import m from "@/messages/es/legal-estudio-genio.json";
 
 const a = m.acceso;
@@ -18,6 +19,7 @@ export default function EstudioGenioInicio() {
   return (
     <main id="main-content" className="mx-auto w-full max-w-[1600px] space-y-6 pb-24 text-[#17233A]">
       <CabeceraGenio titulo={m.title} texto={m.about} />
+      <MuestraGenio />
       <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_400px] [&>*]:min-w-0">
         <section aria-labelledby="genio-elegir" className={`${genioCard} space-y-4`}>
           <div>

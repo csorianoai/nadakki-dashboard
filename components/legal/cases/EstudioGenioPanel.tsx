@@ -3,10 +3,11 @@ import { useState } from "react";
 import { useEstudioGenio, useInformeGenio } from "@/hooks/legal/useEstudioGenio";
 import { descargarEstudio, errorGenio, noHabilitado, type Paquete } from "@/lib/legal/cases/estudio-genio-api";
 import { EstudioGenioRevision } from "./EstudioGenioRevision";
+import { MuestraGenio } from "./estudio-genio/MuestraGenio";
 import { CabeceraGenio, genioButton, genioCard, genioField, genioLabel, genioPrimary, genioTitulo } from "./estudio-genio/estilo";
 import { EstudioGenioCompras, useComprasGenio } from "./EstudioGenioCompras";
 import m from "@/messages/es/legal-estudio-genio.json";
-const phases = ["contexto", "estrategias", "simulacro", "evaluacion_cruzada"] as const;
+const phases = ["contexto", "estrategias", "simulacro", "evaluacion_cruzada", "profundidad"] as const;
 const date = (value?: string) => value && Number.isFinite(Date.parse(value)) ? new Date(value).toLocaleString("es") : m.noDate;
 export function EstudioGenioPanel({ tenantId, caseId }: {
     tenantId: string;
@@ -63,6 +64,7 @@ export function EstudioGenioPanel({ tenantId, caseId }: {
     const cabecera = <CabeceraGenio titulo={m.title} texto={m.about}/>;
     if (q.data?.habilitado === false || noHabilitado(q.error) || noHabilitado(error))
         return <div className="space-y-6">{cabecera}<section className={genioCard}><p role="status" className="font-medium">{m.disabled}</p></section>
+      <MuestraGenio/>
       <EstudioGenioCompras tenantId={tenantId}/></div>;
     if (!q.data || q.error)
         return <div className="space-y-6">{cabecera}<div role="alert" className={`${genioCard} flex flex-wrap items-center gap-3 text-[#8E2C3A]`}>{errorGenio(q.error)} <button className={genioButton} onClick={() => void q.refetch()}>{m.retry}</button></div></div>;
@@ -104,7 +106,7 @@ export function EstudioGenioPanel({ tenantId, caseId }: {
     {study && <div className={`${genioCard} space-y-6`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2"><h3 className={genioTitulo}>{m.states[study.estado]}</h3>
         {study.estado === "en_curso" && <p role="status" className="text-sm text-[#3B4558]">{m.waiting}</p>}</div>
-      <ol className="grid gap-4 sm:grid-cols-4">{phases.map((phase, i) => {
+      <ol className="grid gap-4 sm:grid-cols-5">{phases.map((phase, i) => {
                 const arrived = study.fases?.find((f) => f.fase === phase);
                 return <li key={phase} className="relative pt-5">
           <span aria-hidden className={`absolute left-0 right-0 top-[9px] h-px ${i === 0 ? "left-1/2" : ""} ${i === phases.length - 1 ? "right-1/2" : ""} bg-[#E3E7EE]`}/>
