@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { comprar, errorGenio, listCompras, verificarCompra, type Metodo, type Paquete } from "@/lib/legal/cases/estudio-genio-api";
-import { genioButton, genioField } from "./EstudioGenioRevision";
+import { genioButton, genioCard, genioField, genioLabel, genioPrimary, genioTitulo } from "./estudio-genio/estilo";
 import m from "@/messages/es/legal-estudio-genio.json";
 const c = m.compras;
 /** Acceso al navegador en un solo lugar (las pruebas lo sustituyen: jsdom no deja redefinir location). */
@@ -60,39 +60,40 @@ export function EstudioGenioCompras({ tenantId }: { tenantId: string }) {
         } catch (e) { setError(errorGenio(e)); }
     };
     if (q.isPending)
-        return <p role="status">{m.loading}</p>;
+        return <p role="status" className="text-[#3B4558]">{m.loading}</p>;
     if (q.error || !q.data)
-        return <p role="alert">{errorGenio(q.error)}</p>;
+        return <p role="alert" className="text-sm font-medium text-[#8E2C3A]">{errorGenio(q.error)}</p>;
     const saldo = q.data.saldo;
-    return <section aria-label={c.title} className="space-y-4 rounded border border-slate-300 bg-white p-4 text-slate-900">
-    <h2 className="text-lg font-semibold">{c.title}</h2>
-    <ul className="grid gap-2 sm:grid-cols-2">{(["completo", "esencial"] as const).map((p) => {
+    return <section aria-label={c.title} className={`${genioCard} space-y-5`}>
+    <h2 className={genioTitulo}>{c.title}</h2>
+    <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">{(["completo", "esencial"] as const).map((p) => {
             const s = saldo?.[p];
             const texto = s?.disponibles == null ? (s?.disponible ? c.prueba : c.sinSaldo) : s.disponibles > 0 ? c.disponibles.replace("{n}", String(s.disponibles)) : c.sinSaldo;
-            return <li key={p} className="rounded border p-3"><span className="font-semibold">{m.packages[p].split(" · ")[0]}</span>: {texto}</li>;
+            const hay = Boolean(s?.disponible);
+            return <li key={p} className="flex items-center justify-between gap-3 rounded-xl border border-[#E3E7EE] bg-[#F5F7FA] px-4 py-3"><span className="font-semibold">{m.packages[p].split(" · ")[0]}</span><span className={`text-right text-sm font-medium ${hay ? "text-[#2F6B4F]" : "text-[#6B7385]"}`}>{texto}</span></li>;
         })}</ul>
-    {aviso && <p role="status">{aviso}</p>}{error && <p role="alert">{error}</p>}
-    {!abierto ? <button type="button" className={genioButton} onClick={() => setAbierto(true)}>{c.comprar}</button> :
+    {aviso && <p role="status" className="text-sm font-medium text-[#2F6B4F]">{aviso}</p>}{error && <p role="alert" className="text-sm font-medium text-[#8E2C3A]">{error}</p>}
+    {!abierto ? <button type="button" className={`${genioPrimary} w-full`} onClick={() => setAbierto(true)}>{c.comprar}</button> :
             metodos.length === 0 ? <p role="status">{c.sinMetodos}</p> :
-                <div role="group" aria-label={c.comprar} className="space-y-3 rounded border border-blue-500 bg-blue-50 p-3">
-        <label className="block">{c.paquete}<select className={genioField} value={paquete} onChange={(e) => setPaquete(e.target.value as Paquete)}>
+                <div role="group" aria-label={c.comprar} className="space-y-4 rounded-xl border border-[#B58A3C] bg-[#FBF7EE] p-4">
+        <label className={genioLabel}>{c.paquete}<select className={genioField} value={paquete} onChange={(e) => setPaquete(e.target.value as Paquete)}>
           {(["completo", "esencial"] as const).map((p) => <option key={p} value={p}>{m.packages[p]}</option>)}</select></label>
-        <label className="block">{c.cantidad}<input type="number" min={1} max={50} className={genioField} value={cantidad}
+        <label className={genioLabel}>{c.cantidad}<input type="number" min={1} max={50} className={genioField} value={cantidad}
           onChange={(e) => setCantidad(Math.max(1, Math.min(50, Number(e.target.value) || 1)))}/></label>
-        <p className="font-semibold">{c.total}: {usd(precio * cantidad)}</p>
-        <fieldset className="space-y-1"><legend>{c.metodo}</legend>{metodos.map((x) => <label key={x} className="mr-4">
+        <p className="border-t border-[#EBDDBF] pt-3 font-display text-xl font-semibold">{`${c.total}: ${usd(precio * cantidad)}`}</p>
+        <fieldset className="space-y-2"><legend className="text-sm font-medium text-[#3B4558]">{c.metodo}</legend>{metodos.map((x) => <label key={x} className="mr-5 inline-flex min-h-[44px] items-center gap-2 text-sm">
           <input type="radio" name="metodo" value={x} checked={metodo === x} onChange={() => setMetodo(x)}/> {c[x]}</label>)}</fieldset>
         {metodo === "transferencia" && <>
-          <p className="whitespace-pre-line rounded bg-white p-2 text-sm">{q.data.datos_transferencia}</p>
-          <label className="block">{c.referencia}<input className={genioField} value={referencia} onChange={(e) => setReferencia(e.target.value)}/></label>
-          <label className="block">{c.comprobante}<input className={genioField} value={comprobante} onChange={(e) => setComprobante(e.target.value)}/></label>
+          <p className="whitespace-pre-line rounded-lg border border-[#E3E7EE] bg-white p-3 text-sm">{q.data.datos_transferencia}</p>
+          <label className={genioLabel}>{c.referencia}<input className={genioField} value={referencia} onChange={(e) => setReferencia(e.target.value)}/></label>
+          <label className={genioLabel}>{c.comprobante}<input className={genioField} value={comprobante} onChange={(e) => setComprobante(e.target.value)}/></label>
         </>}
-        <button type="button" className={genioButton} disabled={compra.isPending || !metodo} onClick={() => void enviar()}>
+        <div className="flex flex-wrap gap-3"><button type="button" className={genioPrimary} disabled={compra.isPending || !metodo} onClick={() => void enviar()}>
           {compra.isPending ? m.busy : metodo === "stripe" ? c.pagar : c.registrar}</button>{" "}
-        <button type="button" className={genioButton} disabled={compra.isPending} onClick={() => setAbierto(false)}>{m.cancel}</button>
+        <button type="button" className={genioButton} disabled={compra.isPending} onClick={() => setAbierto(false)}>{m.cancel}</button></div>
       </div>}
-    <h3 className="font-semibold">{c.lista}</h3>
-    {q.data.compras.length === 0 ? <p>{c.sinCompras}</p> : <ul className="space-y-1 text-sm">{q.data.compras.map((x) =>
-            <li key={x.compra_id}>{new Date(x.created_at).toLocaleDateString("es")} · {m.packages[x.paquete].split(" · ")[0]} × {x.cantidad} · {usd(x.monto_usd)} · {c[x.metodo]} · {c.estados[x.estado]}{x.motivo ? ` (${x.motivo})` : ""}</li>)}</ul>}
+    <h3 className="border-t border-[#E3E7EE] pt-4 text-sm font-semibold text-[#3B4558]">{c.lista}</h3>
+    {q.data.compras.length === 0 ? <p className="text-sm text-[#6B7385]">{c.sinCompras}</p> : <ul className="divide-y divide-[#E3E7EE] text-sm">{q.data.compras.map((x) =>
+            <li key={x.compra_id} className="py-2">{new Date(x.created_at).toLocaleDateString("es")} · {m.packages[x.paquete].split(" · ")[0]} × {x.cantidad} · {usd(x.monto_usd)} · {c[x.metodo]} · {c.estados[x.estado]}{x.motivo ? ` (${x.motivo})` : ""}</li>)}</ul>}
   </section>;
 }

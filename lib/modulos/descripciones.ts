@@ -51,6 +51,7 @@ export const DESCRIPCIONES: Record<string, string> = {
   // Legal
   "legal-home": "Mi despacho: plazos, expedientes, revisiones y acciones rápidas de IA.",
   "legal-asistente": "Catálogo completo de tareas de IA del despacho, con búsqueda.",
+  "legal-estudio-genio": "Estrategias de un expediente puestas a prueba por contraparte y jueces simulados.",
   "legal-cases": "Lista de expedientes del despacho, con acceso al detalle de cada caso.",
   "legal-cases-new": "Asistente para abrir un expediente nuevo con sus partes y datos.",
   "legal-contracts": "Revisa un contrato: cláusulas riesgosas, validación legal y cumplimiento por área de práctica.",

@@ -78,17 +78,17 @@ export function CaseWorkTable({ filas, plazosDisponibles, revisionesDisponibles,
         );
       })}
     </ul>
-    <div data-compacto="" className="hidden overflow-x-auto sm:block">
-      <table className="w-full text-left text-[13px]" aria-label={titulo}>
+    <div data-compacto="" className="hidden sm:block">
+      <table className="w-full table-fixed text-left text-[13px]" aria-label={titulo}>
         <thead className="bg-slate-50 text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:bg-zinc-950 dark:text-zinc-400">
           <tr>
-            <th scope="col" className="px-4 py-2.5">Expediente</th>
-            <th scope="col" className="hidden px-3 py-2.5 sm:table-cell">Estado</th>
-            <th scope="col" className="px-3 py-2.5">Prioridad</th>
-            <th scope="col" className="px-3 py-2.5">Próximo plazo</th>
-            <th scope="col" className="hidden px-3 py-2.5 md:table-cell">Pendiente</th>
-            <th scope="col" className="hidden px-3 py-2.5 lg:table-cell">Actualizado</th>
-            <th scope="col" className="px-4 py-2.5 text-right"><span className="sr-only">Acción</span></th>
+            <th scope="col" className="w-auto px-4 py-2.5">Expediente</th>
+            <th scope="col" className="hidden w-[7.5rem] px-3 py-2.5 sm:table-cell">Estado</th>
+            <th scope="col" className="w-[6rem] px-3 py-2.5">Prioridad</th>
+            <th scope="col" className="w-[8.5rem] px-3 py-2.5">Próximo plazo</th>
+            <th scope="col" className="hidden w-[10rem] px-3 py-2.5 2xl:table-cell">Pendiente</th>
+            <th scope="col" className="hidden w-[6.5rem] px-3 py-2.5 2xl:table-cell">Actualizado</th>
+            <th scope="col" className="w-[7rem] px-4 py-2.5 text-right"><span className="sr-only">Acción</span></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 dark:divide-zinc-800">
@@ -97,19 +97,19 @@ export function CaseWorkTable({ filas, plazosDisponibles, revisionesDisponibles,
             const pend = f.revisionesPendientes;
             return (
               <tr key={c.case_id} className="hover:bg-[#f8fafc] dark:hover:bg-zinc-800">
-                <td className="max-w-[16rem] px-4 py-2.5">
+                <td className="px-4 py-2.5">
                   <Link href={`/legal/cases/${encodeURIComponent(c.case_id)}`} className="block truncate font-semibold text-blue-800 hover:underline dark:text-blue-300">{c.title}</Link>
                   <span className="block truncate text-[11px] text-slate-500 dark:text-zinc-400">{c.case_number_internal || "Sin número interno"}</span>
                 </td>
-                <td className="hidden whitespace-nowrap px-3 py-2.5 text-slate-700 dark:text-zinc-300 sm:table-cell">{ESTADOS[c.state] ?? c.state}</td>
+                <td className="hidden truncate px-3 py-2.5 text-slate-700 dark:text-zinc-300 sm:table-cell">{ESTADOS[c.state] ?? c.state}</td>
                 <td className="px-3 py-2.5"><span className={`rounded px-1.5 py-0.5 text-[11px] font-semibold ${tonoPrioridad(c.priority)}`}>{PRIORIDADES[c.priority] ?? "—"}</span></td>
                 <td className="whitespace-nowrap px-3 py-2.5"><CeldaPlazo fila={f} disponible={plazosDisponibles} /></td>
-                <td className="hidden whitespace-nowrap px-3 py-2.5 text-slate-700 dark:text-zinc-300 md:table-cell">
+                <td className="hidden truncate px-3 py-2.5 text-slate-700 dark:text-zinc-300 2xl:table-cell">
                   {!revisionesDisponibles || pend === null ? <span className="text-slate-400 dark:text-zinc-500" title="Solo visible con rol de abogado">—</span>
                     : pend === 0 ? <span className="text-slate-500 dark:text-zinc-400">Nada en revisión</span>
                     : <span className="font-medium text-amber-800 dark:text-amber-300">{pend === 1 ? "1 documento por revisar" : `${pend} documentos por revisar`}</span>}
                 </td>
-                <td className="hidden whitespace-nowrap px-3 py-2.5 text-slate-500 dark:text-zinc-400 lg:table-cell">{fechaCorta(c.updated_at)}</td>
+                <td className="hidden whitespace-nowrap px-3 py-2.5 text-slate-500 dark:text-zinc-400 2xl:table-cell">{fechaCorta(c.updated_at)}</td>
                 <td className="px-4 py-2.5 text-right">
                   <Link href={rutaContinuar(f)} className="inline-flex items-center rounded-md border border-blue-200 px-2.5 py-1 text-xs font-semibold text-blue-800 hover:bg-blue-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-950/40">
                     Continuar<span className="sr-only"> con {c.title}</span>

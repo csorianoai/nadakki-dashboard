@@ -43,6 +43,7 @@ import {
   Share2,
   Target,
   Users,
+  Gem,
 } from "lucide-react";
 import { DEALER_NAV_GROUPS } from "@/components/dealer-management/shell/dealer-nav";
 import { isDealerChromePath } from "@/lib/autos-portal/routes";
@@ -359,6 +360,7 @@ export const NAVEGACION: NavSection[] = [
       { id: "legal-cases-new", label: "Nuevo expediente", href: "/legal/cases/new", icon: FilePlus2 },
       { id: "legal-audiencias", label: "Audiencias", href: "/legal/audiencias", icon: Gavel },
       { id: "legal-asistente", label: "Asistente IA", href: "/legal/asistente", icon: Sparkles },
+      { id: "legal-estudio-genio", label: "Estudio Genio", href: "/legal/estudio-genio", icon: Gem },
       { id: "legal-contracts", label: "Contratos", href: "/legal/contracts", icon: FileSignature },
       { id: "legal-research", label: "Investigación", href: "/legal/research", icon: ScanSearch },
       { id: "legal-library", label: "Biblioteca", href: "/legal/library", icon: Library },
