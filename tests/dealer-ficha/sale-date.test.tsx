@@ -11,6 +11,9 @@ jest.mock("@/lib/access/client", () => {
 });
 jest.mock("@/lib/access/hooks", () => ({ useAccessEntitlementsBatch: () => ({ data: { results: { "autos.inventory.create": { allowed: true } } } }) }));
 jest.mock("@/lib/dealer-management/useDealerManagementBranding", () => ({ useDealerManagementBranding: () => ({ data: { locale: "es-AR", currency: "ARS" } }) }));
+jest.mock("@/app/autos/dealer/contactos/contactos-api", () => ({
+  buscarContactos: jest.fn(async () => [{ id: "buyer-1", display_name: "Comprador Prueba", dni: "30111222", cuit: null, deactivated_at: null }]),
+}));
 const api = apiFetch as jest.Mock;
 let country: string | null;
 let failure: string | null;
@@ -28,7 +31,13 @@ function renderSale() {
 }
 import { ahoraLocal, validateSaleForm, SALE_DATE_FUTURE_MESSAGE } from "@/lib/dealer-management/vehicle-sale";
 
-function llenarYEnviar(fecha?: string) {
+async function elegirCompradorYPago() {
+  fireEvent.click(screen.getByRole("button", { name: "Buscar" }));
+  fireEvent.click(await screen.findByRole("button", { name: /Comprador Prueba/ }));
+  fireEvent.click(screen.getByLabelText("Contado por banco o transferencia"));
+}
+async function llenarYEnviar(fecha?: string) {
+  await elegirCompradorYPago();
   fireEvent.change(screen.getByLabelText(/^Alícuota del IVA/), { target: { value: "21" } });
   fireEvent.change(screen.getByLabelText(/Precio de venta/), { target: { value: "500" } });
   if (fecha !== undefined) fireEvent.change(screen.getByLabelText(/Fecha y hora/), { target: { value: fecha } });
@@ -46,7 +55,7 @@ it("el campo de fecha viene con la hora actual y no deja elegir el futuro", asyn
 it("una hora futura no se envia y muestra el aviso", async () => {
   renderSale();
   await waitFor(() => expect(screen.getByRole("button", { name: "Registrar venta" })).toBeEnabled());
-  llenarYEnviar(ahoraLocal(new Date(Date.now() + 60 * 60_000)));
+  await llenarYEnviar(ahoraLocal(new Date(Date.now() + 60 * 60_000)));
   // El navegador ya frena el envio por el atributo max; si igual llega al submit, lo frena nuestra validacion.
   fireEvent.submit(screen.getByTestId("venta-form"));
   expect(await screen.findByText(SALE_DATE_FUTURE_MESSAGE)).toBeVisible();
@@ -56,7 +65,7 @@ it("una hora futura no se envia y muestra el aviso", async () => {
 it("con la hora precargada la venta se envia", async () => {
   renderSale();
   await waitFor(() => expect(screen.getByRole("button", { name: "Registrar venta" })).toBeEnabled());
-  llenarYEnviar();
+  await llenarYEnviar();
   await screen.findByText("Venta registrada.");
 });
 
@@ -66,7 +75,7 @@ it.each([
 ])("traduce %s del backend", async (code, message) => {
   failure = code; renderSale();
   await waitFor(() => expect(screen.getByRole("button", { name: "Registrar venta" })).toBeEnabled());
-  llenarYEnviar();
+  await llenarYEnviar();
   expect(await screen.findByText(message)).toBeVisible();
 });
 
