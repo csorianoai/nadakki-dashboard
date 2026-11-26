@@ -12,6 +12,7 @@ import { LegalLoadingSkeleton } from "@/components/legal/LegalLoadingSkeleton";
 import { buildChatHistorialFromMessages } from "@/lib/legal/build-chat-historial";
 import type { LegalChatHistorialTurn } from "@/lib/legal/build-chat-historial";
 import { countStoredUserTurns } from "@/lib/legal/research/citation-utils";
+import { explicarErrorInvestigacion } from "@/lib/legal/research/explicar-error";
 import { LoadingStages } from "@/components/legal/research/LoadingStages";
 import { ResearchPapelFonts } from "@/components/legal/research/papel-blanco/ResearchPapelFonts";
 import { ResearchSidebar } from "@/components/legal/research/papel-blanco/ResearchSidebar";
@@ -160,7 +161,7 @@ export default function LegalResearchClient() {
         });
         const msg = isLlmUnavailable(e)
           ? aiUnavailableText("unavailable")
-          : formatLegalAgentRunError(e);
+          : explicarErrorInvestigacion(formatLegalAgentRunError(e));
         const prefix = isLlmUnavailable(e) ? AI_UNAVAILABLE_MARKER : "**Error**";
         setMessages((m) => [...m, { role: "assistant", content: `${prefix}\n${msg}` }]);
       }

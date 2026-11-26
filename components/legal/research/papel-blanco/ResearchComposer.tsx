@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock } from "lucide-react";
+import { PenLine } from "lucide-react";
 
 type Props = {
   value: string;
@@ -15,12 +15,14 @@ export function ResearchComposer({ value, onChange, onSubmit, disabled, maxChars
     <footer className="lr-composer" data-noprint>
       <div className="lr-composer-inner">
         <div className="lr-composer-field">
-          <Lock size={16} strokeWidth={1.9} color="#7e91a8" aria-hidden />
+          <PenLine size={16} strokeWidth={1.9} color="#d9b46a" aria-hidden />
           <textarea
             id="legal-research-input"
             aria-label="Escribe tu consulta legal"
-            placeholder="Escribe tu consulta legal…"
-            rows={1}
+            placeholder="Escribe aquí lo que quieres investigar: hechos, pregunta, norma o plazo…"
+            rows={2}
+            autoFocus
+            className="placeholder:!text-[#b9c6d8]"
             maxLength={maxChars}
             value={value}
             disabled={disabled}
@@ -39,6 +41,10 @@ export function ResearchComposer({ value, onChange, onSubmit, disabled, maxChars
           Consultar
         </button>
       </div>
+      <p className="mx-auto mt-2 max-w-[880px] text-[11.5px] text-[#9fb0c6]">
+        Pregunta lo que necesites con tus palabras. Enter envía; Mayús + Enter salta de línea.
+        Los ejemplos de arriba son solo atajos.
+      </p>
     </footer>
   );
 }
