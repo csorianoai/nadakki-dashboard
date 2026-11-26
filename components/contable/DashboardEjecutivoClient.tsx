@@ -1,5 +1,7 @@
 "use client";
 
+import { numeroFijo } from "@/lib/contable/numero-seguro";
+
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -73,7 +75,7 @@ const COLORS = {
 };
 
 
-const fmtPct = (n: number) => `${n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
+const fmtPct = (n: number) => typeof n === "number" && Number.isFinite(n) ? `${n >= 0 ? "+" : ""}${numeroFijo(n, 1, "%")}` : "—";
 
 // ── Sub-components ──────────────────────────────────────────────────────────
 
@@ -129,7 +131,7 @@ function KpiCard({
       {changePct !== undefined && (
         <div className={cn("mt-3 flex items-center gap-1 text-xs font-semibold", isPositive ? "text-emerald-400" : "text-rose-400")}>
           {isPositive ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
-          {Math.abs(changePct).toFixed(1)}% vs período anterior
+          {numeroFijo(typeof changePct === "number" ? Math.abs(changePct) : NaN, 1, "%")} vs período anterior
         </div>
       )}
     </div>
@@ -248,7 +250,7 @@ export function DashboardEjecutivoClient() {
 
   /** Sin estado de resultados no hay cifras: se dice «Sin datos», nunca un cero inventado. */
   const SIN_DATOS = "Sin datos";
-  const margenNeto = er?.margen_neto_pct ?? 0;
+  const margenNeto = er?.margen_neto_pct ?? Number.NaN;
   const margenColor = !er ? "border-zinc-700/40" : margenNeto >= 20 ? "border-emerald-500/20" : margenNeto >= 10 ? "border-amber-500/20" : "border-rose-500/20";
   const margenValueColor = !er ? "text-zinc-400" : margenNeto >= 20 ? "text-emerald-200" : margenNeto >= 10 ? "text-amber-200" : "text-rose-200";
 
@@ -284,8 +286,8 @@ export function DashboardEjecutivoClient() {
   const activosTotal = sf?.activos?.total ?? 0;
   const pasivosTotal = sf?.pasivos?.total ?? 0;
   const patrimonioTotal = sf?.patrimonio?.total ?? 0;
-  const activosCorrPct = activosTotal > 0 ? ((sf?.activos?.corriente ?? 0) / activosTotal) * 100 : 0;
-  const pasivosCorrPct = pasivosTotal > 0 ? ((sf?.pasivos?.corriente ?? 0) / pasivosTotal) * 100 : 0;
+  const activosCorrPct = activosTotal > 0 ? ((sf?.activos?.corriente ?? NaN) / activosTotal) * 100 : NaN;
+  const pasivosCorrPct = pasivosTotal > 0 ? ((sf?.pasivos?.corriente ?? NaN) / pasivosTotal) * 100 : NaN;
 
   // ── Empty state ───────────────────────────────────────────────────────
 
@@ -406,7 +408,7 @@ export function DashboardEjecutivoClient() {
             />
             <KpiCard
               title="Margen Neto"
-              value={er ? `${margenNeto.toFixed(1)}%` : SIN_DATOS}
+              value={er ? numeroFijo(margenNeto, 1, "%") : SIN_DATOS}
               icon={Target}
               borderColor={margenColor}
               valueColor={margenValueColor}
@@ -420,7 +422,7 @@ export function DashboardEjecutivoClient() {
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={areaData}>
                   <XAxis dataKey="name" stroke="#71717a" fontSize={12} />
-                  <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
+                  <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v: number) => numeroFijo(typeof v === "number" ? v / 1000 : NaN, 0, "k")} />
                   <Tooltip content={<CustomTooltip importe={importe} />} />
                   <Legend wrapperStyle={{ color: "#a1a1aa", fontSize: 11 }} />
                   <Area type="monotone" dataKey="Ingresos" stroke={COLORS.ingresos} fill={COLORS.ingresos} fillOpacity={0.15} strokeWidth={2} />
@@ -439,7 +441,7 @@ export function DashboardEjecutivoClient() {
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={barData}>
                     <XAxis dataKey="name" stroke="#71717a" fontSize={12} />
-                    <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
+                    <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v: number) => numeroFijo(typeof v === "number" ? v / 1000 : NaN, 0, "k")} />
                     <Tooltip content={<CustomTooltip importe={importe} />} />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                       {barData.map((_, i) => (
@@ -483,20 +485,20 @@ export function DashboardEjecutivoClient() {
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400/80">Total Activos</p>
                   <p className="mt-1 font-mono text-2xl font-bold text-emerald-100">{importe(activosTotal)}</p>
                   <div className="mt-3 h-2 w-full rounded-full bg-white/10">
-                    <div className="h-2 rounded-full bg-emerald-500" style={{ width: `${activosCorrPct}%` }} />
+                    <div className="h-2 rounded-full bg-emerald-500" style={{ width: Number.isFinite(activosCorrPct) ? `${activosCorrPct}%` : "0%" }} />
                   </div>
                   <p className="mt-1 text-[10px] text-zinc-500">
-                    Corriente: {activosCorrPct.toFixed(0)}% · No corriente: {(100 - activosCorrPct).toFixed(0)}%
+                    Corriente: {numeroFijo(activosCorrPct, 0, "%")} · No corriente: {numeroFijo(100 - activosCorrPct, 0, "%")}
                   </p>
                 </GlassCard>
                 <GlassCard hover={false} className="p-5">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-400/80">Total Pasivos</p>
                   <p className="mt-1 font-mono text-2xl font-bold text-amber-100">{importe(pasivosTotal)}</p>
                   <div className="mt-3 h-2 w-full rounded-full bg-white/10">
-                    <div className="h-2 rounded-full bg-amber-500" style={{ width: `${pasivosCorrPct}%` }} />
+                    <div className="h-2 rounded-full bg-amber-500" style={{ width: Number.isFinite(pasivosCorrPct) ? `${pasivosCorrPct}%` : "0%" }} />
                   </div>
                   <p className="mt-1 text-[10px] text-zinc-500">
-                    Corriente: {pasivosCorrPct.toFixed(0)}% · No corriente: {(100 - pasivosCorrPct).toFixed(0)}%
+                    Corriente: {numeroFijo(pasivosCorrPct, 0, "%")} · No corriente: {numeroFijo(100 - pasivosCorrPct, 0, "%")}
                   </p>
                 </GlassCard>
                 <GlassCard hover={false} className="p-5">
@@ -528,7 +530,7 @@ export function DashboardEjecutivoClient() {
                   Monitor de Gastos — Alertas y Variaciones
                 </h3>
                 <span className={cn("text-xs font-bold", (gm.alertas_count ?? 0) > 0 ? "text-rose-400" : "text-emerald-400")}>
-                  {gm.alertas_count ?? 0} alerta{(gm.alertas_count ?? 0) !== 1 ? "s" : ""}
+                  {Number.isFinite(gm.alertas_count) ? `${gm.alertas_count} alertas` : "Sin umbrales de alerta disponibles"}
                 </span>
               </div>
               <div className="overflow-x-auto rounded-xl border border-white/10">
@@ -569,7 +571,7 @@ export function DashboardEjecutivoClient() {
                               ALERTA
                             </span>
                           ) : (
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500/60" />
+                            Number.isFinite(gm.alertas_count) ? <CheckCircle2 className="h-4 w-4 text-emerald-500/60" /> : <span>—</span>
                           )}
                         </td>
                       </tr>

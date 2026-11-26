@@ -1,5 +1,7 @@
 "use client";
 
+import { numeroFijo } from "@/lib/contable/numero-seguro";
+
 import { useCallback, useState } from "react";
 import { PieChart as PieChartIcon, Loader2, ChevronDown, ChevronRight, CheckCircle2, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -110,7 +112,7 @@ export function SituacionFinancieraClient() {
     }
   }, [tenantId, fecha]);
 
-  const stackedData = report
+  const stackedData = report && Number.isFinite(report.activos?.corriente) && Number.isFinite(report.pasivos?.corriente)
     ? [
         {
           name: "Activos",
@@ -128,13 +130,14 @@ export function SituacionFinancieraClient() {
   return (
     <ContablePageShell
       title="Situación Financiera"
-      description="Balance general: activos, pasivos y patrimonio a una fecha determinada."
+      description="Balance general actual: activos, pasivos y patrimonio."
       icon={<PieChartIcon className="h-10 w-10" aria-hidden />}
     >
       <MonedaFuncionalNota locale={moneda} />
+      <p className="mb-3 text-xs text-zinc-400">El backend solo ofrece el balance actual, sin desglose corriente/no corriente ni consulta histórica.</p>
 
       <div className="mb-6 flex flex-wrap items-end gap-3">
-        <Input label="Fecha" type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
+        <Input label="Fecha" type="date" value={fecha} readOnly onChange={(e) => setFecha(e.target.value)} />
         <Button onClick={() => void generate()} disabled={loading}>
           {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
           Generar
@@ -196,7 +199,7 @@ export function SituacionFinancieraClient() {
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={stackedData}>
                   <XAxis dataKey="name" stroke="#71717a" fontSize={12} />
-                  <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
+                  <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v: number) => numeroFijo(typeof v === "number" ? v / 1000 : NaN, 0, "k")} />
                   <Tooltip
                     contentStyle={{ backgroundColor: "#18181b", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff" }}
                     formatter={(value: number) => [importe(value), ""]}

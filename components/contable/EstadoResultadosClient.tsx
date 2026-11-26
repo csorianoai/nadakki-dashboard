@@ -1,5 +1,7 @@
 "use client";
 
+import { numeroFijo } from "@/lib/contable/numero-seguro";
+
 import { useCallback, useState } from "react";
 import { TrendingUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -97,6 +99,7 @@ export function EstadoResultadosClient() {
       icon={<TrendingUp className="h-10 w-10" aria-hidden />}
     >
       <MonedaFuncionalNota locale={moneda} />
+      <p className="mb-3 text-xs text-zinc-400">El reporte incluye completos los períodos contables que coinciden con el rango elegido.</p>
 
       <div className="mb-6 flex flex-wrap items-end gap-3">
         <Input label="Desde" type="date" value={desde} onChange={(e) => setDesde(e.target.value)} />
@@ -125,10 +128,10 @@ export function EstadoResultadosClient() {
           {/* Badges de margen */}
           <div className="flex flex-wrap gap-3">
             <span className={cn("inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1", margenColor(report.margen_bruto_pct))}>
-              Margen bruto: {report.margen_bruto_pct.toFixed(1)}%
+              Margen bruto: {numeroFijo(report.margen_bruto_pct, 1, "%")}
             </span>
             <span className={cn("inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ring-1", margenColor(report.margen_neto_pct))}>
-              Margen neto: {report.margen_neto_pct.toFixed(1)}%
+              Margen neto: {numeroFijo(report.margen_neto_pct, 1, "%")}
             </span>
           </div>
 
@@ -140,7 +143,7 @@ export function EstadoResultadosClient() {
                 <ResponsiveContainer width="100%" height={280}>
                   <BarChart data={barData}>
                     <XAxis dataKey="name" stroke="#71717a" fontSize={12} />
-                    <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`} />
+                    <YAxis stroke="#71717a" fontSize={11} tickFormatter={(v: number) => numeroFijo(typeof v === "number" ? v / 1000 : NaN, 0, "k")} />
                     <Tooltip
                       contentStyle={{ backgroundColor: "#18181b", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, color: "#fff" }}
                       formatter={(value: number) => [importe(value), "Monto"]}

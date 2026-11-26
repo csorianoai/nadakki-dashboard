@@ -346,10 +346,17 @@ export async function getLibroMayor(
 ): Promise<LibroMayorReport> {
   if (USE_MOCKS) return mock.mockGetLibroMayor(tenantId, cuentaId, periodoId);
 
-  return contableFetch<LibroMayorReport>(
-    tenantId,
-    `/mayor?cuenta_id=${encodeURIComponent(cuentaId)}&periodo_id=${encodeURIComponent(periodoId)}`,
-  );
+  const raw = await contableFetch<Record<string, unknown>[]>(tenantId,
+    `/mayor?cuenta_id=${encodeURIComponent(cuentaId)}&periodo_id=${encodeURIComponent(periodoId)}`);
+  const rows = Array.isArray(raw) ? raw.filter((r) => r.cuenta_id === cuentaId && r.periodo_id === periodoId) : [];
+  const sum = (field: string) => rows.reduce((total, r) => total + reportNumber(r[field]), 0);
+  const saldo = sum("saldo");
+  return {
+    cuenta_id: cuentaId, cuenta_codigo: String(rows[0]?.codigo ?? ""), cuenta_nombre: String(rows[0]?.nombre ?? ""),
+    periodo_id: periodoId, saldo_inicial: Number.NaN, saldo_final: saldo,
+    movimientos: rows.length ? [{ id: `total-${cuentaId}-${periodoId}`, asiento_id: "", fecha: "",
+      descripcion: "Total del período", debe_base: sum("total_debe"), haber_base: sum("total_haber"), saldo_acumulado: saldo }] : [],
+  };
 }
 
 export async function getBalanceComprobacion(
@@ -358,10 +365,22 @@ export async function getBalanceComprobacion(
 ): Promise<BalanceComprobacionReport> {
   if (USE_MOCKS) return mock.mockGetBalanceComprobacion(tenantId, periodoId);
 
-  return contableFetch<BalanceComprobacionReport>(
-    tenantId,
-    `/balance-comprobacion?periodo_id=${encodeURIComponent(periodoId)}`,
-  );
+  const [raw, periods] = await Promise.all([
+    contableFetch<Record<string, unknown>>(tenantId, `/balance-comprobacion?periodo_id=${encodeURIComponent(periodoId)}`),
+    listPeriodos(tenantId),
+  ]);
+  const period = periods.find((p) => p.id === periodoId);
+  // The router does not include account type. Resolve it from the real chart of accounts.
+  const cuentas = await listCuentas(tenantId);
+  return {
+    periodo_id: periodoId, fiscal_year: period?.fiscal_year ?? Number.NaN, label: period?.label ?? "",
+    rows: (Array.isArray(raw.cuentas) ? raw.cuentas : []).map((r) => ({
+      cuenta_id: String(r.cuenta_id ?? ""), codigo: String(r.codigo ?? ""), nombre: String(r.nombre ?? ""),
+      tipo_cuenta: cuentas.find((c) => c.id === r.cuenta_id)?.tipo_cuenta,
+      total_debe: reportNumber(r.total_debe), total_haber: reportNumber(r.total_haber), saldo: reportNumber(r.saldo),
+    })),
+    totals: { total_debe: reportNumber(raw.total_debe), total_haber: reportNumber(raw.total_haber), cuadra: raw.cuadra === true },
+  };
 }
 
 // ── Reportes financieros ──────────────────────────────────────────────────
@@ -372,32 +391,80 @@ export async function getEstadoResultados(
   hasta: string,
   projectId?: string,
 ): Promise<EstadoResultadosReport> {
-  const params = new URLSearchParams({ desde, hasta });
-  if (projectId) params.set("project_id", projectId);
-  return contableFetch<EstadoResultadosReport>(
-    tenantId,
-    `/reports/estado-resultados?${params}`,
-  );
+  if (projectId) throw new ContableApiError("El backend no permite filtrar este reporte por proyecto.", 422);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(desde) || !/^\d{4}-\d{2}-\d{2}$/.test(hasta) || desde > hasta) {
+    throw new ContableApiError("Indica un rango de fechas válido.", 422);
+  }
+  const periods = (await listPeriodos(tenantId)).filter((p) => p.fecha_inicio <= hasta && p.fecha_fin >= desde);
+  const responses = await Promise.all(periods.map((p) => contableFetch<Record<string, unknown>[]>(tenantId,
+    `/reports/estado-resultados?periodo_id=${encodeURIComponent(p.id)}`)));
+  const groups = { ingresos: new Map<string, { codigo: string; nombre: string; total: number }>(),
+    costos: new Map<string, { codigo: string; nombre: string; total: number }>(),
+    gastos: new Map<string, { codigo: string; nombre: string; total: number }>() };
+  for (const rows of responses) {
+    if (!Array.isArray(rows)) throw new ContableApiError("Respuesta inválida del estado de resultados.", 502);
+    for (const row of rows) {
+      if (row.tipo_cuenta !== "ingreso" && row.tipo_cuenta !== "gasto") continue;
+      const codigo = String(row.codigo ?? "");
+      const target = row.tipo_cuenta === "ingreso" ? groups.ingresos : codigo.startsWith("50") ? groups.costos : groups.gastos;
+      const previous = target.get(codigo);
+      target.set(codigo, { codigo, nombre: String(row.nombre ?? ""), total: (previous?.total ?? 0) + reportNumber(row.saldo) });
+    }
+  }
+  const ingresos = [...groups.ingresos.values()], costos = [...groups.costos.values()], gastos = [...groups.gastos.values()];
+  const sum = (rows: typeof ingresos) => rows.reduce((total, row) => total + row.total, 0);
+  const total_ingresos = sum(ingresos), total_costos = sum(costos), total_gastos = sum(gastos);
+  const utilidad_bruta = total_ingresos - total_costos, utilidad_neta = utilidad_bruta - total_gastos;
+  return { desde, hasta, ingresos, costos, gastos, total_ingresos, total_costos, total_gastos, utilidad_bruta, utilidad_neta,
+    margen_bruto_pct: total_ingresos === 0 ? 0 : utilidad_bruta / total_ingresos * 100,
+    margen_neto_pct: total_ingresos === 0 ? 0 : utilidad_neta / total_ingresos * 100 };
 }
 
-export async function getSituacionFinanciera(
-  tenantId: string,
-  fecha: string,
-): Promise<SituacionFinancieraReport> {
-  return contableFetch<SituacionFinancieraReport>(
-    tenantId,
-    `/reports/situacion-financiera?fecha=${encodeURIComponent(fecha)}`,
-  );
+/** Unknown/missing amounts remain unknown, so the UI renders an em dash instead of a fabricated zero. */
+function reportNumber(value: unknown): number {
+  return (typeof value === "number" || (typeof value === "string" && value.trim() !== "")) && Number.isFinite(Number(value))
+    ? Number(value) : Number.NaN;
 }
 
-export async function getGastosMonitor(
-  tenantId: string,
-  periodoId: string,
-): Promise<GastosMonitorReport> {
-  return contableFetch<GastosMonitorReport>(
-    tenantId,
-    `/reports/gastos-monitor?periodo_id=${encodeURIComponent(periodoId)}`,
-  );
+export async function getSituacionFinanciera(tenantId: string, fecha: string): Promise<SituacionFinancieraReport> {
+  // balance-general is a current snapshot: it has no historical date filter or current/non-current breakdown.
+  if (fecha !== new Date().toISOString().slice(0, 10)) {
+    throw new ContableApiError("El backend solo ofrece el balance general actual; no permite consultar una fecha histórica.", 422);
+  }
+  const raw = await contableFetch<Record<string, unknown>[]>(tenantId, "/reports/balance-general");
+  if (!Array.isArray(raw)) throw new ContableApiError("Respuesta inválida del balance general.", 502);
+  const group = (type: string) => {
+    const detalle = raw.filter((r) => r.tipo_cuenta === type).map((r) => ({ codigo: String(r.codigo ?? ""), nombre: String(r.nombre ?? ""), saldo: reportNumber(r.saldo) }));
+    return { total: detalle.reduce((total, r) => total + r.saldo, 0), corriente: Number.NaN, no_corriente: Number.NaN, detalle };
+  };
+  const activos = group("activo"), pasivos = group("pasivo"), patrimonio = group("patrimonio");
+  return { fecha, activos, pasivos, patrimonio, ecuacion_cuadra: Math.abs(activos.total - pasivos.total - patrimonio.total) < 0.02 };
+}
+
+export async function getGastosMonitor(tenantId: string, periodoId: string): Promise<GastosMonitorReport> {
+  // There is no gastos-monitor route. Compare real income-statement expense rows for consecutive periods.
+  const periods = (await listPeriodos(tenantId)).sort((a, b) => a.fecha_inicio.localeCompare(b.fecha_inicio));
+  const period = periods.find((p) => p.id === periodoId);
+  if (!period) throw new ContableApiError("Período contable no encontrado.", 404);
+  const previous = periods.filter((p) => p.fecha_fin < period.fecha_inicio).at(-1);
+  const read = (id: string) => contableFetch<Record<string, unknown>[]>(tenantId, `/reports/estado-resultados?periodo_id=${encodeURIComponent(id)}`);
+  const [currentRows, previousRows, accounts] = await Promise.all([read(period.id), previous ? read(previous.id) : Promise.resolve([]), listCuentas(tenantId)]);
+  if (!Array.isArray(currentRows) || !Array.isArray(previousRows)) throw new ContableApiError("Respuesta inválida del reporte de gastos.", 502);
+  const expenseRows = (rows: typeof currentRows) => rows.filter((r) => r.tipo_cuenta === "gasto" && !String(r.codigo).startsWith("50"));
+  const current = expenseRows(currentRows), prior = expenseRows(previousRows);
+  const codes = [...new Set([...current, ...prior].map((r) => String(r.codigo)))];
+  const variation = (actual: number, anterior: number) => anterior !== 0 ? (actual - anterior) / Math.abs(anterior) * 100 : actual === 0 ? 0 : Number.NaN;
+  const gastos = codes.map((codigo) => {
+    const row = current.find((r) => String(r.codigo) === codigo), old = prior.find((r) => String(r.codigo) === codigo);
+    const actual = row ? reportNumber(row.saldo) : 0, anterior = previous ? old ? reportNumber(old.saldo) : 0 : Number.NaN;
+    return { cuenta_id: accounts.find((a) => a.codigo === codigo)?.id ?? "", codigo, nombre: String(row?.nombre ?? old?.nombre ?? ""),
+      periodo_actual: actual, periodo_anterior: anterior, variacion_pct: variation(actual, anterior),
+      tendencia: (actual > anterior ? "up" : actual < anterior ? "down" : "stable") as "up" | "down" | "stable", alerta: false };
+  });
+  const total_gastos = gastos.reduce((total, g) => total + g.periodo_actual, 0);
+  const anterior = gastos.reduce((total, g) => total + g.periodo_anterior, 0);
+  return { periodo_id: periodoId, periodo_nombre: period.label, gastos, total_gastos,
+    variacion_total_pct: variation(total_gastos, anterior), alertas_count: Number.NaN };
 }
 
 export async function getSugerenciasAgente(
