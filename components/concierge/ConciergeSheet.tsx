@@ -9,16 +9,20 @@ import { TypingIndicator } from "@/components/concierge/TypingIndicator";
 import { QuickActions } from "@/components/concierge/QuickActions";
 import { ChatInput } from "@/components/concierge/ChatInput";
 import { ConciergeFab } from "@/components/concierge/ConciergeFab";
-import { SEED_MESSAGES, matchConciergeReply } from "@/lib/concierge/mock-responses";
+import { SEED_MESSAGES, INVENTORY_UNAVAILABLE, conciergeRegion, regionalReply } from "@/lib/concierge/messages";
+import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
 import { sendConciergeMessage } from "@/lib/api/concierge";
 
 type Message = {
   role: "user" | "bot";
   text: string;
   recId?: number;
+  retryText?: string;
 };
 
 export function ConciergeHost() {
+  const branding = useDealerManagementBranding();
+  const { locale, country, currency } = conciergeRegion(branding.data);
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>(SEED_MESSAGES);
   const [input, setInput] = useState("");
@@ -32,28 +36,27 @@ export function ConciergeHost() {
 
   const pushBotReply = useCallback(async (userText: string) => {
     setTyping(true);
-    await new Promise((r) => window.setTimeout(r, 1100));
 
     try {
-      const res = await sendConciergeMessage(null, userText, {});
+      const res = await sendConciergeMessage(null, userText, { locale, ...(country ? { country_code: country, currency } : {}) });
+      const reply = regionalReply(res.message, { locale, country, currency });
       setTyping(false);
       setMessages((prev) => [
         ...prev,
         {
           role: "bot",
-          text: res.message,
+          text: reply,
           recId: res.recId,
         },
       ]);
     } catch {
-      const mock = matchConciergeReply(userText);
       setTyping(false);
       setMessages((prev) => [
         ...prev,
-        { role: "bot", text: mock.text, recId: mock.recId },
+        { role: "bot", text: INVENTORY_UNAVAILABLE, retryText: userText },
       ]);
     }
-  }, []);
+  }, [locale, country, currency]);
 
   const handleSend = useCallback(() => {
     const text = input.trim();
@@ -79,6 +82,10 @@ export function ConciergeHost() {
             <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
               {messages.map((msg, i) => (
                 <ChatMessage key={`${msg.role}-${i}`} role={msg.role} text={msg.text}>
+                  {msg.retryText ? <button type="button" disabled={typing} className="mt-2 underline" onClick={() => {
+                    setMessages((prev) => prev.filter((message) => message !== msg));
+                    void pushBotReply(msg.retryText!);
+                  }}>Reintentar</button> : null}
                   {msg.recId ? (
                     <InlineVehicleRec
                       vehicleId={msg.recId}
