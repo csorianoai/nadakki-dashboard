@@ -28,7 +28,28 @@ export type Estudio = {
         datos?: unknown;
     }[];
     revision?: Revision;
+    revisiones_nadakki?: RevisionesNadakki;
     resultado?: unknown;
+};
+export type DecisionNadakki = "aprobado" | "con_correcciones" | "rechazado";
+export type SolicitudNadakki = {
+    solicitud_id: string;
+    estado: "pendiente" | "respondida";
+    nota?: string | null;
+    solicitada?: string;
+    respondida?: string;
+    decision?: DecisionNadakki;
+    firmante?: string;
+    colegiatura?: string | null;
+    correcciones?: Correccion[];
+    notas?: string | null;
+};
+export type RevisionesNadakki = {
+    incluidas: number;
+    usadas: number;
+    disponibles: number;
+    pendiente: boolean;
+    solicitudes: SolicitudNadakki[];
 };
 export type Pedido = {
     paquete: Paquete;
@@ -72,6 +93,44 @@ export const pedirEstudio = (tenantId: string, caseId: string, body: Pedido) => 
     paquete: Paquete;
 }>(tenantId, base(caseId), body);
 export const revisarEstudio = (tenantId: string, caseId: string, studyId: string, body: Firma) => post<unknown>(tenantId, `${item(caseId, studyId)}/revision`, body);
+export const pedirRevisionNadakki = (tenantId: string, caseId: string, studyId: string, nota?: string) =>
+    post<{ solicitud_id: string; estado: string; disponibles: number }>(tenantId, `${item(caseId, studyId)}/revision-nadakki`, nota ? { nota } : {});
+/** Explica los rechazos estables de la revisión de Nadakki (409 con código) o cae al error general. */
+export function errorRevisionNadakki(e: unknown): string {
+    const detail = e instanceof LegalApiHttpError ? String(e.detail ?? "") : "";
+    const propios = m.nadakki.errores as Record<string, string>;
+    return propios[detail] ?? errorGenio(e);
+}
+
+/* Cola del abogado de Nadakki (superadmin). El backend devuelve 403 SOLO_SUPERADMIN_NADAKKI a cualquier otro. */
+export type PendienteNadakki = {
+    solicitud_id: string;
+    estudio_id: string;
+    case_id: string;
+    tenant_id: string;
+    despacho: string;
+    despacho_nombre: string;
+    nota?: string | null;
+    solicitada: string;
+};
+export type RespuestaNadakki = {
+    decision: DecisionNadakki;
+    firmante: string;
+    colegiatura?: string;
+    correcciones: Correccion[];
+    notas?: string;
+};
+const admin = "/api/legal/cases/estudio-genio/admin/revisiones";
+export async function listRevisionesPendientes(tenantId: string): Promise<PendienteNadakki[]> {
+    const res = await apiFetch(admin, { headers: headers(tenantId) });
+    const raw = await readLegalJson<{ revisiones: PendienteNadakki[] }>(res, m.error);
+    return Array.isArray(raw.revisiones) ? raw.revisiones : [];
+}
+export const responderRevisionNadakki = (tenantId: string, p: PendienteNadakki, body: RespuestaNadakki) =>
+    post<unknown>(tenantId, `${admin}/${[p.tenant_id, p.case_id, p.estudio_id, p.solicitud_id].map(encodeURIComponent).join("/")}`, body);
+/** 403: no es del equipo de Nadakki. 404: el backend aún no tiene la cola. En ambos casos no se muestra nada. */
+export const soloNadakki = (e: unknown) => e instanceof LegalApiHttpError && (e.status === 403 || e.status === 404);
+
 export async function informeEstudio(tenantId: string, caseId: string, studyId: string, format: "html" | "pdf") {
     const res = await apiFetch(`${item(caseId, studyId)}/informe?formato=${format}`, { headers: { ...headers(tenantId), Accept: format === "pdf" ? "application/pdf" : "text/html" } });
     await throwIfLegalApiError(res, m.error);

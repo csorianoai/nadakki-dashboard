@@ -5,6 +5,7 @@ import { useLegalCases } from "@/hooks/legal/useLegalCases";
 import { EstudioGenioCompras } from "@/components/legal/cases/EstudioGenioCompras";
 import { CabeceraGenio, genioCard, genioTitulo } from "@/components/legal/cases/estudio-genio/estilo";
 import { MuestraGenio } from "@/components/legal/cases/estudio-genio/MuestraGenio";
+import { ColaRevisionesNadakki } from "@/components/legal/cases/estudio-genio/ColaRevisionesNadakki";
 import m from "@/messages/es/legal-estudio-genio.json";
 
 const a = m.acceso;
@@ -51,6 +52,7 @@ export default function EstudioGenioInicio() {
         </section>
         <EstudioGenioCompras tenantId={effectiveTenantId} />
       </div>
+      <ColaRevisionesNadakki tenantId={effectiveTenantId} />
     </main>
   );
 }

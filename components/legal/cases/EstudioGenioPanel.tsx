@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useEstudioGenio, useInformeGenio } from "@/hooks/legal/useEstudioGenio";
 import { descargarEstudio, errorGenio, noHabilitado, type Paquete } from "@/lib/legal/cases/estudio-genio-api";
 import { EstudioGenioRevision } from "./EstudioGenioRevision";
+import { EstudioGenioRevisionNadakki } from "./EstudioGenioRevisionNadakki";
 import { MuestraGenio } from "./estudio-genio/MuestraGenio";
 import { CabeceraGenio, genioButton, genioCard, genioField, genioLabel, genioPrimary, genioTitulo } from "./estudio-genio/estilo";
 import { EstudioGenioCompras, useComprasGenio } from "./EstudioGenioCompras";
@@ -119,6 +120,7 @@ export function EstudioGenioPanel({ tenantId, caseId }: {
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#E3E7EE] pt-5"><h3 className={genioTitulo}>{m.report}</h3>
           <button type="button" className={genioPrimary} disabled={downloading} onClick={() => void download()}>{m.pdf}</button></div>
         {report.isPending ? <p role="status">{m.loading}</p> : report.error ? <p role="alert" className="text-[#8E2C3A]">{errorGenio(report.error)} <button className={genioButton} onClick={() => void report.refetch()}>{m.retry}</button></p> : <iframe title={m.report} sandbox="" referrerPolicy="no-referrer" className="min-h-[720px] w-full rounded-xl border border-[#E3E7EE] bg-white shadow-[0_24px_48px_-32px_rgba(23,35,58,0.45)]" srcDoc={`<style>${CSS_INFORME}</style>${report.data ?? ""}`}/>}
+        <EstudioGenioRevisionNadakki key={`n-${study.estudio_id}`} revisiones={study.revisiones_nadakki} busy={q.nadakki.isPending} onPedir={(nota) => q.nadakki.mutateAsync({ estudioId: study.estudio_id, nota })}/>
         <EstudioGenioRevision key={study.estudio_id} previous={study.revision} busy={q.review.isPending} onSave={(body) => q.review.mutateAsync({ estudioId: study.estudio_id, body })}/>
       </>}
     </div>}
