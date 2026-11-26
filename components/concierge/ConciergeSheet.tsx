@@ -12,12 +12,12 @@ import { ChatInput } from "@/components/concierge/ChatInput";
 import { ConciergeFab } from "@/components/concierge/ConciergeFab";
 import { SEED_MESSAGES, INVENTORY_UNAVAILABLE, conciergeRegion, regionalReply } from "@/lib/concierge/messages";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
-import { sendConciergeMessage } from "@/lib/api/concierge";
+import { sendConciergeMessage, type ConciergeVehicle } from "@/lib/api/concierge";
 
 type Message = {
   role: "user" | "bot";
   text: string;
-  recId?: number;
+  vehicles?: ConciergeVehicle[];
   retryText?: string;
 };
 
@@ -40,6 +40,7 @@ function ConciergeHostVisible() {
   const [messages, setMessages] = useState<Message[]>(SEED_MESSAGES);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   useEffect(() => {
     const handler = () => setOpen(true);
@@ -51,15 +52,19 @@ function ConciergeHostVisible() {
     setTyping(true);
 
     try {
-      const res = await sendConciergeMessage(null, userText, { locale, ...(country ? { country_code: country, currency } : {}) });
-      const reply = regionalReply(res.message, { locale, country, currency });
+      const res = await sendConciergeMessage(sessionId, userText, { locale, ...(country ? { country_code: country, currency } : {}) });
+      if (res.sessionId) setSessionId(res.sessionId);
+      // La respuesta sale del inventario REAL del concesionario: su moneda es la de sus autos. El control de moneda
+      // por region era para textos de ejemplo; si no aplica, se muestra el texto del backend tal cual.
+      let reply = res.message;
+      try { reply = regionalReply(res.message, { locale, country, currency }); } catch { /* moneda real del inventario */ }
       setTyping(false);
       setMessages((prev) => [
         ...prev,
         {
           role: "bot",
           text: reply,
-          recId: res.recId,
+          vehicles: res.vehicles,
         },
       ]);
     } catch {
@@ -69,7 +74,7 @@ function ConciergeHostVisible() {
         { role: "bot", text: INVENTORY_UNAVAILABLE, retryText: userText },
       ]);
     }
-  }, [locale, country, currency]);
+  }, [locale, country, currency, sessionId]);
 
   const handleSend = useCallback(() => {
     const text = input.trim();
@@ -99,9 +104,9 @@ function ConciergeHostVisible() {
                     setMessages((prev) => prev.filter((message) => message !== msg));
                     void pushBotReply(msg.retryText!);
                   }}>Reintentar</button> : null}
-                  {msg.recId ? (
+                  {msg.vehicles?.length ? (
                     <InlineVehicleRec
-                      vehicleId={msg.recId}
+                      vehicles={msg.vehicles}
                       onNavigate={() => setOpen(false)}
                     />
                   ) : null}

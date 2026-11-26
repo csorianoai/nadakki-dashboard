@@ -32,18 +32,26 @@ it("error honesto sin modelos ni recomendacion y reintento de la misma consulta"
   await screen.findByText(INVENTORY_UNAVAILABLE);
   expect(screen.queryByRole("link")).toBeNull();
   expect(document.body.textContent).not.toMatch(/Corolla|GLC|Sportage|Tucson|yipeta|RD\$/i);
-  send.mockResolvedValueOnce({ message: "Sin resultados" });
+  send.mockResolvedValueOnce({ message: "Sin resultados", vehicles: [] });
   fireEvent.click(screen.getByText("Reintentar"));
   await screen.findByText("Sin resultados");
   expect(send).toHaveBeenLastCalledWith(null, "familiar", { locale: "es-AR", country_code: "AR", currency: "ARS" });
 });
 
-it("respuesta con moneda extranjera falla sin mostrar recomendacion", async () => {
-  send.mockResolvedValueOnce({ message: "RD$ 100", recId: 4 });
+it("muestra los autos REALES que devuelve el backend, con enlace a su ficha, y conserva la sesion", async () => {
+  const rav4 = { id: "11111111-1111-4111-8111-111111111111", make: "Toyota", model: "RAV4", year: 2020, price_amount: 14500000,
+    price_currency: "USD", mileage_km: 50000, transmission: "automatica", primary_photo_url: null, url: "/autos/vehiculo/11111111-1111-4111-8111-111111111111" };
+  send.mockResolvedValueOnce({ message: "Encontré 1 auto: Toyota RAV4 2020 · USD 14.500.000", sessionId: "s1", vehicles: [rav4] });
   render(<ConciergeHost />);
-  fireEvent.change(screen.getByRole("textbox", { name: "Consulta" }), { target: { value: "precio" } });
+  fireEvent.change(screen.getByRole("textbox", { name: "Consulta" }), { target: { value: "SUV" } });
   fireEvent.click(screen.getByText("Enviar"));
-  await screen.findByText(INVENTORY_UNAVAILABLE);
-  expect(screen.queryByRole("link")).toBeNull();
-  expect(screen.queryByText(/RD\$/)).toBeNull();
+  // La moneda es la del inventario real del concesionario: se muestra tal cual, sin convertir.
+  await screen.findByText(/Toyota RAV4 2020 · USD 14\.500\.000/);
+  expect(screen.getByRole("link", { name: /Toyota RAV4 2020/ })).toHaveAttribute("href", rav4.url);
+  send.mockResolvedValueOnce({ message: "Sin resultados", sessionId: "s1", vehicles: [] });
+  fireEvent.change(screen.getByRole("textbox", { name: "Consulta" }), { target: { value: "otra" } });
+  fireEvent.click(screen.getByText("Enviar"));
+  await screen.findByText("Sin resultados");
+  expect(send).toHaveBeenLastCalledWith("s1", "otra", { locale: "es-AR", country_code: "AR", currency: "ARS" });
+  expect(screen.getAllByRole("link")).toHaveLength(1);
 });
