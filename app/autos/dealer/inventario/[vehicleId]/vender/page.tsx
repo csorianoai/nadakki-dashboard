@@ -16,6 +16,9 @@ import {
   registerSale,
   validateSaleForm,
   validateSaleVat,
+  validateCompradorYPago,
+  COMPRADOR_Y_PAGO_EMPTY,
+  type CompradorYPago,
   SALE_VAT_MESSAGES,
   type SaleForm,
   type SaleFormErrors,
@@ -27,6 +30,7 @@ import { decodeJWT } from "@/lib/auth/jwt-decode";
 import { tokenStorage } from "@/lib/auth/token-storage";
 import { fetchCompra } from "../vehicle-purchase-read";
 import { VentaFiscalFields } from "./VentaFiscalFields";
+import { CompradorYPagoFields } from "./CompradorYPagoFields";
 
 const FIELD = "mt-1 min-h-11 w-full max-w-full rounded-r-sm border border-nk-border bg-nk-surface px-3 text-sm text-nk-fg";
 
@@ -40,6 +44,7 @@ export default function DealerVehicleSalePage() {
   const locale = localeDeTenant(branding.data);
   const [form, setForm] = useState<SaleForm>(() => saleFormNuevo());
   const [fiscal, setFiscal] = useState<VentaFiscalForm>(VENTA_FISCAL_EMPTY);
+  const [pago, setPago] = useState<CompradorYPago>(COMPRADOR_Y_PAGO_EMPTY);
   const [errors, setErrors] = useState<SaleFormErrors & Record<string, string>>({});
   const allowed = !access.error && access.data?.results?.[DEALER_REGISTER_CAPABILITY]?.allowed === true;
 
@@ -58,10 +63,11 @@ export default function DealerVehicleSalePage() {
   const saleFiscal = country === "DO" ? { ...fiscal, vat_rate: "18" } : fiscal;
 
   const venta = useMutation({
-    mutationFn: (payload: SaleForm) => registerSale(vehicleId, tenantId, payload, locale.currency as string, saleFiscal),
+    mutationFn: (payload: SaleForm) => registerSale(vehicleId, tenantId, payload, locale.currency as string, saleFiscal, pago),
     onSuccess: () => {
       setForm(saleFormNuevo());
       setFiscal(VENTA_FISCAL_EMPTY);
+      setPago(COMPRADOR_Y_PAGO_EMPTY);
     },
   });
 
@@ -69,7 +75,7 @@ export default function DealerVehicleSalePage() {
     event.preventDefault();
     venta.reset();
     if (purchase.isPending || purchase.isError || !allowed) return;
-    const found: Record<string, string> = { ...validateSaleForm(form, locale.currency), ...validateVentaFiscal(saleFiscal), ...validateSaleVat(saleFiscal, country) };
+    const found: Record<string, string> = { ...validateSaleForm(form, locale.currency), ...validateVentaFiscal(saleFiscal), ...validateSaleVat(saleFiscal, country), ...validateCompradorYPago(pago) };
     setErrors(found);
     if (Object.keys(found).length > 0) return;
     venta.mutate(form);
@@ -128,6 +134,7 @@ export default function DealerVehicleSalePage() {
             errors={errors}
             baseIva={baseDevuelta ? (BASE_IVA_TEXTO[baseDevuelta] ?? baseDevuelta) : null}
           />
+          <CompradorYPagoFields value={pago} onChange={setPago} errors={errors} />
           {purchase.isPending ? <p role="status">Consultando el país de la compra…</p> : null}
           {purchase.isError ? <p role="alert">No se pudo consultar la compra. Intenta de nuevo antes de vender.</p> : null}
           {errors.currency ? <p role="alert" data-testid="venta-sin-moneda" className="text-sm text-nk-fg">{errors.currency}</p> : null}

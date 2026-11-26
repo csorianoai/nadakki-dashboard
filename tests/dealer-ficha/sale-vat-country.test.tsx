@@ -11,6 +11,9 @@ jest.mock("@/lib/access/client", () => {
 });
 jest.mock("@/lib/access/hooks", () => ({ useAccessEntitlementsBatch: () => ({ data: { results: { "autos.inventory.create": { allowed: true } } } }) }));
 jest.mock("@/lib/dealer-management/useDealerManagementBranding", () => ({ useDealerManagementBranding: () => ({ data: { locale: "es-AR", currency: "ARS" } }) }));
+jest.mock("@/app/autos/dealer/contactos/contactos-api", () => ({
+  buscarContactos: jest.fn(async () => [{ id: "buyer-1", display_name: "Comprador Prueba", dni: "30111222", cuit: null, deactivated_at: null }]),
+}));
 const api = apiFetch as jest.Mock;
 let country: string | null;
 let failure: string | null;
@@ -26,8 +29,14 @@ beforeEach(() => {
 function renderSale() {
   return render(<QueryClientProvider client={new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } })}><SalePage /></QueryClientProvider>);
 }
+async function elegirCompradorYPago() {
+  fireEvent.click(screen.getByRole("button", { name: "Buscar" }));
+  fireEvent.click(await screen.findByRole("button", { name: /Comprador Prueba/ }));
+  fireEvent.click(screen.getByLabelText("Contado por banco o transferencia"));
+}
 async function submit() {
   await waitFor(() => expect(screen.getByRole("button", { name: "Registrar venta" })).toBeEnabled());
+  await elegirCompradorYPago();
   fireEvent.change(screen.getByLabelText(/Precio de venta/), { target: { value: "500" } });
   fireEvent.change(screen.getByLabelText(/Fecha y hora/), { target: { value: "2026-11-25T12:00" } });
   fireEvent.click(screen.getByRole("button", { name: "Registrar venta" }));

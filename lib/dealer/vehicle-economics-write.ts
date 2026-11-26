@@ -26,6 +26,9 @@ export type SaleBody = {
   sold_at: string;
   /** F4F-6: campos fiscales de la venta (`vat.rate`, `trade_in`); nunca `vat_base`. */
   fiscal?: Record<string, unknown>;
+  /** Validacion Cowork 26-nov: comprador (autos_contacts) y forma de pago (cash | bank | pending). */
+  buyer_contact_id?: string;
+  payment_method?: "cash" | "bank" | "pending";
 };
 
 function vehicleWriteUrl(vehicleId: string, suffix: "acquisition" | "costs" | "sale"): string {
@@ -79,6 +82,8 @@ export function salePayload(form: SaleBody): Record<string, unknown> {
     currency: form.currency,
     sold_at: form.sold_at,
     ...(form.fiscal ?? {}),
+    ...(form.buyer_contact_id ? { buyer_contact_id: form.buyer_contact_id } : {}),
+    ...(form.payment_method ? { payment_method: form.payment_method } : {}),
   };
 }
 

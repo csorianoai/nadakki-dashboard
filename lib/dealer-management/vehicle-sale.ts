@@ -219,12 +219,30 @@ export function validateSaleForm(form: SaleForm, currency: string | null, ahora:
   return errors;
 }
 
+export type SalePaymentMethod = "cash" | "bank" | "pending";
+export type CompradorYPago = { buyer_contact_id: string; buyer_name: string; payment_method: SalePaymentMethod | "" };
+export const COMPRADOR_Y_PAGO_EMPTY: CompradorYPago = { buyer_contact_id: "", buyer_name: "", payment_method: "" };
+export const PAYMENT_METHOD_LABELS: Record<SalePaymentMethod, string> = {
+  cash: "Contado en efectivo",
+  bank: "Contado por banco o transferencia",
+  pending: "Queda a cobrar (financiado o cuenta corriente)",
+};
+
+/** Decision de Cesar 26-nov: la venta pide comprador y forma de pago. */
+export function validateCompradorYPago(v: CompradorYPago): Record<string, string> {
+  const errors: Record<string, string> = {};
+  if (!v.buyer_contact_id) errors.buyer_contact_id = "Elige el comprador. Si no está en tus contactos, dalo de alta primero.";
+  if (!v.payment_method) errors.payment_method = "Elige la forma de pago.";
+  return errors;
+}
+
 export async function registerSale(
   vehicleId: string,
   tenantId: string,
   form: SaleForm,
   currency: string,
   fiscal?: VentaFiscalForm,
+  compradorYPago?: CompradorYPago,
 ): Promise<unknown> {
   const amount = normalizaImporte(form.sale_price_amount);
   if (amount === null) throw new Error("sale_price_amount invalido");
@@ -233,6 +251,8 @@ export async function registerSale(
     currency: currency.trim().toUpperCase(),
     sold_at: new Date(form.sold_at).toISOString(),
     ...(fiscal ? { fiscal: ventaFiscalPayload(fiscal) } : {}),
+    ...(compradorYPago?.buyer_contact_id ? { buyer_contact_id: compradorYPago.buyer_contact_id } : {}),
+    ...(compradorYPago?.payment_method ? { payment_method: compradorYPago.payment_method } : {}),
   });
 }
 
@@ -251,4 +271,6 @@ export const SALE_VAT_MESSAGES: Record<string, string> = {
   SALE_VAT_BASE_UNKNOWN: "La compra no tiene datos fiscales: complétalos antes de vender.",
   SALE_DATE_IN_FUTURE: SALE_DATE_FUTURE_MESSAGE,
   VEHICLE_ALREADY_SOLD: "Este vehículo ya está vendido.",
+  BUYER_NOT_FOUND: "El comprador elegido ya no está en tus contactos. Elige otro.",
+  SALE_PAYMENT_FX_REQUIRED: "Una venta en otra moneda cobrada al contado necesita el tipo de cambio: elige 'Queda a cobrar' y carga el cobro aparte.",
 };
