@@ -9,31 +9,45 @@ export class ConciergeUnavailableError extends Error {
   }
 }
 
-export type ConciergeMessageResponse = {
-  message: string;
-  recId?: number;
-  sessionId?: string;
+/** Auto REAL del inventario publicado del concesionario del portal (backend POST /api/v1/autos/concierge/message). */
+export type ConciergeVehicle = {
+  id: string;
+  make: string | null;
+  model: string | null;
+  year: number | null;
+  price_amount: number | null;
+  price_currency: string | null;
+  mileage_km: number | null;
+  transmission: string | null;
+  primary_photo_url: string | null;
+  url: string;
 };
 
-export async function conversationalSearch(query: string): Promise<ConciergeMessageResponse> {
-  try {
-    const res = await autosFetch<{
-      reply: string;
-      vehicle_id?: string | number;
-      session_id?: string;
-    }>("/api/v1/autos_ai/conversational_search", {
-      method: "POST",
-      body: JSON.stringify({ query }),
-    });
-    if (!res || typeof res.reply !== "string" || !res.reply.trim()) throw new ConciergeUnavailableError();
-    return {
-      message: res.reply,
-      recId: res.vehicle_id && Number.isFinite(Number(res.vehicle_id)) && Number(res.vehicle_id) > 0 ? Number(res.vehicle_id) : undefined,
-      sessionId: res.session_id,
-    };
-  } catch {
-    throw new ConciergeUnavailableError();
-  }
+export type ConciergeMessageResponse = {
+  message: string;
+  /** Obsoleto: el backend ya no devuelve ids numericos de ejemplo. Se mantiene para no romper a quien lo lee. */
+  recId?: number;
+  sessionId?: string;
+  vehicles: ConciergeVehicle[];
+};
+
+export const CONCIERGE_MESSAGE_PATH = "/api/v1/autos/concierge/message";
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function vehiculosReales(raw: unknown): ConciergeVehicle[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((v) => {
+    const o = (v ?? {}) as Record<string, unknown>;
+    const id = typeof o.id === "string" && UUID.test(o.id) ? o.id : null;
+    if (!id) return [];
+    const num = (x: unknown) => (typeof x === "number" && Number.isFinite(x) ? x : null);
+    const str = (x: unknown) => (typeof x === "string" && x.trim() ? x : null);
+    return [{
+      id, make: str(o.make), model: str(o.model), year: num(o.year), price_amount: num(o.price_amount),
+      price_currency: str(o.price_currency), mileage_km: num(o.mileage_km), transmission: str(o.transmission),
+      primary_photo_url: str(o.primary_photo_url), url: `/autos/vehiculo/${encodeURIComponent(id)}`,
+    }];
+  });
 }
 
 export async function sendConciergeMessage(
@@ -42,21 +56,18 @@ export async function sendConciergeMessage(
   context: Record<string, unknown>,
 ): Promise<ConciergeMessageResponse> {
   try {
-    const res = await autosFetch<{
-      reply: string;
-      vehicle_id?: string | number;
-      session_id?: string;
-    }>("/api/v1/autos_ai/concierge/message", {
+    const res = await autosFetch<{ reply: string; session_id?: string; vehicles?: unknown }>(CONCIERGE_MESSAGE_PATH, {
       method: "POST",
       body: JSON.stringify({ session_id: sessionId, message, context }),
     });
     if (!res || typeof res.reply !== "string" || !res.reply.trim()) throw new ConciergeUnavailableError();
-    return {
-      message: res.reply,
-      recId: res.vehicle_id && Number.isFinite(Number(res.vehicle_id)) && Number(res.vehicle_id) > 0 ? Number(res.vehicle_id) : undefined,
-      sessionId: res.session_id ?? sessionId ?? undefined,
-    };
+    return { message: res.reply, sessionId: res.session_id ?? sessionId ?? undefined, vehicles: vehiculosReales(res.vehicles) };
   } catch {
     throw new ConciergeUnavailableError();
   }
+}
+
+/** Busqueda conversacional de una sola frase: mismo concierge, sin sesion previa. */
+export function conversationalSearch(query: string): Promise<ConciergeMessageResponse> {
+  return sendConciergeMessage(null, query, {});
 }

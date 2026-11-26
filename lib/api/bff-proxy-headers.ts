@@ -34,6 +34,11 @@ export function buildBffUpstreamHeaders(
     .trim();
   if (portalHost) headers["X-Portal-Host"] = portalHost;
 
+  // IP del visitante para el limite del concierge publico: detras de este BFF el backend solo ve la IP de Vercel.
+  // Vercel reescribe x-forwarded-for con la IP real del cliente; un X-Portal-Client-IP del cliente no se reenvia.
+  const clientIp = (req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "").split(",")[0].trim();
+  if (clientIp) headers["X-Portal-Client-IP"] = clientIp;
+
   const auth = req.headers.get("Authorization") || req.headers.get("authorization");
   if (auth) headers["Authorization"] = auth;
 

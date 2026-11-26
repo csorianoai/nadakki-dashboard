@@ -51,3 +51,14 @@ describe("BFF: X-Portal-Host", () => {
     expect(h["X-Tenant-ID"]).toBe("tenant-1");
   });
 });
+
+describe("BFF: X-Portal-Client-IP (limite del concierge publico)", () => {
+  test("reenvia la IP del visitante que pone Vercel en x-forwarded-for", () => {
+    const h = buildBffUpstreamHeaders(req({ host: "qa.nadakki.com", "x-forwarded-for": "190.1.2.3, 76.76.21.21" }), "POST", "");
+    expect(h["X-Portal-Client-IP"]).toBe("190.1.2.3");
+  });
+  test("un X-Portal-Client-IP del cliente no se reenvia", () => {
+    const h = buildBffUpstreamHeaders(req({ host: "qa.nadakki.com", "x-portal-client-ip": "1.1.1.1" }), "POST", "");
+    expect(h["X-Portal-Client-IP"]).toBeUndefined();
+  });
+});
