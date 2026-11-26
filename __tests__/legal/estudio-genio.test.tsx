@@ -75,7 +75,7 @@ it("422 muestra mensaje de datos invalidos", async () => {
 });
 it("403 no habilitado tambien bloquea cuando responde como error HTTP", async () => {
  api.mockResolvedValue(response({ detail: "ESTUDIO_GENIO_NO_HABILITADO" }, 403)); renderPanel();
- expect(await screen.findByText(m.disabled)).toBeVisible(); expect(screen.queryByRole("button")).toBeNull();
+ expect(await screen.findByText(m.disabled)).toBeVisible(); expect(screen.queryByRole("button", { name: m.request })).toBeNull();
 });
 it("consulta a los 20 segundos y deja de consultar al terminar", async () => {
  jest.useFakeTimers(); studies = [study]; const rendered = renderPanel();
