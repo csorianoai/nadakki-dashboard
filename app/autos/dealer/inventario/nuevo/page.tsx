@@ -21,7 +21,12 @@ import { useRouter } from "next/navigation";
 import { AccessApiError } from "@/lib/access/client";
 import { useAccessEntitlementsBatch } from "@/lib/access/hooks";
 import { resolveDealerAccessContext, selectedDealerIdentity } from "@/lib/dealer/access-context";
-import { VehicleManualForm } from "@/components/dealer-management/VehicleManualForm";
+import {
+  VehicleManualForm,
+  pasosAltaAuto,
+  type EstadoAltaAuto,
+} from "@/components/dealer-management/VehicleManualForm";
+import { PasosDeTarea, avisarProgreso } from "@/lib/dealer/pasos-tarea";
 import { ContactoSelector } from "@/app/autos/dealer/contactos/ContactoSelector";
 import { useDealerManagementBranding } from "@/lib/dealer-management/useDealerManagementBranding";
 import { localeDeTenant } from "@/lib/dealer-management/formato";
@@ -76,6 +81,12 @@ export default function DealerVehicleNuevoPage() {
   // Una clave por intento de alta: se reutiliza mientras el contenido sea el mismo y se descarta tras un 201.
   const intento = useRef<{ contenido: string; key: string } | null>(null);
   const enCurso = useRef(false);
+  // Lista de pasos "Cargar un auto": sale del estado real del formulario y del resultado del alta.
+  const [estadoForm, setEstadoForm] = useState<EstadoAltaAuto | null>(null);
+  const [creado, setCreado] = useState<{ creado: boolean; vehicleId: string | null }>({
+    creado: false,
+    vehicleId: null,
+  });
 
   async function onSubmit(form: VehicleForm, purchase?: PurchaseForm) {
     if (!context || enCurso.current) return;
@@ -102,12 +113,14 @@ export default function DealerVehicleNuevoPage() {
       const body = await createVehiclePurchase(context, form, purchase, monedaFuncional, key);
       intento.current = null;
       const id = vehicleIdFrom(body);
+      setCreado({ creado: true, vehicleId: id });
+      avisarProgreso("auto_creado");
       if (id) {
         setAck(`Vehículo creado: ${id}`);
         router.push(`/autos/dealer/inventario/${encodeURIComponent(id)}`);
         return;
       }
-      setAck("Vehículo creado. No pudimos abrir su ficha; búscalo en el inventario.");
+      setAck("Vehículo creado. No pudimos abrir su ficha; buscalo en el inventario para subirle fotos.");
     } catch (error) {
       if (error instanceof AccessApiError) {
         setReasonCode(error.reason_code ?? `HTTP_${error.status}`);
@@ -167,15 +180,19 @@ export default function DealerVehicleNuevoPage() {
           </DetalleTecnico>
         </div>
       ) : (
-        <VehicleManualForm
-          status={VEHICLE_INITIAL_STATUS}
-          busy={busy}
-          errorReasonCode={reasonCode}
-          ack={ack}
-          withPurchase
-          sellerSelector={(props) => <VendedorSelector value={props.value} onChange={props.onChange} />}
-          onSubmit={onSubmit}
-        />
+        <>
+          <PasosDeTarea titulo="Cargar un auto" pasos={pasosAltaAuto(estadoForm, creado)} />
+          <VehicleManualForm
+            status={VEHICLE_INITIAL_STATUS}
+            busy={busy}
+            errorReasonCode={reasonCode}
+            ack={ack}
+            withPurchase
+            sellerSelector={(props) => <VendedorSelector value={props.value} onChange={props.onChange} />}
+            onSubmit={onSubmit}
+            onCambio={setEstadoForm}
+          />
+        </>
       )}
     </main>
   );

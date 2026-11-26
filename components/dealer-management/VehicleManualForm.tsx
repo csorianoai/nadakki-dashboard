@@ -18,12 +18,15 @@
  */
 
 import { DetalleTecnico } from "@/app/autos/dealer/inventario/DetalleTecnico";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import type { PasoTarea } from "@/lib/dealer/pasos-tarea";
+import { conCondicion, validateFiscal } from "@/lib/dealer-management/compra-fiscal";
 import {
   VehiclePurchaseSection,
   type VehiclePurchaseSectionProps,
 } from "@/components/dealer-management/VehiclePurchaseSection";
 import {
+  centavos,
   MENSAJE_ALTA,
   PURCHASE_EMPTY,
   validatePurchase,
@@ -81,6 +84,108 @@ const FICHA: TextField[] = [
   { name: "municipality", label: "Localidad", maxLength: 100 },
 ];
 
+/** Lo que el formulario sabe de si mismo: los datos y los errores que daria el boton Crear si se tocara ahora. */
+export type EstadoAltaAuto = {
+  form: VehicleForm;
+  purchase: PurchaseForm;
+  erroresAuto: VehicleFormErrors;
+  erroresCompra: PurchaseErrors;
+};
+
+const CAMPOS_AUTO: (keyof VehicleForm)[] = ["make", "model", "year", "trim", "vin", "mileage_km", "condition"];
+const CAMPOS_PRECIO: (keyof VehicleForm)[] = [
+  "price_amount",
+  "display_price_amount",
+  "display_price_currency",
+  "plate",
+  "plate_country",
+  "stock_number",
+];
+const CAMPOS_COMPRA = ["cost", "acquired_on", "currency", "fx_rate", "fx_source", "fx_as_of", "fx_source_detail", "country_code"];
+
+/**
+ * Pasos de "Cargar un auto" (pedido de César, 26-nov). Cada `hecho` sale de la misma validacion que usa el boton
+ * Crear: un paso queda hecho cuando sus campos ya no darian error. Sin estado (antes del primer render) nada esta hecho.
+ */
+export function pasosAltaAuto(
+  estado: EstadoAltaAuto | null,
+  resultado: { creado: boolean; vehicleId: string | null } = { creado: false, vehicleId: null },
+): PasoTarea[] {
+  const sinError = (errores: Record<string, string | undefined> | undefined, campos: string[]) =>
+    !!estado && !!errores && campos.every((c) => !errores[c]);
+  const compra = estado?.purchase;
+  const erroresFiscales = compra ? validateFiscal(compra, centavos(compra.cost)) : {};
+  const fichaEnlace = resultado.vehicleId
+    ? `/autos/dealer/inventario/${encodeURIComponent(resultado.vehicleId)}`
+    : resultado.creado
+      ? "/autos/dealer/inventario"
+      : undefined;
+  return [
+    {
+      id: "datos",
+      titulo: "Datos del auto: marca, modelo y año",
+      hecho: sinError(estado?.erroresAuto, CAMPOS_AUTO),
+      ayuda: "Completá marca, modelo y año en «Identificación». VIN y kilómetros son opcionales.",
+    },
+    {
+      id: "precio",
+      titulo: "Precio de venta",
+      hecho: !!estado?.form.price_amount.trim() && sinError(estado?.erroresAuto, CAMPOS_PRECIO),
+      ayuda: "Podés dejarlo para después: sin precio el auto queda en Borrador y no se publica.",
+      opcional: true,
+    },
+    {
+      id: "compra",
+      titulo: "Costo, fecha y moneda de la compra",
+      hecho: sinError(estado?.erroresCompra, CAMPOS_COMPRA),
+      ayuda: "Cuánto pagaste, cuándo, en qué país y en qué moneda (con el tipo de cambio si no es tu moneda).",
+    },
+    {
+      id: "modo",
+      titulo: "Cómo lo compraste (modo de adquisición)",
+      hecho: sinError(estado?.erroresCompra, ["acquisition_mode_code"]),
+      ayuda: "Elegí el «Código de adquisición» en la sección Compra.",
+    },
+    {
+      id: "vendedor",
+      titulo: "A quién se lo compraste (contacto vendedor)",
+      hecho: sinError(estado?.erroresCompra, ["seller_contact_id"]),
+      ayuda: "Buscá y elegí al vendedor entre tus contactos.",
+    },
+    {
+      id: "pagos",
+      titulo: "Cómo lo pagaste: los pagos suman el costo",
+      hecho:
+        !!estado &&
+        Object.keys(estado.erroresCompra).every((k) => !k.startsWith("payment_")) &&
+        !estado.erroresCompra.cost,
+      ayuda: "Cargá cada pago (efectivo, transferencia, cheque). La suma tiene que dar el costo.",
+    },
+    {
+      id: "factura",
+      titulo: "Factura de la compra (si el vendedor te la dio)",
+      hecho: !!compra && conCondicion(compra) && Object.keys(erroresFiscales).length === 0,
+      ayuda: "Si el vendedor es una empresa y te dio factura, cargá su número, neto e IVA.",
+      opcional: true,
+    },
+    {
+      id: "crear",
+      titulo: "Tocar «Crear vehículo»",
+      hecho: resultado.creado,
+      ayuda: "Se guarda como Borrador: todavía no se publica.",
+    },
+    {
+      id: "fotos",
+      titulo: resultado.creado && !resultado.vehicleId
+        ? "Buscar el auto en el inventario para subirle fotos y publicarlo"
+        : "Subir fotos y publicarlo, en la ficha del auto",
+      hecho: false,
+      ayuda: "Al crear el auto te llevamos a su ficha: ahí subís las fotos y lo pasás a Disponible.",
+      enlace: fichaEnlace,
+    },
+  ];
+}
+
 export type VehicleManualFormProps = {
   initial?: VehicleForm;
   status?: string;
@@ -92,6 +197,8 @@ export type VehicleManualFormProps = {
   /** Selector del contacto vendedor (F4C-7). Sin el, la compra va deshabilitada. */
   sellerSelector?: VehiclePurchaseSectionProps["sellerSelector"];
   onSubmit: (form: VehicleForm, purchase?: PurchaseForm) => void;
+  /** Avisa cada cambio con los errores que daria Crear ahora (para la lista de pasos de la pantalla). */
+  onCambio?: (estado: EstadoAltaAuto) => void;
 };
 
 export function VehicleManualForm({
@@ -103,6 +210,7 @@ export function VehicleManualForm({
   withPurchase = false,
   sellerSelector,
   onSubmit,
+  onCambio,
 }: VehicleManualFormProps) {
   const [form, setForm] = useState<VehicleForm>(initial ?? VEHICLE_FORM_EMPTY);
   const [errors, setErrors] = useState<VehicleFormErrors>({});
@@ -140,6 +248,25 @@ export function VehicleManualForm({
       country_code: previous.country_code || paisPropuesto || "",
     }));
   }, [withPurchase, branding.data, locale.currency, paisPropuesto]);
+
+  // Mismo calculo que `submit`, sin pintar errores: solo informa a quien escucha.
+  const avisar = useRef(onCambio);
+  avisar.current = onCambio;
+  const monedaCompra = branding.data ? locale.currency : null;
+  const conSelector = !!sellerSelector;
+  useEffect(() => {
+    if (!avisar.current) return;
+    avisar.current({
+      form,
+      purchase,
+      erroresAuto: validateVehicleForm(form, locale.currency),
+      erroresCompra: withPurchase
+        ? conSelector
+          ? validatePurchase(purchase, monedaCompra)
+          : { purchase: "La compra no está disponible todavía." }
+        : {},
+    });
+  }, [form, purchase, locale.currency, monedaCompra, withPurchase, conSelector]);
 
   const PRECIO: TextField[] = [
     { name: "price_amount", label: priceFields[0].label, ayuda: priceFields[0].ayuda, inputMode: "decimal" },
