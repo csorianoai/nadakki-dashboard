@@ -52,12 +52,16 @@ export function pasosCargaAuto(d: DatosCargaAuto): PasoTarea[] | null {
       ayuda: "Si tuviste gastos (taller, papeles, traslado), cargalos en Adquisición, en Coste.",
     });
   }
-  if (publicado) {
-    pasos.push({
-      id: "vender", titulo: "Registrar la venta", hecho: false, enlace: `${base}/vender`,
-      ayuda: "Cuando lo vendas, registrá la venta: así entra en la contabilidad.",
-    });
-  }
+  // Siempre presente, para que el total no salte de "de 5" a "de 6" al pasar a Disponible: antes de publicar queda
+  // pendiente y sin enlace (la pantalla de venta solo sirve para un auto publicado).
+  pasos.push(
+    publicado
+      ? {
+          id: "vender", titulo: "Registrar la venta", hecho: false, enlace: `${base}/vender`,
+          ayuda: "Cuando lo vendas, registrá la venta: así entra en la contabilidad.",
+        }
+      : { id: "vender", titulo: "Registrar la venta", hecho: false, ayuda: "Primero pasalo a Disponible." },
+  );
   return pasos;
 }
 

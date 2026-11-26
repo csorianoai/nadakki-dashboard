@@ -52,8 +52,23 @@ describe("pasos para cargar un auto", () => {
     const pasos = pasosCargaAuto({ ...BASE, fotos: null, verCostos: false }) ?? [];
     expect(pasos.find((p) => p.id === "fotos")).toMatchObject({ opcional: true });
     expect(pasos.some((p) => p.id === "costos")).toBe(false);
-    expect(pasos.some((p) => p.id === "vender")).toBe(false);
     expect(pasosCargaAuto({ ...BASE, status: "archivado" })).not.toBeNull();
+  });
+
+  test("vender esta siempre: pendiente y sin enlace hasta publicar, asi el total no cambia", () => {
+    const borrador = pasosCargaAuto({ ...BASE, compraRegistrada: true, fotos: 3, price_amount: "100" }) ?? [];
+    const vender = borrador.find((p) => p.id === "vender");
+    expect(vender).toMatchObject({ hecho: false, ayuda: "Primero pasalo a Disponible." });
+    expect(vender?.enlace).toBeUndefined();
+    expect(borrador[borrador.length - 1]?.id).toBe("vender");
+    const publicado = pasosCargaAuto({ ...BASE, compraRegistrada: true, fotos: 3, price_amount: "100", status: "disponible" }) ?? [];
+    expect(resumenPasos(publicado).total).toBe(resumenPasos(borrador).total);
+    for (const extra of [{}, { fotos: null, verCostos: false }]) {
+      const antes = pasosCargaAuto({ ...BASE, ...extra }) ?? [];
+      const despues = pasosCargaAuto({ ...BASE, ...extra, status: "disponible" }) ?? [];
+      expect(resumenPasos(despues).total).toBe(resumenPasos(antes).total);
+      expect(despues.map((p) => p.id)).toEqual(antes.map((p) => p.id));
+    }
   });
 });
 
@@ -123,7 +138,7 @@ test("la ficha muestra el ciclo con los datos leidos y al subir una foto avanza 
   mockRed();
   montar(<DealerVehicleEconomicsPage />);
   const ciclo = await screen.findByRole("region", { name: "Cargar este auto" });
-  expect(within(ciclo).getByRole("heading")).toHaveTextContent("Cargar este auto: 2 de 5");
+  expect(within(ciclo).getByRole("heading")).toHaveTextContent("Cargar este auto: 2 de 6");
   expect(within(ciclo).getByRole("link", { name: "Siguiente paso: Subir fotos" })).toHaveAttribute("href", "#fotos");
   // Cada ancla va justo antes de su seccion.
   expect(document.getElementById("fotos")?.nextElementSibling).toBe(screen.getByTestId("vehicle-photos"));
@@ -132,7 +147,7 @@ test("la ficha muestra el ciclo con los datos leidos y al subir una foto avanza 
   const file = new File(["x"], "DNI-cliente.jpg", { type: "image/jpeg" });
   fireEvent.change(screen.getByTestId("vehicle-photos-input"), { target: { files: [file] } });
   await waitFor(() => expect(avisos).toContain("fotos"));
-  await waitFor(() => expect(within(ciclo).getByRole("heading")).toHaveTextContent("3 de 5"));
+  await waitFor(() => expect(within(ciclo).getByRole("heading")).toHaveTextContent("3 de 6"));
   expect(within(ciclo).getByRole("link", { name: "Siguiente paso: Poner el precio de venta" })).toHaveAttribute("href", "#precio");
 });
 
@@ -143,10 +158,13 @@ test("al pasar a Disponible se relee la ficha, avisa 'publicar' y el siguiente p
   montar(<DealerVehicleEconomicsPage />);
   const ciclo = await screen.findByRole("region", { name: "Cargar este auto" });
   expect(within(ciclo).getByRole("link", { name: "Siguiente paso: Pasarlo a Disponible" })).toHaveAttribute("href", "#precio");
+  expect(within(ciclo).getByRole("heading")).toHaveTextContent("Cargar este auto: 4 de 6");
+  expect(within(ciclo).getByTestId("paso-vender")).toHaveTextContent("Primero pasalo a Disponible.");
   fireEvent.click(screen.getByTestId("vehicle-publicar"));
   await waitFor(() => expect(avisos).toEqual(["publicar"]));
   expect(await within(ciclo).findByRole("link", { name: "Siguiente paso: Registrar la venta" })).toHaveAttribute(
     "href", "/autos/dealer/inventario/veh-1/vender");
+  expect(within(ciclo).getByRole("heading")).toHaveTextContent("Cargar este auto: 5 de 6");
 });
 
 test("vendido: la ficha no muestra el ciclo de carga y las comisiones tienen su ancla", async () => {
