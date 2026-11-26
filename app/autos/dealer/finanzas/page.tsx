@@ -32,6 +32,14 @@ import {
   COSTS_VEHICLE_CAPABILITY,
 } from "@/lib/dealer-management/vehicle-costs";
 import { CostosVehiculoPanel } from "./CostosVehiculoPanel";
+import { PasosDeTarea } from "@/lib/dealer/pasos-tarea";
+import {
+  facturaSinEmpezar,
+  pasosCargarFactura,
+  textoFinalFactura,
+  type EstadoFactura,
+  type FacturaRegistrada,
+} from "./pasos-factura";
 
 const CARD_CLASS = "rounded-xl border border-nk-border bg-nk-surface p-4 text-sm text-nk-fg";
 
@@ -42,6 +50,10 @@ export default function DealerFinanzasPage() {
   const branding = useDealerManagementBranding();
   const locale = localeDeTenant(branding.data);
   const [vehicleId, setVehicleId] = useState("");
+  // "Cargar una factura": estado real del formulario del panel y la ultima factura registrada.
+  const [estadoFactura, setEstadoFactura] = useState<EstadoFactura | null>(null);
+  const [registrada, setRegistrada] = useState<FacturaRegistrada | null>(null);
+  const facturaLista = registrada && facturaSinEmpezar(estadoFactura) ? registrada : null;
 
   const cerrado = access.isLoading || access.isPending || Boolean(access.error);
   const granted = (key: string) => !cerrado && access.data?.results[key]?.allowed === true;
@@ -140,6 +152,23 @@ export default function DealerFinanzasPage() {
         </div>
       ) : (
         <>
+          <PasosDeTarea
+            titulo="Cargar una factura"
+            pasos={pasosCargarFactura(Boolean(vehicleId), vehicleId ? estadoFactura : null, facturaLista)}
+            final={facturaLista ? textoFinalFactura(facturaLista) : undefined}
+          />
+          {facturaLista ? (
+            <p role="status" data-testid="factura-cargada-siguiente" className="text-sm text-nk-fg">
+              Para ver los movimientos contables, entrá al{" "}
+              <Link
+                href="/contable/libro-mayor"
+                className="inline-flex min-h-11 items-center font-semibold text-brand-2 underline"
+              >
+                libro mayor
+              </Link>
+              . Para cargar otra factura, completá de nuevo el formulario.
+            </p>
+          ) : null}
           <section className={CARD_CLASS}>
             <label className="block">
               <span className="block text-sm font-semibold text-nk-fg">Vehículo</span>
@@ -153,7 +182,10 @@ export default function DealerFinanzasPage() {
                 <select
                   name="vehicleId"
                   value={vehicleId}
-                  onChange={(event) => setVehicleId(event.target.value)}
+                  onChange={(event) => {
+                    setVehicleId(event.target.value);
+                    setRegistrada(null);
+                  }}
                   data-testid="finanzas-vehiculo"
                   className="mt-1 min-h-11 w-full max-w-full rounded-r-sm border border-nk-border bg-nk-surface px-3 text-sm text-nk-fg"
                 >
@@ -174,7 +206,13 @@ export default function DealerFinanzasPage() {
           </section>
 
           {vehicleId ? (
-            <CostosVehiculoPanel vehicleId={vehicleId} tenantId={context.tenantId} locale={locale} />
+            <CostosVehiculoPanel
+              vehicleId={vehicleId}
+              tenantId={context.tenantId}
+              locale={locale}
+              onCambio={setEstadoFactura}
+              onFacturaRegistrada={setRegistrada}
+            />
           ) : (
             <p data-testid="finanzas-sin-vehiculo" className="text-sm text-nk-fg-muted">
               Elige una unidad para ver sus costos.

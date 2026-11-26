@@ -22,7 +22,9 @@
  */
 
 import { DetalleTecnico } from "../inventario/DetalleTecnico";
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { avisarProgreso } from "@/lib/dealer/pasos-tarea";
+import type { EstadoFactura, FacturaRegistrada } from "./pasos-factura";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AccessApiError } from "@/lib/access/client";
 import {
@@ -47,6 +49,7 @@ import {
   esReparacion,
   fetchVehicleCostTotals,
   mensajeDeErrorCosto,
+  montoNormalizado,
   postCost,
   totalEnMoneda,
   uploadRepairInvoice,
@@ -87,10 +90,16 @@ export function CostosVehiculoPanel({
   vehicleId,
   tenantId,
   locale,
+  onCambio,
+  onFacturaRegistrada,
 }: {
   vehicleId: string;
   tenantId: string;
   locale: LocaleTenant;
+  /** Cada cambio del formulario, con los errores que daria «Registrar costo» ahora (lista de pasos). */
+  onCambio?: (estado: EstadoFactura) => void;
+  /** Una factura de reparacion quedo registrada (y el total ya se releyo). */
+  onFacturaRegistrada?: (factura: FacturaRegistrada) => void;
 }) {
   const client = useQueryClient();
   const [form, setForm] = useState<CostForm>(COST_FORM_EMPTY);
@@ -109,14 +118,45 @@ export function CostosVehiculoPanel({
   const alta = useMutation({
     mutationFn: (payload: CostForm) =>
       postCost(vehicleId, tenantId, payload, locale.currency as string),
-    onSuccess: async () => {
+    onSuccess: async (_body, enviado) => {
       setForm({ ...COST_FORM_EMPTY, cost_type: form.cost_type });
       setFecha("");
       setFactura(null);
       await client.refetchQueries({ queryKey: ["vehicle-cost-totals", tenantId, vehicleId] });
       setAck("Costo registrado.");
+      if (esReparacion(enviado.cost_type)) {
+        avisarProgreso("factura_cargada");
+        avisarFactura.current?.({
+          monto: montoLegible(enviado.amount),
+          proveedor: enviado.supplier_name.trim(),
+          numero: enviado.invoice_number.trim(),
+        });
+      }
     },
   });
+
+  // Estado para la lista de pasos: mismo calculo que `submit`, sin pintar errores.
+  const avisarCambio = useRef(onCambio);
+  avisarCambio.current = onCambio;
+  const avisarFactura = useRef(onFacturaRegistrada);
+  avisarFactura.current = onFacturaRegistrada;
+  // Depende del idioma y la moneda, no del objeto `locale`: la pantalla lo arma de nuevo en cada render.
+  const idioma = locale.locale;
+  const moneda = locale.currency;
+  useEffect(() => {
+    if (!avisarCambio.current) return;
+    const iso = parseaFecha(fecha, { locale: idioma });
+    avisarCambio.current({
+      form,
+      fechaValida: Boolean(iso),
+      errores: validateCostForm({ ...form, incurred_at: iso ?? "" }, moneda),
+    });
+  }, [form, fecha, idioma, moneda]);
+
+  function montoLegible(monto: string): string {
+    const n = Number(montoNormalizado(monto));
+    return locale.currency && Number.isFinite(n) ? formateaMoneda(n, locale) : monto;
+  }
 
   const subida = useMutation({
     mutationFn: (file: File) => uploadRepairInvoice(vehicleId, tenantId, file),
