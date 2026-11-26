@@ -438,6 +438,16 @@ export async function getSituacionFinanciera(tenantId: string, fecha: string): P
     return { total: detalle.reduce((total, r) => total + r.saldo, 0), corriente: Number.NaN, no_corriente: Number.NaN, detalle };
   };
   const activos = group("activo"), pasivos = group("pasivo"), patrimonio = group("patrimonio");
+  // Validacion Cowork 26-nov: sin asiento de cierre, la utilidad del ejercicio sigue en ingresos y gastos y la
+  // ecuacion "no cuadraba" por exactamente ese monto. Se muestra como linea de patrimonio, sin escribir nada.
+  const resultados = await contableFetch<Record<string, unknown>[]>(tenantId, "/reports/estado-resultados");
+  if (!Array.isArray(resultados)) throw new ContableApiError("Respuesta inválida del estado de resultados.", 502);
+  const resultado = Math.round(resultados.reduce(
+    (total, r) => total + (r.tipo_cuenta === "ingreso" ? reportNumber(r.saldo) : r.tipo_cuenta === "gasto" ? -reportNumber(r.saldo) : 0), 0) * 100) / 100;
+  if (Math.abs(resultado) >= 0.005) {
+    patrimonio.detalle.push({ codigo: "", nombre: "Resultado del ejercicio (sin cerrar)", saldo: resultado });
+    patrimonio.total += resultado;
+  }
   return { fecha, activos, pasivos, patrimonio, ecuacion_cuadra: Math.abs(activos.total - pasivos.total - patrimonio.total) < 0.02 };
 }
 
