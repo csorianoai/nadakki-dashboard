@@ -24,7 +24,8 @@
     "contexto": "Contexto",
     "estrategias": "Estrategias",
     "simulacro": "Simulacro",
-    "evaluacion_cruzada": "Evaluación cruzada"
+    "evaluacion_cruzada": "Evaluación cruzada",
+    "profundidad": "Segundo nivel"
   },
   "done": "Recibida",
   "pending": "Pendiente",
