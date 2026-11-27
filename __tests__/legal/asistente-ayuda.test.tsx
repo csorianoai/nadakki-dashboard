@@ -69,3 +69,16 @@ describe("Asistente de ayuda de Legal", () => {
     expect(screen.queryByTestId("legal-ayuda")).toBeNull();
   });
 });
+
+describe("Texto de las respuestas del asistente", () => {
+  it("muestra negritas y tablas sin asteriscos ni barras", async () => {
+    const { TextoAyuda } = await import("@/components/legal/ayuda/TextoAyuda");
+    const { render, screen } = await import("@testing-library/react");
+    const { container } = render(<TextoAyuda texto={"Paquetes:\n- **Esencial:** US$500\n\n| Membresía | Precio |\n|---|---|\n| Premium | US$449 |\nFin"} />);
+    expect(screen.getByText("Esencial:").tagName).toBe("STRONG");
+    expect(screen.getByRole("columnheader", { name: "Membresía" })).toBeInTheDocument();
+    expect(screen.getByRole("cell", { name: "US$449" })).toBeInTheDocument();
+    expect(container.textContent).not.toMatch(/\*\*|\|/);
+    expect(container.textContent).toContain("Fin");
+  });
+});
