@@ -57,13 +57,13 @@ describe("Dealer post-sale cores", () => {
         );
       }
       if (url.includes("/api/v1/contable/asientos")) {
-        return jsonResponse([{ id: "asi-1", status: "posted" }], 200);
+        return jsonResponse([{ id: "asi-1", status: "posted", numero_asiento: 7, fecha_asiento: "2026-11-26", descripcion: "Venta Gol" }], 200);
       }
       if (url.includes("/api/marketing/scheduler/heartbeat")) {
         return jsonResponse({ alive: true, last_cycle: "2026-09-22T12:00:00Z" }, 200);
       }
       if (url.includes("/api/v1/autos/dealers/dealer-a/vehicles")) {
-        return jsonResponse({ vehicles: [{ id: "veh-1", status: "sold" }] }, 200);
+        return jsonResponse({ vehicles: [{ id: "veh-1", status: "vendido", make: "VW", model: "Gol", year: 2018, stock_number: "F3" }] }, 200);
       }
       return jsonResponse({ detail: "not-mocked" }, 404);
     });
@@ -73,8 +73,10 @@ describe("Dealer post-sale cores", () => {
     expect(await screen.findByTestId("dealer-post-sale-ready")).toBeInTheDocument();
     expect(screen.getByText(/case-open/)).toBeInTheDocument();
     expect(screen.queryByText(/case-done/)).not.toBeInTheDocument();
-    expect(screen.getByText(/asi-1 · posted/)).toBeInTheDocument();
-    expect(screen.getByText(/veh-1 · sold/)).toBeInTheDocument();
+    // Resumen legible (Cowork 26-nov): nunca el id crudo.
+    expect(screen.getByText(/26\/11\/2026 · N\.º 7 · Venta Gol/)).toBeInTheDocument();
+    expect(screen.getByText(/VW Gol 2018/)).toBeInTheDocument();
+    expect(screen.queryByText(/asi-1|veh-1/)).not.toBeInTheDocument();
     expect(screen.getByText(/alive: true/)).toBeInTheDocument();
     const urls = (global.fetch as jest.Mock).mock.calls.map((c) => String(c[0]));
     expect(urls.some((u) => u.includes("/api/marketing/scheduler/heartbeat"))).toBe(true);

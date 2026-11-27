@@ -6,8 +6,23 @@ export const POST_SALE_ASIENTOS_PATH = "/api/v1/contable/asientos";
 export const POST_SALE_HEARTBEAT_PATH = "/api/marketing/scheduler/heartbeat";
 
 export type PostSaleCase = { id: string; state: string | null };
-export type PostSaleAsiento = { id: string; status: string | null };
-export type PostSaleListing = { id: string; status: string | null };
+/** GET /api/v1/contable/asientos (routers/contable/asientos_router.py): llega ordenado por fecha y numero, del mas nuevo. */
+export type PostSaleAsiento = {
+  id: string;
+  status: string | null;
+  numero: string | null;
+  fecha: string | null;
+  descripcion: string | null;
+};
+/** GET /api/v1/autos/dealers/{id}/vehicles (_SQL_LISTA_PRIVADA): llega del alta mas nueva a la mas vieja. */
+export type PostSaleListing = {
+  id: string;
+  status: string | null;
+  make: string | null;
+  model: string | null;
+  year: number | null;
+  stock: string | null;
+};
 export type PostSaleHeartbeat = Record<string, string | number | boolean>;
 
 function asRecord(value: unknown): Record<string, unknown> | null {
@@ -20,6 +35,65 @@ function readTrimmed(value: unknown): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
   return trimmed ? trimmed : null;
+}
+
+function readNumeroOTexto(value: unknown): string | null {
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return readTrimmed(value);
+}
+
+/** "2026-11-26" (o con hora) → "26/11/2026", sin pasar por Date (sin corrimiento de zona horaria). */
+export function fechaCorta(iso: string | null): string | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso ?? "");
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : null;
+}
+
+/**
+ * Resumenes legibles de la tarjeta "Tras una venta" (Cowork 26-nov): antes se listaban 134 lineas "<uuid> · posted"
+ * y 25 "<uuid> · archivado". Nunca se muestra un id crudo: una fila sin dato legible no se lista, solo se cuenta.
+ */
+export function resumenAsientos(asientos: PostSaleAsiento[], max = 3): { total: number; ultimos: string[] } {
+  const ultimos: string[] = [];
+  for (const a of asientos) {
+    if (ultimos.length >= max) break;
+    const legible = [a.numero ? `N.º ${a.numero}` : null, a.descripcion].filter(Boolean);
+    if (legible.length === 0) continue;
+    ultimos.push([fechaCorta(a.fecha), ...legible].filter(Boolean).join(" · "));
+  }
+  return { total: asientos.length, ultimos };
+}
+
+const ESTADO_PLURAL: Record<string, [string, string]> = {
+  disponible: ["disponible", "disponibles"],
+  reservado: ["reservado", "reservados"],
+  vendido: ["vendido", "vendidos"],
+  draft: ["borrador", "borradores"],
+};
+const ORDEN_ESTADOS = ["disponible", "reservado", "vendido", "draft"];
+
+/** Conteo por estado en palabras ("2 disponibles · 2 vendidos") y los ultimos autos con nombre; sin archivados. */
+export function resumenAnuncios(listings: PostSaleListing[], max = 3): { conteo: string | null; ultimos: string[] } {
+  const activos = listings.filter((l) => (l.status ?? "").toLowerCase() !== "archivado");
+  const porEstado = new Map<string, number>();
+  for (const l of activos) {
+    const e = (l.status ?? "").toLowerCase();
+    if (ESTADO_PLURAL[e]) porEstado.set(e, (porEstado.get(e) ?? 0) + 1);
+  }
+  const conteo = ORDEN_ESTADOS.filter((e) => porEstado.has(e))
+    .map((e) => {
+      const n = porEstado.get(e)!;
+      return `${n} ${ESTADO_PLURAL[e]![n === 1 ? 0 : 1]}`;
+    })
+    .join(" · ");
+  const ultimos: string[] = [];
+  for (const l of activos) {
+    if (ultimos.length >= max) break;
+    const nombre = [l.make, l.model, l.year].filter((x) => x != null && x !== "").join(" ");
+    if (!nombre) continue;
+    const estado = ESTADO_PLURAL[(l.status ?? "").toLowerCase()]?.[0];
+    ultimos.push([nombre, l.stock ? `stock ${l.stock}` : null, estado].filter(Boolean).join(" · "));
+  }
+  return { conteo: conteo || null, ultimos };
 }
 
 async function accessGet(path: string, tenantId: string): Promise<unknown> {
@@ -61,7 +135,13 @@ export function parsePostSaleAsiento(value: unknown): PostSaleAsiento | null {
   if (!rec) return null;
   const id = readTrimmed(rec.id);
   if (!id) return null;
-  return { id, status: readTrimmed(rec.status) };
+  return {
+    id,
+    status: readTrimmed(rec.status),
+    numero: readNumeroOTexto(rec.numero_asiento),
+    fecha: readTrimmed(rec.fecha_asiento),
+    descripcion: readTrimmed(rec.descripcion),
+  };
 }
 
 export function parsePostSaleListing(value: unknown): PostSaleListing | null {
@@ -69,7 +149,14 @@ export function parsePostSaleListing(value: unknown): PostSaleListing | null {
   if (!rec) return null;
   const id = readTrimmed(rec.id);
   if (!id) return null;
-  return { id, status: readTrimmed(rec.status) };
+  return {
+    id,
+    status: readTrimmed(rec.status),
+    make: readTrimmed(rec.make),
+    model: readTrimmed(rec.model),
+    year: typeof rec.year === "number" && Number.isFinite(rec.year) ? rec.year : null,
+    stock: readNumeroOTexto(rec.stock_number),
+  };
 }
 
 export function parseHeartbeat(value: unknown): PostSaleHeartbeat {
