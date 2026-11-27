@@ -9,6 +9,7 @@ import { DeadlineNotificationBanner } from "@/components/legal/DeadlineNotificat
 import { DemoBannerStrong } from "@/components/legal/DemoBannerStrong";
 import { LegalCoreShell } from "@/components/legal/LegalCoreShell";
 import { LegalAvisoInicial } from "@/components/legal/LegalAvisoInicial";
+import { AsistenteAyuda } from "@/components/legal/ayuda/AsistenteAyuda";
 import { DisasterModeProvider } from "@/app/providers/DisasterModeProvider";
 
 import { ForgeToaster } from "@/components/forge/ui/Toast";
@@ -38,6 +39,7 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
               <DisasterModeProvider>
                 <LegalAvisoInicial />
                 <div className="flex min-h-0 min-w-0 flex-1 flex-col">{children}</div>
+                <AsistenteAyuda />
               </DisasterModeProvider>
             </ModuleGate>
           </CHTenantGuard>
@@ -79,6 +81,7 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
                   </div>
                 </div>
               </div>
+              <AsistenteAyuda />
             </DisasterModeProvider>
           </ModuleGate>
         </CHTenantGuard>
