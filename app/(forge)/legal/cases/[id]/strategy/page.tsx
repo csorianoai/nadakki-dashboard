@@ -9,6 +9,7 @@ import { useLegalEffectiveTenantId } from "@/hooks/useLegalCore";
 import { CaseDetailHeader } from "@/components/legal/cases/CaseDetailHeader";
 import { CaseStrategyMultiSelect } from "@/components/legal/cases/CaseStrategyMultiSelect";
 import type { CaseStrategy } from "@/lib/legal/cases/case-types";
+import { mensajeErrorEstrategias as mensajeError } from "@/lib/legal/cases/mensaje-estrategias";
 
 export default function LegalCaseStrategyPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -17,12 +18,17 @@ export default function LegalCaseStrategyPage({ params }: { params: Promise<{ id
   const { data: st, isLoading: ls, error: strategyError, selectStrategies, selecting } = useCaseStrategies(effectiveTenantId, id);
   const [selected, setSelected] = useState<string[]>([]);
   // QA 23-nov: la pestaña no tenía cómo generar estrategias; el botón estaba solo en el Resumen.
-  const { runAction, running } = useCaseActions(effectiveTenantId, id);
+  const { runAction, runTransition, running } = useCaseActions(effectiveTenantId, id);
   const qc = useQueryClient();
   const [aviso, setAviso] = useState<string | null>(null);
   const generar = async () => {
     setAviso(null);
     try {
+      // Validación 27-nov-2026: un expediente recién creado queda en «Ingreso de documentos» y el backend no genera
+      // estrategias en ese estado (409 en inglés). Se pasa primero a «Análisis automático», con el motivo en la línea de tiempo.
+      if (c?.state === "INGESTION") {
+        await runTransition({ newState: "TRIAGE", reason: "Paso a análisis para generar estrategias" });
+      }
       const r = (await runAction({ actionName: "generate_strategies", payload: {} })) as
         | { count?: number; strategies?: unknown[]; mensaje?: string; motivo?: string }
         | null
@@ -31,7 +37,7 @@ export default function LegalCaseStrategyPage({ params }: { params: Promise<{ id
       if (n === null || n === 0) setAviso(r?.mensaje || r?.motivo || "No se generaron estrategias.");
       await qc.invalidateQueries({ queryKey: ["legal_case_strategies", effectiveTenantId ?? "", id] });
     } catch (e: unknown) {
-      setAviso(e instanceof Error ? e.message : "No se pudieron generar las estrategias. Intenta de nuevo.");
+      setAviso(mensajeError(e));
     }
   };
 
