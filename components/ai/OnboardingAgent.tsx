@@ -117,7 +117,17 @@ interface Message {
   feedback?: "positive" | "negative" | null;
 }
 
+/**
+ * En Legal (/legal) no se muestra: Legal tiene su propio asistente de ayuda por membresía
+ * (components/legal/ayuda/AsistenteAyuda.tsx) en la misma esquina, con la guía real del core.
+ */
 export default function OnboardingAgent() {
+  const pathname = usePathname();
+  if (pathname?.startsWith("/legal")) return null;
+  return <CopilotoGeneral />;
+}
+
+function CopilotoGeneral() {
   const { tenantId, settings } = useTenant();
   const pathname = usePathname();
   const currentModule = useMemo(() => detectModule(pathname), [pathname]);
