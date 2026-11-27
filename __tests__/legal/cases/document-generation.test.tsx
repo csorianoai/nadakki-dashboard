@@ -153,6 +153,20 @@ describe("DocumentGenerationDialog", () => {
     expect(screen.getByRole("button", { name: /Generar$/i })).toBeInTheDocument();
   });
 
+  it("ofrece escritos laborales y pliega los parámetros técnicos (validación 27-nov-2026)", () => {
+    render(
+      <QueryClientProvider client={new QueryClient({ defaultOptions: { mutations: { retry: false } } })}>
+        <DocumentGenerationDialog tenantId="t1" caseId="c1" open onClose={() => {}} />
+      </QueryClientProvider>
+    );
+    const opciones = Array.from((screen.getByLabelText(/Tipo de documento/i) as HTMLSelectElement).options).map((o) => o.textContent);
+    expect(opciones).toEqual(expect.arrayContaining(["Demanda laboral — despido y prestaciones", "Recurso de apelación laboral"]));
+    expect(opciones.every((t) => t && !t.includes("_"))).toBe(true);
+    const json = document.getElementById("gen-doc-json") as HTMLElement;
+    expect(json.closest("details")).not.toBeNull();
+    expect(json.closest("details")!.hasAttribute("open")).toBe(false);
+  });
+
   it("valida instrucciones vacías antes de enviar", async () => {
     const user = userEvent.setup();
     render(

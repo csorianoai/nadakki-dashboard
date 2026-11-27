@@ -244,7 +244,11 @@ export type LegalGeneratedDocumentType =
   | "recurso_apelacion_civil"
   | "denuncia_penal"
   | "querella_penal"
-  | "escrito_acusacion_querellante";
+  | "escrito_acusacion_querellante"
+  | "demanda_laboral_despido"
+  | "escrito_defensa_laboral"
+  | "recurso_apelacion_laboral"
+  | "intimacion_pago";
 
 export const LEGAL_GENERATED_DOCUMENT_TYPES: LegalGeneratedDocumentType[] = [
   "demanda_civil_cobro_pesos",
@@ -253,6 +257,10 @@ export const LEGAL_GENERATED_DOCUMENT_TYPES: LegalGeneratedDocumentType[] = [
   "denuncia_penal",
   "querella_penal",
   "escrito_acusacion_querellante",
+  "demanda_laboral_despido",
+  "escrito_defensa_laboral",
+  "recurso_apelacion_laboral",
+  "intimacion_pago",
 ];
 
 export interface GenerateDocumentRequestBody {

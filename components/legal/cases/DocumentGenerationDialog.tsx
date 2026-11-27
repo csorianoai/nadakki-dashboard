@@ -128,21 +128,25 @@ export function DocumentGenerationDialog({ tenantId, caseId, open, onClose }: Pr
             />
           </div>
 
-          <div>
-            <label htmlFor="gen-doc-json" className="block text-sm font-medium text-forgeGray-800">
-              {m.field_parameters_json}
-            </label>
-            <p className="mb-1 text-xs text-forgeGray-500">{m.field_parameters_json_hint}</p>
-            <textarea
-              id="gen-doc-json"
-              rows={4}
-              value={jsonExtra}
-              disabled={isPending}
-              onChange={(e) => setJsonExtra(e.target.value)}
-              aria-label={m.field_parameters_json}
-              className="w-full resize-y rounded-forge-sm border border-forgeGray-200 px-3 py-2 font-mono text-xs outline-none focus-visible:ring-2 focus-visible:ring-forgeBrand-500"
-            />
-          </div>
+          {/* Validación 27-nov-2026: el abogado veía «Parámetros adicionales (JSON)». Queda plegado, para soporte. */}
+          <details className="text-sm">
+            <summary className="cursor-pointer text-xs text-forgeGray-500">Opciones avanzadas</summary>
+            <div className="mt-2">
+              <label htmlFor="gen-doc-json" className="block text-sm font-medium text-forgeGray-800">
+                {m.field_parameters_json}
+              </label>
+              <p className="mb-1 text-xs text-forgeGray-500">{m.field_parameters_json_hint}</p>
+              <textarea
+                id="gen-doc-json"
+                rows={4}
+                value={jsonExtra}
+                disabled={isPending}
+                onChange={(e) => setJsonExtra(e.target.value)}
+                aria-label={m.field_parameters_json}
+                className="w-full resize-y rounded-forge-sm border border-forgeGray-200 px-3 py-2 font-mono text-xs outline-none focus-visible:ring-2 focus-visible:ring-forgeBrand-500"
+              />
+            </div>
+          </details>
         </div>
 
         <div className="mt-6 flex flex-wrap justify-end gap-2">

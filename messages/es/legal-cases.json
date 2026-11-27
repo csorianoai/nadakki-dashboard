@@ -338,7 +338,11 @@
       "recurso_apelacion_civil": "Recurso de apelación civil",
       "denuncia_penal": "Denuncia penal",
       "querella_penal": "Querella penal",
-      "escrito_acusacion_querellante": "Escrito de acusación (querellante)"
+      "escrito_acusacion_querellante": "Escrito de acusación (querellante)",
+      "demanda_laboral_despido": "Demanda laboral — despido y prestaciones",
+      "escrito_defensa_laboral": "Escrito de defensa laboral (empleador)",
+      "recurso_apelacion_laboral": "Recurso de apelación laboral",
+      "intimacion_pago": "Acto de intimación de pago"
     }
   },
   "overview": {
