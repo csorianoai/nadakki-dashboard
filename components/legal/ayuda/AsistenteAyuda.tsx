@@ -10,6 +10,7 @@ import {
   type EstadoAyuda, type PrimerosPasos, type RespuestaAyuda,
 } from "@/lib/legal/ayuda-api";
 import m from "@/messages/es/legal-ayuda.json";
+import { TextoAyuda } from "@/components/legal/ayuda/TextoAyuda";
 
 type Mensaje = { de: "usuario" | "asistente"; texto: string; r?: RespuestaAyuda; error?: boolean };
 
@@ -143,7 +144,7 @@ export function AsistenteAyuda({ tenantId: tenantProp }: { tenantId?: string | n
                 <div className={x.de === "usuario"
                   ? "max-w-[85%] rounded-xl bg-indigo-700 px-3 py-2 text-white"
                   : `max-w-[95%] whitespace-pre-line rounded-xl px-3 py-2 ${x.error ? "bg-amber-50 text-amber-900" : "bg-slate-100 text-slate-800"}`}>
-                  {x.texto}
+                  {x.de === "asistente" ? <TextoAyuda texto={x.texto} /> : x.texto}
                   {x.r?.enlaces?.length ? (
                     <div className="mt-2 flex flex-wrap gap-2">
                       {x.r.enlaces.map((e) => (
