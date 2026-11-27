@@ -1,7 +1,9 @@
 "use client";
 
 export function QuickActions({ onAction }: { onAction: (label: string) => void }) {
-  const actions = ["Agendar visita", "Calcular cuota", "Aplicar financiamiento"];
+  // Sin "Calcular cuota" ni "Aplicar financiamiento": el portal no tiene condiciones de financiamiento reales del
+  // concesionario (Cowork 26-nov, Argentina). Volver a agregarlas solo con un dato real.
+  const actions = ["Agendar visita"];
 
   return (
     <div className="flex shrink-0 gap-2 overflow-x-auto px-4 pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

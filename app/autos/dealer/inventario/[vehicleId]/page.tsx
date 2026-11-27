@@ -56,12 +56,15 @@ function VehicleFicha({
   photos,
   write,
   costsView,
+  accesoReleyendo = false,
 }: {
   dealerId: string;
   vehicleId: string;
   photos: EntitlementDecision;
   write: EntitlementDecision;
   costsView: boolean;
+  /** El plan se esta releyendo (cache vencida): fotos y costos pueden cambiar, la guia espera. */
+  accesoReleyendo?: boolean;
 }) {
   const queryClient = useQueryClient();
   const query = useQuery({
@@ -131,7 +134,7 @@ function VehicleFicha({
           </Link>
         ) : null}
       </section>
-      <CicloDelAuto ficha={query.data} photosAllowed={photos.allowed} costsView={costsView} />
+      <CicloDelAuto ficha={query.data} photosAllowed={photos.allowed} costsView={costsView} accesoListo={!accesoReleyendo} />
       {/* Anclas vacias: los pasos de la guia saltan aca sin envolver (ni reindentar) cada seccion. */}
       {isSold(query.data.status) ? <div id={ANCLA.comisiones} className="scroll-mt-4" /> : null}
       {isSold(query.data.status) ? (
@@ -267,7 +270,14 @@ export default function DealerVehicleEconomicsPage() {
           No se pudo identificar tu concesionario. Vuelve a iniciar sesión.
         </p>
       ) : (
-        <VehicleFicha dealerId={dealerId} vehicleId={vehicleId} photos={photos} write={write} costsView={costsView} />
+        <VehicleFicha
+          dealerId={dealerId}
+          vehicleId={vehicleId}
+          photos={photos}
+          write={write}
+          costsView={costsView}
+          accesoReleyendo={access.isFetching}
+        />
       )}
     </main>
   );

@@ -13,6 +13,11 @@ export interface Vehicle {
   loc: string;
   type: VehicleType;
   km: number;
+  /**
+   * true cuando el backend no informa el kilometraje (mileage_km null). Entonces `km` vale 0 solo por el tipo:
+   * la ficha y la tarjeta no lo muestran, porque "0 km" en Argentina quiere decir auto nuevo.
+   */
+  kmDesconocido?: boolean;
   trans: string;
   fuel: string;
   badge?: string;

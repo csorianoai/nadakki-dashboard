@@ -14,7 +14,36 @@ import { fetchVehiclePhotos } from "./fotos";
 import { fetchCompra } from "./vehicle-purchase-read";
 import { SIN_REUTILIZAR, useIdentidadCache } from "./ficha-interna";
 
-export function CicloDelAuto({ ficha, photosAllowed, costsView }: { ficha: DealerVehicleStatusRow; photosAllowed: boolean; costsView: boolean }) {
+/** La guia se cuenta solo con TODAS sus lecturas terminadas (con exito o con error): asi el total no cambia por carga. */
+export function guiaLista(e: {
+  /** false mientras el plan (fotos, costos) se relee: de el depende si Fotos cuenta y si se lee la compra. */
+  accesoListo?: boolean;
+  tenantId: string;
+  daysPending: boolean;
+  costsView: boolean;
+  compraPending: boolean;
+  photosAllowed: boolean;
+  fotosPending: boolean;
+}): boolean {
+  if (e.accesoListo === false) return false;
+  if (!e.tenantId || e.daysPending) return false;
+  if (e.costsView && e.compraPending) return false;
+  if (e.photosAllowed && e.fotosPending) return false;
+  return true;
+}
+
+export function CicloDelAuto({
+  ficha,
+  photosAllowed,
+  costsView,
+  accesoListo = true,
+}: {
+  ficha: DealerVehicleStatusRow;
+  photosAllowed: boolean;
+  costsView: boolean;
+  /** false mientras la pagina relee el plan: una cache vencida puede decir "sin fotos" y despues "con fotos". */
+  accesoListo?: boolean;
+}) {
   const vehicleId = ficha.id;
   const tenantId = getAccessClientContext()?.tenantId ?? "";
   const [, userId] = useIdentidadCache();
@@ -40,8 +69,17 @@ export function CicloDelAuto({ ficha, photosAllowed, costsView }: { ficha: Deale
     retry: false,
   });
 
-  // Mientras se lee, no se pinta: un paso marcado pendiente por no haber leido todavia confunde.
-  if ((tenantId && days.isPending) || (costsView && compra.isPending) || (photosAllowed && fotos.isPending)) return null;
+  // Mientras se lee algo de lo que dependen los pasos, no se cuenta nada: ni "x de y" ni tildes. Un paso marcado
+  // pendiente o un total calculado antes de terminar de leer cambia ante los ojos del usuario (Cowork 26-nov: la RAV4
+  // paso de "3 de 5" a "5 de 6"). Sin tenant tampoco: la fecha de adquisicion no se puede leer y "compra" saldria
+  // pendiente por no haber leido.
+  if (!guiaLista({ accesoListo, tenantId, daysPending: days.isPending, costsView, compraPending: compra.isPending, photosAllowed, fotosPending: fotos.isPending })) {
+    return (
+      <p role="status" data-testid="ciclo-cargando" className="animate-pulse text-sm text-nk-fg-muted">
+        Cargando los pasos de este auto…
+      </p>
+    );
+  }
 
   const pasos = pasosCargaAuto({
     vehicleId,

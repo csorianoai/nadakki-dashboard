@@ -1,6 +1,7 @@
 "use client";
 
 import { PenLine } from "lucide-react";
+import { textoClaro } from "@/lib/legal/research/texto-claro";
 
 type Props = {
   value: string;
@@ -18,6 +19,7 @@ export function ResearchComposer({ value, onChange, onSubmit, disabled, maxChars
           <PenLine size={16} strokeWidth={1.9} color="#d9b46a" aria-hidden />
           <textarea
             id="legal-research-input"
+            ref={(el) => textoClaro(el)}
             aria-label="Escribe tu consulta legal"
             placeholder="Escribe aquí lo que quieres investigar: hechos, pregunta, norma o plazo…"
             rows={2}

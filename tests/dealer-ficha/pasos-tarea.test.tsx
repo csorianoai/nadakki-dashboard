@@ -33,3 +33,25 @@ test("avisarProgreso emite el evento que escucha la bienvenida", () => {
   window.removeEventListener(EVENTO_PROGRESO, oir);
   expect(visto).toEqual(["auto_creado"]);
 });
+
+test("cada paso pendiente con enlace se puede tocar; los hechos y los que no tienen enlace, no", () => {
+  const varios: PasoTarea[] = [
+    { id: "datos", titulo: "Cargar los datos", hecho: true, enlace: "/hecho" },
+    { id: "compra", titulo: "Registrar la compra", hecho: false, enlace: "/registrar" },
+    { id: "fotos", titulo: "Subir fotos", hecho: false, enlace: "#fotos" },
+    { id: "precio", titulo: "Poner el precio", hecho: false },
+  ];
+  render(<PasosDeTarea titulo="Cargar un auto" pasos={varios} />);
+  // El siguiente sigue teniendo su boton, y ademas su titulo enlaza.
+  expect(screen.getByRole("link", { name: "Siguiente paso: Registrar la compra" })).toHaveAttribute("href", "/registrar");
+  expect(screen.getByRole("link", { name: "Registrar la compra" })).toHaveAttribute("href", "/registrar");
+  // Un paso pendiente que no es el siguiente tambien enlaza, con 44px de alto tocable.
+  const fotos = screen.getByRole("link", { name: "Subir fotos" });
+  expect(fotos).toHaveAttribute("href", "#fotos");
+  expect(fotos.className).toContain("min-h-11");
+  // Hecho con enlace: sin enlace. Pendiente sin enlace: texto.
+  expect(screen.queryByRole("link", { name: "Cargar los datos" })).toBeNull();
+  expect(screen.queryByTestId("paso-enlace-datos")).toBeNull();
+  expect(screen.queryByRole("link", { name: "Poner el precio" })).toBeNull();
+  expect(screen.getAllByRole("link")).toHaveLength(3);
+});
