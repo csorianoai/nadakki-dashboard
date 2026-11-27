@@ -1,0 +1,32 @@
+{
+  "abrir": "Ayuda",
+  "abrirAria": "Abrir el asistente de ayuda de Nadakki Legal",
+  "cerrar": "Cerrar el asistente",
+  "titulo": "Asistente de Nadakki Legal",
+  "subtituloGuia": "Le explico cómo usar cada pantalla del despacho.",
+  "subtituloAgente": "Agente de IA del despacho: conoce la guía completa y su avance.",
+  "bienvenida": "Hola. Pregúnteme cómo hacer cualquier cosa en Nadakki Legal: expedientes, plazos, Estudio Genio, almacenamiento o usuarios.",
+  "pasos": "Primeros pasos: {hechos} de {total}",
+  "siguiente": "Siguiente",
+  "pasosListos": "Primeros pasos completos",
+  "placeholder": "Escriba su pregunta…",
+  "enviar": "Enviar",
+  "pensando": "Buscando la respuesta…",
+  "relacionadas": "También le puede servir",
+  "ir": "Ir a {pantalla}",
+  "error": "No pude responder ahora. Intente de nuevo en un momento.",
+  "aviso": "Solo explica cómo usar el sistema. Las consultas de derecho se hacen en Investigación.",
+  "pantallas": {
+    "/legal": "Mi despacho",
+    "/legal/cases": "Expedientes",
+    "/legal/cases/new": "Nuevo expediente",
+    "/legal/research": "Investigación",
+    "/legal/estudio-genio": "Estudio Genio",
+    "/legal/library": "Biblioteca",
+    "/legal/audiencias": "Audiencias",
+    "/legal/contracts": "Contratos",
+    "/legal/audit": "Auditoría",
+    "/legal/config": "Configuración",
+    "/cambiar-contrasena": "Cambiar contraseña"
+  }
+}
