@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronDown } from "lucide-react";
+import { textoClaro } from "@/lib/legal/research/texto-claro";
 
 const AGENT_LABELS: Record<string, string> = {
   chat_asesor_legal: "Asesor legal general",
@@ -27,6 +28,8 @@ export function ResearchTopBar({ agentId, onAgentChange, recentCount, onOpenRece
         <span className="lr-agent-dot" aria-hidden />
         <span>Agente ·</span>
         <select
+          ref={(el) => textoClaro(el)}
+          className="appearance-none pr-1"
           id="legal-agent-select"
           aria-label="Seleccionar agente legal"
           value={agentId}
@@ -34,7 +37,7 @@ export function ResearchTopBar({ agentId, onAgentChange, recentCount, onOpenRece
           style={{ color: "#eef2f8" }}
         >
           {Object.entries(AGENT_LABELS).map(([id, name]) => (
-            <option key={id} value={id} style={{ color: "#17233A", background: "#ffffff" }}>
+            <option key={id} value={id} ref={(el) => textoClaro(el, "#17233A")} style={{ background: "#ffffff" }}>
               {name}
             </option>
           ))}
