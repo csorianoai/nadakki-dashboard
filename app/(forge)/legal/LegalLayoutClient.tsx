@@ -14,6 +14,7 @@ import { DisasterModeProvider } from "@/app/providers/DisasterModeProvider";
 
 import { ForgeToaster } from "@/components/forge/ui/Toast";
 import { ModuleGate } from "@/lib/feature-gating/ModuleGate";
+import { BienvenidaPrimerosPasos } from "@/components/ai/onboarding/BienvenidaPrimerosPasos";
 import { useTenant as useCreditHubTenant } from "@/lib/credit-hub/hooks/useTenant";
 import "../credit-hub/forge-globals.css";
 import "@/styles/legal-contrast.css";
@@ -71,6 +72,9 @@ export function LegalLayoutClient({ children }: { children: ReactNode }) {
                   <div className="mx-auto flex min-h-0 w-full max-w-[1400px] flex-1 flex-col px-4 py-5 md:px-6 md:py-6">
                     <LegalAvisoInicial />
                     <DemoBannerStrong />
+                    {/* Primeros pasos del despacho (motor de onboarding): en línea, no flota, para no pisar el globo NADA.
+                        Sin core legal activo (404 CORE_NO_ACTIVO) o con todo hecho no pinta nada. */}
+                    <BienvenidaPrimerosPasos core="legal" variante="en-linea" />
                     {/* En Mi despacho los plazos ya encabezan la pantalla («Atención prioritaria»): no se repiten arriba. */}
                     {pathname === "/legal" || pathname?.endsWith("/deadlines") ? null : <DeadlineNotificationBanner />}
                     {/* Las pestañas de Legal las pinta ModuleShell (PestanasGrupo) desde el registro; ya no hay barra propia. */}

@@ -7,6 +7,7 @@ import {
   fetchGeneratedDocuments,
   postGenerateDocument,
 } from "@/lib/legal/cases/legal-cases-api";
+import { avisarProgreso } from "@/lib/agents/onboarding/progreso";
 
 const qkGenerated = (tenantId: string, caseId: string) =>
   ["legal_generated_documents", tenantId, caseId] as const;
@@ -39,6 +40,8 @@ export function useGenerateDocument(tenantId: string | undefined, caseId: string
     mutationFn: async (body: GenerateDocumentRequestBody) =>
       postGenerateDocument(tenantId!, caseId!, body),
     onSuccess: async () => {
+      // Primeros pasos de Legal: "Generar tu primer escrito con IA".
+      avisarProgreso("legal.escrito-generado");
       if (!tenantId?.trim() || !caseId?.trim()) return;
       await qc.invalidateQueries({ queryKey: qkGenerated(tenantId, caseId) });
       await qc.invalidateQueries({ queryKey: ["legal_case", tenantId, caseId] });

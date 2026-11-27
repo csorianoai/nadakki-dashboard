@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import type { CasePriority, MatterArea, ProceduralStage } from "@/lib/legal/cases/case-types";
 import { createCase } from "@/lib/legal/cases/legal-cases-api";
+import { avisarProgreso } from "@/lib/agents/onboarding/progreso";
 import { legalCaughtErrorToSpanish } from "@/lib/legal/api-error-es";
 import { useLegalCasesMessages } from "@/hooks/useLegalCasesMessages";
 import { MATERIAS, COVERAGE_BADGE, deriveCaseType } from "@/lib/legal/cases/matter-catalog";
@@ -130,6 +131,8 @@ export function CaseCreateWizard({ tenantId }: { tenantId: string }) {
       });
     },
     onSuccess: async (c) => {
+      // Primeros pasos de Legal: expediente (y cliente, que entra con initial_actors).
+      avisarProgreso("legal.expediente-creado");
       await qc.invalidateQueries({ queryKey: ["legal_cases", tenantId] });
       router.push(`/legal/cases/${c.case_id}`);
     },

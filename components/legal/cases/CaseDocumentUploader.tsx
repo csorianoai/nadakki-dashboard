@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchDocumentsStorage, ingestDocument, type DocumentUploadMeta } from "@/lib/legal/cases/legal-cases-api";
 import { mensajeDeError } from "@/lib/legal/cases/mensajes-error";
+import { avisarProgreso } from "@/lib/agents/onboarding/progreso";
 
 export const TIPOS_DOCUMENTO: { value: string; label: string }[] = [
   { value: "", label: "Sin clasificar (lo revisará el abogado)" },
@@ -79,6 +80,7 @@ export function CaseDocumentUploader({ tenantId, caseId, onUploaded }: { tenantI
     fd.append("file", archivo);
     try {
       const r = await ingestDocument(tenantId, caseId, fd, meta);
+      avisarProgreso("legal.documento-subido");
       setEstado({
         tipo: "ok",
         nombre: archivo.name,
