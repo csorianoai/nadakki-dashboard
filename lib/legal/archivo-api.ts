@@ -78,7 +78,8 @@ export function tamano(bytes: number): string {
   for (const [nombre, valor] of u) {
     if (bytes >= valor) {
       const n = bytes / valor;
-      return `${n >= 10 ? Math.round(n) : n.toFixed(1).replace(".", ",")} ${nombre}`;
+      const txt = n >= 10 ? String(Math.round(n)) : n.toFixed(1).replace(/\.0$/, "").replace(".", ",");
+      return `${txt} ${nombre}`;
     }
   }
   return `${bytes} B`;
