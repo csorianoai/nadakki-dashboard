@@ -57,10 +57,25 @@ export function PasosDeTarea({ titulo, pasos, final }: { titulo: string; pasos: 
             </span>
             <span>
               <span className="sr-only">{p.hecho ? "Hecho: " : p.opcional ? "Opcional: " : "Pendiente: "}</span>
-              <span className={p.hecho ? "line-through opacity-70" : siguiente?.id === p.id ? "font-semibold" : ""}>
-                {p.titulo}
-                {p.opcional ? " (opcional)" : ""}
-              </span>
+              {!p.hecho && p.enlace ? (
+                // Cada paso pendiente con pantalla propia se puede tocar, no solo el siguiente (Cowork 26-nov):
+                // enlace de texto subrayado con 44px de alto tocable. Los hechos quedan sin enlace.
+                <Link
+                  href={p.enlace}
+                  data-testid={`paso-enlace-${p.id}`}
+                  className={`inline-flex min-h-11 items-center underline underline-offset-2 focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[var(--dcc-teal)]${
+                    siguiente?.id === p.id ? " font-semibold" : ""
+                  }`}
+                >
+                  {p.titulo}
+                  {p.opcional ? " (opcional)" : ""}
+                </Link>
+              ) : (
+                <span className={p.hecho ? "line-through opacity-70" : siguiente?.id === p.id ? "font-semibold" : ""}>
+                  {p.titulo}
+                  {p.opcional ? " (opcional)" : ""}
+                </span>
+              )}
               {p.ayuda && !p.hecho ? <span className="block opacity-80">{p.ayuda}</span> : null}
             </span>
           </li>
