@@ -73,7 +73,9 @@ export function mapBackendVehicle(v: BackendVehicle & FotosBackend, _legacySeed?
     ...(price > 0 && currency ? { currency } : {}),
     loc: v.province ?? "",
     type: (v.body_type as ConsumerVehicle["type"]) ?? "SUV",
+    // null = el concesionario no informo el kilometraje: 0 solo por el tipo, y la marca para no mostrar "0 km".
     km: v.mileage_km ?? 0,
+    ...(v.mileage_km == null ? { kmDesconocido: true } : {}),
     trans,
     fuel,
     grad: GRADS[id % GRADS.length]!,
