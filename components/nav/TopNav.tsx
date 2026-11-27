@@ -108,12 +108,7 @@ export function TopNav() {
               ) : null}
             </Link>
 
-            <span
-              className="hidden h-11 w-11 items-center justify-center rounded-full bg-nk-surface-3 text-xs font-bold text-nk-fg sm:inline-flex"
-              aria-label="Usuario JR"
-            >
-              JR
-            </span>
+            {/* Sin avatar fijo "JR": aparecia aunque nadie hubiera iniciado sesion (Cowork 26-nov, portal del concesionario). */}
 
             <Button
               type="button"
