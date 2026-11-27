@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { memo, useCallback } from "react";
 import { Camera, Fuel, Gauge, MapPin, Settings2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { fmtKm } from "@/lib/format";
 import { useFmtPrecioDe } from "@/components/vehicle/precio";
 import { publicVehicleHref } from "@/lib/autos-portal/vehicle-href";
 import { priceStatus } from "@/lib/finance";
@@ -13,6 +12,7 @@ import { photoCount, primaryPhotoUrl, type Vehicle } from "@/lib/vehicles";
 import { QualityBadge } from "@/components/vehicle/QualityBadge";
 import { PrecioJustoBadge } from "@/components/vehicle/PrecioJustoBadge";
 import { SaveButton } from "@/components/vehicle/SaveButton";
+import { kmTexto } from "@/components/vehicle/km";
 import { cn } from "@/lib/utils";
 
 export type VehicleCardVariant = "grid" | "list" | "compact";
@@ -132,7 +132,7 @@ export const VehicleCard = memo(function VehicleCard({
             {fmt(vehicle.price)}
           </p>
           <p className="text-xs leading-snug text-nk-fg-muted">
-            {fmtKm(vehicle.km)} · {vehicle.trans}
+            {[kmTexto(vehicle), vehicle.trans].filter(Boolean).join(" · ")}
           </p>
           <p className="text-xs leading-snug text-nk-fg-muted">{vehicle.loc}</p>
         </div>
@@ -184,10 +184,12 @@ export const VehicleCard = memo(function VehicleCard({
             {vehicle.featuresLine}
           </p>
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-nk-fg-muted">
-            <span className="inline-flex items-center gap-1">
-              <Gauge className="h-3.5 w-3.5" aria-hidden />
-              {fmtKm(vehicle.km)}
-            </span>
+            {kmTexto(vehicle) ? (
+              <span className="inline-flex items-center gap-1" data-testid="vehicle-km">
+                <Gauge className="h-3.5 w-3.5" aria-hidden />
+                {kmTexto(vehicle)}
+              </span>
+            ) : null}
             <span className="inline-flex items-center gap-1">
               <Settings2 className="h-3.5 w-3.5" aria-hidden />
               {vehicle.trans}
@@ -272,10 +274,12 @@ export const VehicleCard = memo(function VehicleCard({
           </p>
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-nk-fg-muted">
-            <span className="inline-flex items-center gap-1">
-              <Gauge className="h-3.5 w-3.5" aria-hidden />
-              {fmtKm(vehicle.km)}
-            </span>
+            {kmTexto(vehicle) ? (
+              <span className="inline-flex items-center gap-1" data-testid="vehicle-km">
+                <Gauge className="h-3.5 w-3.5" aria-hidden />
+                {kmTexto(vehicle)}
+              </span>
+            ) : null}
             <span className="inline-flex items-center gap-1">
               <Settings2 className="h-3.5 w-3.5" aria-hidden />
               {vehicle.trans}

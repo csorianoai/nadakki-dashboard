@@ -3,14 +3,14 @@
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { fmtKm } from "@/lib/format";
+import { kmTexto } from "@/components/vehicle/km";
 import type { Vehicle } from "@/lib/vehicles";
 
 const SPECS = (v: Vehicle): string[][] => [
   ["Marca", v.make],
   ["Modelo", v.model],
   ["Año", String(v.year)],
-  ["Kilometraje", fmtKm(v.km)],
+  ["Kilometraje", kmTexto(v) ?? ""],
   ["Transmisión", v.trans],
   ["Combustible", v.fuel],
   ["Tipo", v.type],
